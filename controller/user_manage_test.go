@@ -159,3 +159,87 @@ func TestManageUserDeleteReturnsImmediatelyAndUnknownActionFails(t *testing.T) {
 	assert.EqualValues(t, 1, unchanged.AuthVersion)
 	assert.Equal(t, common.UserStatusEnabled, unchanged.Status)
 }
+
+func TestManageUserQuotaAuditIsVisibleToTargetWithoutOperatorDetails(t *testing.T) {
+	db := setupManageUserTestDB(t)
+	user := model.User{
+		Username: "managed-quota-user", Password: "password", Role: common.RoleCommonUser,
+		Status: common.UserStatusEnabled, Group: "default", Quota: 2_000_000,
+	}
+	require.NoError(t, db.Create(&user).Error)
+
+	tests := []struct {
+		mode          string
+		value         int
+		action        string
+		expectedQuota int
+	}{
+		{mode: "add", value: 500_000, action: "user.quota_add", expectedQuota: 2_500_000},
+		{mode: "subtract", value: 250_000, action: "user.quota_subtract", expectedQuota: 2_250_000},
+		{mode: "override", value: 750_000, action: "user.quota_override", expectedQuota: 750_000},
+	}
+
+	for index, test := range tests {
+		recorder := performManageUserRequest(t, fmt.Sprintf(
+			`{"id":%d,"action":"add_quota","mode":%q,"value":%d}`,
+			user.Id, test.mode, test.value,
+		))
+		assert.Equal(t, http.StatusOK, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), `"success":true`)
+
+		var updated model.User
+		require.NoError(t, db.First(&updated, user.Id).Error)
+		assert.Equal(t, test.expectedQuota, updated.Quota)
+
+		var logs []model.Log
+		require.NoError(t, db.Order("id asc").Find(&logs).Error)
+		require.Len(t, logs, index+1)
+		log := logs[index]
+		assert.Equal(t, user.Id, log.UserId)
+		assert.Equal(t, user.Username, log.Username)
+		assert.Equal(t, model.LogTypeManage, log.Type)
+		assert.Empty(t, log.Ip)
+
+		other, err := common.StrToMap(log.Other)
+		require.NoError(t, err)
+		op, ok := other["op"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Equal(t, test.action, op["action"])
+		params, ok := op["params"].(map[string]interface{})
+		require.True(t, ok)
+		assert.EqualValues(t, user.Id, params["target_user_id"])
+		adminInfo, ok := other["admin_info"].(map[string]interface{})
+		require.True(t, ok)
+		assert.EqualValues(t, 9999, adminInfo["admin_id"])
+		assert.Equal(t, "root-operator", adminInfo["admin_username"])
+		assert.EqualValues(t, common.RoleRootUser, adminInfo["admin_role"])
+		assert.Equal(t, "session", adminInfo["auth_method"])
+		assert.Equal(t, "192.0.2.1", adminInfo["caller_ip"])
+	}
+
+	userLogs, total, err := model.GetUserLogs(
+		user.Id, model.LogTypeUnknown, 0, 0, "", "", 0, 20, "", "", "",
+	)
+	require.NoError(t, err)
+	assert.EqualValues(t, len(tests), total)
+	require.Len(t, userLogs, len(tests))
+	for _, log := range userLogs {
+		assert.Empty(t, log.Ip)
+		other, err := common.StrToMap(log.Other)
+		require.NoError(t, err)
+		assert.NotContains(t, other, "admin_info")
+		assert.NotContains(t, other, "audit_info")
+		op, ok := other["op"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Contains(t, []string{
+			"user.quota_add", "user.quota_subtract", "user.quota_override",
+		}, op["action"])
+	}
+
+	operatorLogs, operatorTotal, err := model.GetUserLogs(
+		9999, model.LogTypeUnknown, 0, 0, "", "", 0, 20, "", "", "",
+	)
+	require.NoError(t, err)
+	assert.Zero(t, operatorTotal)
+	assert.Empty(t, operatorLogs)
+}
