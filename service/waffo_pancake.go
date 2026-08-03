@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/shopspring/decimal"
 	pancake "github.com/waffo-com/waffo-pancake-sdk-go"
+	"gorm.io/gorm"
 )
 
 // WaffoPancakePriceSnapshot is the per-session price override sent with checkout.
@@ -220,24 +222,36 @@ func VerifyConfiguredWaffoPancakeWebhook(payload string, signatureHeader string)
 	}, nil
 }
 
-func waffoPancakeCurrencyFromTradeNo(tradeNo string) (string, error) {
+type waffoPancakeOrderBinding struct {
+	Currency string
+	StoreID  string
+}
+
+// ErrWaffoPancakeOrderLookup marks transient database lookup failures. The
+// webhook controller returns 5xx for this class so Pancake retries delivery.
+var ErrWaffoPancakeOrderLookup = errors.New("waffo pancake order lookup failed")
+
+func waffoPancakeBindingFromTradeNo(tradeNo string, legacyStoreID string) (waffoPancakeOrderBinding, error) {
 	tradeNo = strings.TrimSpace(tradeNo)
 	prefix := "WAFFO_PANCAKE-"
 	if strings.HasPrefix(tradeNo, "WAFFO_PANCAKE_SUB-") {
 		prefix = "WAFFO_PANCAKE_SUB-"
 	} else if !strings.HasPrefix(tradeNo, prefix) {
-		return "", fmt.Errorf("unrecognized Waffo Pancake tradeNo=%s", tradeNo)
+		return waffoPancakeOrderBinding{}, fmt.Errorf("unrecognized Waffo Pancake tradeNo=%s", tradeNo)
 	}
 
 	remainder := strings.TrimPrefix(tradeNo, prefix)
-	firstPart, _, found := strings.Cut(remainder, "-")
-	if !found || firstPart == "" {
-		return "", fmt.Errorf("malformed Waffo Pancake tradeNo=%s", tradeNo)
+	parts := strings.Split(remainder, "-")
+	if len(parts) < 3 || parts[0] == "" {
+		return waffoPancakeOrderBinding{}, fmt.Errorf("malformed Waffo Pancake tradeNo=%s", tradeNo)
 	}
 
 	// Orders created before currency became configurable started with the
-	// numeric user ID and were always USD. New orders freeze their currency
-	// in the trade number before the user ID (for example, ...-CNY-123-...).
+	// numeric user ID and were always USD. They predate per-order StoreID
+	// freezing, so the persisted legacy binding is their only safe fallback.
+	// New orders freeze both currency and StoreID before the user ID (for
+	// example, ...-CNY-STO_xxx-123-...).
+	firstPart := parts[0]
 	legacyUserID := true
 	for i := 0; i < len(firstPart); i++ {
 		if firstPart[i] < '0' || firstPart[i] > '9' {
@@ -246,9 +260,27 @@ func waffoPancakeCurrencyFromTradeNo(tradeNo string) (string, error) {
 		}
 	}
 	if legacyUserID {
-		return setting.DefaultWaffoPancakeCurrency, nil
+		legacyStoreID = strings.TrimSpace(legacyStoreID)
+		if legacyStoreID == "" {
+			return waffoPancakeOrderBinding{}, fmt.Errorf("missing legacy Waffo Pancake store binding")
+		}
+		return waffoPancakeOrderBinding{
+			Currency: setting.DefaultWaffoPancakeCurrency,
+			StoreID:  legacyStoreID,
+		}, nil
 	}
-	return setting.NormalizeWaffoPancakeCurrency(firstPart)
+	if len(parts) < 5 {
+		return waffoPancakeOrderBinding{}, fmt.Errorf("missing frozen Waffo Pancake store binding in tradeNo=%s", tradeNo)
+	}
+	currency, err := setting.NormalizeWaffoPancakeCurrency(firstPart)
+	if err != nil {
+		return waffoPancakeOrderBinding{}, err
+	}
+	storeID := strings.TrimSpace(parts[1])
+	if storeID == "" {
+		return waffoPancakeOrderBinding{}, fmt.Errorf("missing frozen Waffo Pancake store binding in tradeNo=%s", tradeNo)
+	}
+	return waffoPancakeOrderBinding{Currency: currency, StoreID: storeID}, nil
 }
 
 func parseWaffoPancakeAmount(field string, value string) (decimal.Decimal, error) {
@@ -338,7 +370,7 @@ func validateWaffoPancakePayment(event *WaffoPancakeWebhookEvent, expectedMoney 
 	if hasSubtotal && !baseAmount.Add(taxAmount).Equal(paidAmount) {
 		return fmt.Errorf("Waffo Pancake tax total mismatch: subtotal=%s tax=%s total=%s", baseAmount.String(), taxAmount.String(), paidAmount.String())
 	}
-	if paymentStatus := strings.TrimSpace(event.Data.PaymentStatus); paymentStatus != "" && !strings.EqualFold(paymentStatus, "succeeded") {
+	if paymentStatus := strings.TrimSpace(event.Data.PaymentStatus); paymentStatus != "succeeded" {
 		return fmt.Errorf("Waffo Pancake payment is not successful: status=%q", paymentStatus)
 	}
 	return nil
@@ -355,15 +387,21 @@ func ResolveWaffoPancakeTradeNo(event *WaffoPancakeWebhookEvent) (string, error)
 	if tradeNo == "" {
 		return "", fmt.Errorf("missing webhook orderMerchantExternalId")
 	}
-	topUp := model.GetTopUpByTradeNo(tradeNo)
+	topUp, err := model.GetTopUpByTradeNoWithError(tradeNo)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", fmt.Errorf("waffo pancake order not found for tradeNo=%s", tradeNo)
+		}
+		return "", fmt.Errorf("%w for tradeNo=%s: %w", ErrWaffoPancakeOrderLookup, tradeNo, err)
+	}
 	if topUp == nil || topUp.PaymentProvider != model.PaymentProviderWaffoPancake {
 		return "", fmt.Errorf("waffo pancake order not found for tradeNo=%s", tradeNo)
 	}
-	expectedCurrency, err := waffoPancakeCurrencyFromTradeNo(tradeNo)
+	binding, err := waffoPancakeBindingFromTradeNo(tradeNo, setting.WaffoPancakeStoreID)
 	if err != nil {
 		return "", err
 	}
-	if err := validateWaffoPancakePayment(event, topUp.Money, expectedCurrency, setting.WaffoPancakeStoreID, topUp.Status); err != nil {
+	if err := validateWaffoPancakePayment(event, topUp.Money, binding.Currency, binding.StoreID, topUp.Status); err != nil {
 		return "", fmt.Errorf("waffo pancake payment validation failed for tradeNo=%s: %w", tradeNo, err)
 	}
 	expectedIdentity := WaffoPancakeBuyerIdentityFromUserID(topUp.UserId)
@@ -389,15 +427,21 @@ func ResolveWaffoPancakeSubscriptionTradeNo(event *WaffoPancakeWebhookEvent) (st
 	if tradeNo == "" {
 		return "", fmt.Errorf("missing webhook orderMerchantExternalId")
 	}
-	order := model.GetSubscriptionOrderByTradeNo(tradeNo)
+	order, err := model.GetSubscriptionOrderByTradeNoWithError(tradeNo)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", fmt.Errorf("waffo pancake subscription order not found for tradeNo=%s", tradeNo)
+		}
+		return "", fmt.Errorf("%w for subscription tradeNo=%s: %w", ErrWaffoPancakeOrderLookup, tradeNo, err)
+	}
 	if order == nil || order.PaymentProvider != model.PaymentProviderWaffoPancake {
 		return "", fmt.Errorf("waffo pancake subscription order not found for tradeNo=%s", tradeNo)
 	}
-	expectedCurrency, err := waffoPancakeCurrencyFromTradeNo(tradeNo)
+	binding, err := waffoPancakeBindingFromTradeNo(tradeNo, setting.WaffoPancakeStoreID)
 	if err != nil {
 		return "", err
 	}
-	if err := validateWaffoPancakePayment(event, order.Money, expectedCurrency, setting.WaffoPancakeStoreID, order.Status); err != nil {
+	if err := validateWaffoPancakePayment(event, order.Money, binding.Currency, binding.StoreID, order.Status); err != nil {
 		return "", fmt.Errorf("waffo pancake subscription payment validation failed for tradeNo=%s: %w", tradeNo, err)
 	}
 	expectedIdentity := WaffoPancakeBuyerIdentityFromUserID(order.UserId)

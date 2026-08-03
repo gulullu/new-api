@@ -70,13 +70,19 @@ func GetTopUpById(id int) *TopUp {
 }
 
 func GetTopUpByTradeNo(tradeNo string) *TopUp {
-	var topUp *TopUp
-	var err error
-	err = DB.Where("trade_no = ?", tradeNo).First(&topUp).Error
-	if err != nil {
-		return nil
-	}
+	topUp, _ := GetTopUpByTradeNoWithError(tradeNo)
 	return topUp
+}
+
+// GetTopUpByTradeNoWithError preserves database failures so payment webhook
+// handlers can return a retryable response instead of treating an outage as
+// a permanently missing order.
+func GetTopUpByTradeNoWithError(tradeNo string) (*TopUp, error) {
+	var topUp TopUp
+	if err := DB.Where("trade_no = ?", tradeNo).First(&topUp).Error; err != nil {
+		return nil, err
+	}
+	return &topUp, nil
 }
 
 func UpdatePendingTopUpStatus(tradeNo string, expectedPaymentProvider string, targetStatus string) error {

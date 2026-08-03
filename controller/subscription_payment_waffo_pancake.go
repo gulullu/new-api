@@ -20,6 +20,21 @@ type SubscriptionWaffoPancakePayRequest struct {
 	PlanId int `json:"plan_id"`
 }
 
+func validateWaffoPancakeSubscriptionCurrency(planCurrency string, checkoutCurrency string) error {
+	planCurrency, err := setting.NormalizeWaffoPancakeCurrency(planCurrency)
+	if err != nil {
+		return fmt.Errorf("invalid subscription plan currency: %w", err)
+	}
+	checkoutCurrency, err = setting.NormalizeWaffoPancakeCurrency(checkoutCurrency)
+	if err != nil {
+		return fmt.Errorf("invalid Waffo Pancake checkout currency: %w", err)
+	}
+	if planCurrency != checkoutCurrency {
+		return fmt.Errorf("subscription plan currency %s does not match Waffo Pancake currency %s", planCurrency, checkoutCurrency)
+	}
+	return nil
+}
+
 func SubscriptionRequestWaffoPancakePay(c *gin.Context) {
 	if !requirePaymentCompliance(c) {
 		return
@@ -44,10 +59,11 @@ func SubscriptionRequestWaffoPancakePay(c *gin.Context) {
 		common.ApiErrorMsg(c, "该套餐未配置 WaffoPancakeProductId")
 		return
 	}
-	// Plan targets its own Pancake product, so we only require credentials
-	// here — not the gateway-level WaffoPancakeProductID.
+	// Plan targets its own Pancake product, so we require the credentials and
+	// StoreID frozen into the order, but not the gateway-level ProductID.
 	if strings.TrimSpace(setting.WaffoPancakeMerchantID) == "" ||
-		strings.TrimSpace(setting.WaffoPancakePrivateKey) == "" {
+		strings.TrimSpace(setting.WaffoPancakePrivateKey) == "" ||
+		strings.TrimSpace(setting.WaffoPancakeStoreID) == "" {
 		common.ApiErrorMsg(c, "Waffo Pancake 未配置或密钥无效")
 		return
 	}
@@ -80,10 +96,16 @@ func SubscriptionRequestWaffoPancakePay(c *gin.Context) {
 		common.ApiErrorMsg(c, "Waffo Pancake 币种配置无效")
 		return
 	}
+	if err := validateWaffoPancakeSubscriptionCurrency(plan.Currency, currency); err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 套餐币种不匹配 user_id=%d plan_id=%d plan_currency=%q checkout_currency=%q error=%q", userId, plan.Id, plan.Currency, currency, err.Error()))
+		common.ApiErrorMsg(c, "套餐币种与 Waffo Pancake 结账币种不一致")
+		return
+	}
 
 	// WAFFO_PANCAKE_SUB- prefix (vs. wallet's WAFFO_PANCAKE-) drives webhook
 	// dispatch in WaffoPancakeWebhook.
-	tradeNo := fmt.Sprintf("WAFFO_PANCAKE_SUB-%s-%d-%d-%s", currency, userId, time.Now().UnixMilli(), randstr.String(6))
+	storeID := strings.TrimSpace(setting.WaffoPancakeStoreID)
+	tradeNo := fmt.Sprintf("WAFFO_PANCAKE_SUB-%s-%s-%d-%d-%s", currency, storeID, userId, time.Now().UnixMilli(), randstr.String(6))
 
 	order := &model.SubscriptionOrder{
 		UserId:          userId,

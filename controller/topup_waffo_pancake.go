@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -377,7 +378,8 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		return
 	}
 
-	tradeNo := fmt.Sprintf("WAFFO_PANCAKE-%s-%d-%d-%s", currency, id, time.Now().UnixMilli(), randstr.String(6))
+	storeID := strings.TrimSpace(setting.WaffoPancakeStoreID)
+	tradeNo := fmt.Sprintf("WAFFO_PANCAKE-%s-%s-%d-%d-%s", currency, storeID, id, time.Now().UnixMilli(), randstr.String(6))
 	topUp := &model.TopUp{
 		UserId:          id,
 		Amount:          normalizeWaffoPancakeTopUpAmount(req.Amount),
@@ -499,6 +501,14 @@ func WaffoPancakeWebhook(c *gin.Context) {
 	if isSubscription {
 		tradeNo, err := service.ResolveWaffoPancakeSubscriptionTradeNo(event)
 		if err != nil {
+			if errors.Is(err, service.ErrWaffoPancakeOrderLookup) {
+				logger.LogError(c.Request.Context(), fmt.Sprintf(
+					"Waffo Pancake webhook 订阅订单查询失败，将请求重试 event_id=%s order_id=%s client_ip=%s error=%q",
+					event.ID, event.Data.OrderID, c.ClientIP(), err.Error(),
+				))
+				c.String(http.StatusInternalServerError, "retry")
+				return
+			}
 			logger.LogError(c.Request.Context(), fmt.Sprintf(
 				"Waffo Pancake webhook 订阅订单解析失败 event_id=%s order_id=%s buyer_identity=%q client_ip=%s error=%q",
 				event.ID, event.Data.OrderID, event.Data.MerchantProvidedBuyerIdentity, c.ClientIP(), err.Error(),
@@ -518,6 +528,14 @@ func WaffoPancakeWebhook(c *gin.Context) {
 
 	tradeNo, err := service.ResolveWaffoPancakeTradeNo(event)
 	if err != nil {
+		if errors.Is(err, service.ErrWaffoPancakeOrderLookup) {
+			logger.LogError(c.Request.Context(), fmt.Sprintf(
+				"Waffo Pancake webhook 订单查询失败，将请求重试 event_id=%s order_id=%s client_ip=%s error=%q",
+				event.ID, event.Data.OrderID, c.ClientIP(), err.Error(),
+			))
+			c.String(http.StatusInternalServerError, "retry")
+			return
+		}
 		// LogError (not LogWarn): covers order-not-found and buyer-identity
 		// mismatch — both warrant human attention. 200 OK so Waffo doesn't
 		// retry a permanently-unresolvable webhook.

@@ -239,14 +239,22 @@ func (o *SubscriptionOrder) Update() error {
 }
 
 func GetSubscriptionOrderByTradeNo(tradeNo string) *SubscriptionOrder {
+	order, _ := GetSubscriptionOrderByTradeNoWithError(tradeNo)
+	return order
+}
+
+// GetSubscriptionOrderByTradeNoWithError is the error-preserving lookup used
+// by payment webhooks that must distinguish a transient database outage from
+// a genuinely missing order.
+func GetSubscriptionOrderByTradeNoWithError(tradeNo string) (*SubscriptionOrder, error) {
 	if tradeNo == "" {
-		return nil
+		return nil, gorm.ErrRecordNotFound
 	}
 	var order SubscriptionOrder
 	if err := DB.Where("trade_no = ?", tradeNo).First(&order).Error; err != nil {
-		return nil
+		return nil, err
 	}
-	return &order
+	return &order, nil
 }
 
 // User subscription instance
