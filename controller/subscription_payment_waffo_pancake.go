@@ -74,10 +74,16 @@ func SubscriptionRequestWaffoPancakePay(c *gin.Context) {
 			return
 		}
 	}
+	currency, err := setting.GetWaffoPancakeCurrency()
+	if err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 币种配置无效 user_id=%d plan_id=%d error=%q", userId, plan.Id, err.Error()))
+		common.ApiErrorMsg(c, "Waffo Pancake 币种配置无效")
+		return
+	}
 
 	// WAFFO_PANCAKE_SUB- prefix (vs. wallet's WAFFO_PANCAKE-) drives webhook
 	// dispatch in WaffoPancakeWebhook.
-	tradeNo := fmt.Sprintf("WAFFO_PANCAKE_SUB-%d-%d-%s", userId, time.Now().UnixMilli(), randstr.String(6))
+	tradeNo := fmt.Sprintf("WAFFO_PANCAKE_SUB-%s-%d-%d-%s", currency, userId, time.Now().UnixMilli(), randstr.String(6))
 
 	order := &model.SubscriptionOrder{
 		UserId:          userId,
@@ -98,6 +104,7 @@ func SubscriptionRequestWaffoPancakePay(c *gin.Context) {
 	expiresInSeconds := 45 * 60
 	session, err := service.CreateWaffoPancakeCheckoutSession(c.Request.Context(), &service.WaffoPancakeCreateSessionParams{
 		ProductID:     plan.WaffoPancakeProductId,
+		Currency:      currency,
 		BuyerIdentity: service.WaffoPancakeBuyerIdentityFromUserID(user.Id),
 		PriceSnapshot: &service.WaffoPancakePriceSnapshot{
 			Amount:      decimal.NewFromFloat(plan.PriceAmount).StringFixed(2),

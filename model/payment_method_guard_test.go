@@ -102,6 +102,20 @@ func TestRechargeWaffoPancake_RejectsMismatchedPaymentMethod(t *testing.T) {
 	assert.Equal(t, 0, getUserQuotaForPaymentGuardTest(t, 101))
 }
 
+func TestRechargeWaffoPancake_ReplayDoesNotDoubleCredit(t *testing.T) {
+	truncateTables(t)
+
+	insertUserForPaymentGuardTest(t, 102, 0)
+	insertTopUpForPaymentGuardTest(t, "waffo-pancake-idempotency", 102, PaymentProviderWaffoPancake)
+
+	require.NoError(t, RechargeWaffoPancake("waffo-pancake-idempotency"))
+	quotaAfterFirstCallback := getUserQuotaForPaymentGuardTest(t, 102)
+	require.Positive(t, quotaAfterFirstCallback)
+
+	require.NoError(t, RechargeWaffoPancake("waffo-pancake-idempotency"))
+	assert.Equal(t, quotaAfterFirstCallback, getUserQuotaForPaymentGuardTest(t, 102))
+}
+
 func TestUpdatePendingTopUpStatus_RejectsMismatchedPaymentProvider(t *testing.T) {
 	testCases := []struct {
 		name                    string
