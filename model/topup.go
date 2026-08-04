@@ -19,9 +19,13 @@ type TopUp struct {
 	TradeNo         string  `json:"trade_no" gorm:"unique;type:varchar(255);index"`
 	PaymentMethod   string  `json:"payment_method" gorm:"type:varchar(50)"`
 	PaymentProvider string  `json:"payment_provider" gorm:"type:varchar(50);default:''"`
-	CreateTime      int64   `json:"create_time"`
-	CompleteTime    int64   `json:"complete_time"`
-	Status          string  `json:"status"`
+	// ReferralPaymentVerified is set only by a signed, production payment
+	// callback. Manual completions and sandbox callbacks must not consume the
+	// user's first eligible referral payment.
+	ReferralPaymentVerified bool   `json:"-" gorm:"column:referral_payment_verified;not null;default:false;index"`
+	CreateTime              int64  `json:"create_time"`
+	CompleteTime            int64  `json:"complete_time"`
+	Status                  string `json:"status"`
 }
 
 const (
@@ -106,12 +110,26 @@ func UpdatePendingTopUpStatus(tradeNo string, expectedPaymentProvider string, ta
 	})
 }
 
-func Recharge(referenceId string, customerId string, callerIp string) (err error) {
+func invalidateTopUpUserCache(userId int) error {
+	if userId <= 0 {
+		return nil
+	}
+	if err := InvalidateUserCache(userId); err != nil {
+		return fmt.Errorf("invalidate topup user cache: %w", err)
+	}
+	return nil
+}
+
+func Recharge(referenceId string, customerId string, callerIp string, payment VerifiedPayment) (err error) {
 	if referenceId == "" {
 		return errors.New("未提供支付单号")
 	}
 
 	var quota float64
+	completed := false
+	var rewardGranted bool
+	var rewardInviterId int
+	var rewardQuota int
 	topUp := &TopUp{}
 
 	refCol := "`trade_no`"
@@ -129,10 +147,14 @@ func Recharge(referenceId string, customerId string, callerIp string) (err error
 			return ErrPaymentMethodMismatch
 		}
 
+		if topUp.Status == common.TopUpStatusSuccess {
+			return nil
+		}
 		if topUp.Status != common.TopUpStatusPending {
 			return errors.New("充值订单状态错误")
 		}
 
+		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
 		err = tx.Save(topUp).Error
@@ -146,6 +168,12 @@ func Recharge(referenceId string, customerId string, callerIp string) (err error
 			return err
 		}
 
+		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		if err != nil {
+			return err
+		}
+		completed = true
+
 		return nil
 	})
 
@@ -153,9 +181,99 @@ func Recharge(referenceId string, customerId string, callerIp string) (err error
 		common.SysError("topup failed: " + err.Error())
 		return errors.New("充值失败，请稍后重试")
 	}
+	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {
+		common.SysError("topup cache refresh failed: " + err.Error())
+		return errors.New("充值已入账，额度缓存刷新失败，请稍后重试")
+	}
+
+	if !completed {
+		return nil
+	}
 
 	RecordTopupLog(topUp.UserId, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%d", logger.FormatQuota(int(quota)), topUp.Amount), callerIp, topUp.PaymentMethod, PaymentMethodStripe)
+	logReferralRewardGrant(rewardGranted, rewardInviterId, topUp.UserId, topUp.TradeNo, rewardQuota, payment)
 
+	return nil
+}
+
+// RechargeEpay atomically completes a verified Epay payment, credits the buyer,
+// and grants any first-paid referral reward before acknowledging the webhook.
+func RechargeEpay(referenceId string, actualPaymentMethod string, callerIp string, payment VerifiedPayment) (err error) {
+	if referenceId == "" {
+		return errors.New("未提供支付单号")
+	}
+
+	var quotaToAdd int
+	completed := false
+	var rewardGranted bool
+	var rewardInviterId int
+	var rewardQuota int
+	topUp := &TopUp{}
+
+	refCol := "`trade_no`"
+	if common.UsingMainDatabase(common.DatabaseTypePostgreSQL) {
+		refCol = `"trade_no"`
+	}
+
+	err = DB.Transaction(func(tx *gorm.DB) error {
+		if err := lockForUpdate(tx).Where(refCol+" = ?", referenceId).First(topUp).Error; err != nil {
+			return ErrTopUpNotFound
+		}
+		if topUp.PaymentProvider != PaymentProviderEpay {
+			return ErrPaymentMethodMismatch
+		}
+		if topUp.Status == common.TopUpStatusSuccess {
+			return nil
+		}
+		if topUp.Status != common.TopUpStatusPending {
+			return ErrTopUpStatusInvalid
+		}
+
+		if actualPaymentMethod != "" {
+			topUp.PaymentMethod = actualPaymentMethod
+		}
+		topUp.ReferralPaymentVerified = payment.Production
+		topUp.CompleteTime = common.GetTimestamp()
+		topUp.Status = common.TopUpStatusSuccess
+		if err := tx.Save(topUp).Error; err != nil {
+			return err
+		}
+
+		quotaDecimal := decimal.NewFromInt(topUp.Amount).Mul(decimal.NewFromFloat(common.QuotaPerUnit)).Floor()
+		var quotaClamp *common.QuotaClamp
+		quotaToAdd, quotaClamp = common.QuotaFromDecimalChecked(quotaDecimal)
+		if quotaClamp != nil {
+			return errors.New("充值额度超出支持范围")
+		}
+		if quotaToAdd <= 0 {
+			return errors.New("无效的充值额度")
+		}
+		if err := tx.Model(&User{}).Where("id = ?", topUp.UserId).Update("quota", gorm.Expr("quota + ?", quotaToAdd)).Error; err != nil {
+			return err
+		}
+
+		var rewardErr error
+		rewardGranted, rewardInviterId, rewardQuota, rewardErr = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		if rewardErr != nil {
+			return rewardErr
+		}
+		completed = true
+		return nil
+	})
+	if err != nil {
+		common.SysError("epay topup failed: " + err.Error())
+		return err
+	}
+	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {
+		common.SysError("epay topup cache refresh failed: " + err.Error())
+		return err
+	}
+	if !completed {
+		return nil
+	}
+
+	RecordTopupLog(topUp.UserId, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%s %s", logger.FormatQuota(quotaToAdd), payment.PaidAmountForLog(), payment.Currency), callerIp, topUp.PaymentMethod, PaymentProviderEpay)
+	logReferralRewardGrant(rewardGranted, rewardInviterId, topUp.UserId, topUp.TradeNo, rewardQuota, payment)
 	return nil
 }
 
@@ -384,17 +502,24 @@ func ManualCompleteTopUp(tradeNo string, callerIp string) error {
 	if err != nil {
 		return err
 	}
+	if err := invalidateTopUpUserCache(userId); err != nil {
+		common.SysError("manual topup cache refresh failed: " + err.Error())
+	}
 
 	// 事务外记录日志，避免阻塞
 	RecordTopupLog(userId, fmt.Sprintf("管理员补单成功，充值金额: %v，支付金额：%f", logger.FormatQuota(quotaToAdd), payMoney), callerIp, paymentMethod, "admin")
 	return nil
 }
-func RechargeCreem(referenceId string, customerEmail string, customerName string, callerIp string) (err error) {
+func RechargeCreem(referenceId string, customerEmail string, customerName string, callerIp string, payment VerifiedPayment) (err error) {
 	if referenceId == "" {
 		return errors.New("未提供支付单号")
 	}
 
 	var quota int64
+	completed := false
+	var rewardGranted bool
+	var rewardInviterId int
+	var rewardQuota int
 	topUp := &TopUp{}
 
 	refCol := "`trade_no`"
@@ -412,10 +537,14 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 			return ErrPaymentMethodMismatch
 		}
 
+		if topUp.Status == common.TopUpStatusSuccess {
+			return nil
+		}
 		if topUp.Status != common.TopUpStatusPending {
 			return errors.New("充值订单状态错误")
 		}
 
+		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
 		err = tx.Save(topUp).Error
@@ -451,6 +580,12 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 			return err
 		}
 
+		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		if err != nil {
+			return err
+		}
+		completed = true
+
 		return nil
 	})
 
@@ -458,18 +593,30 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 		common.SysError("creem topup failed: " + err.Error())
 		return errors.New("充值失败，请稍后重试")
 	}
+	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {
+		common.SysError("creem topup cache refresh failed: " + err.Error())
+		return errors.New("充值已入账，额度缓存刷新失败，请稍后重试")
+	}
 
-	RecordTopupLog(topUp.UserId, fmt.Sprintf("使用Creem充值成功，充值额度: %v，支付金额：%.2f", quota, topUp.Money), callerIp, topUp.PaymentMethod, PaymentMethodCreem)
+	if !completed {
+		return nil
+	}
+
+	RecordTopupLog(topUp.UserId, fmt.Sprintf("使用Creem充值成功，充值额度: %v，支付金额：%s %s", quota, payment.PaidAmountForLog(), payment.Currency), callerIp, topUp.PaymentMethod, PaymentMethodCreem)
+	logReferralRewardGrant(rewardGranted, rewardInviterId, topUp.UserId, topUp.TradeNo, rewardQuota, payment)
 
 	return nil
 }
 
-func RechargeWaffo(tradeNo string, callerIp string) (err error) {
+func RechargeWaffo(tradeNo string, callerIp string, payment VerifiedPayment) (err error) {
 	if tradeNo == "" {
 		return errors.New("未提供支付单号")
 	}
 
 	var quotaToAdd int
+	var rewardGranted bool
+	var rewardInviterId int
+	var rewardQuota int
 	topUp := &TopUp{}
 
 	refCol := "`trade_no`"
@@ -502,6 +649,7 @@ func RechargeWaffo(tradeNo string, callerIp string) (err error) {
 			return errors.New("无效的充值额度")
 		}
 
+		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
 		if err := tx.Save(topUp).Error; err != nil {
@@ -512,6 +660,11 @@ func RechargeWaffo(tradeNo string, callerIp string) (err error) {
 			return err
 		}
 
+		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
@@ -519,20 +672,28 @@ func RechargeWaffo(tradeNo string, callerIp string) (err error) {
 		common.SysError("waffo topup failed: " + err.Error())
 		return errors.New("充值失败，请稍后重试")
 	}
+	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {
+		common.SysError("waffo topup cache refresh failed: " + err.Error())
+		return errors.New("充值已入账，额度缓存刷新失败，请稍后重试")
+	}
 
 	if quotaToAdd > 0 {
-		RecordTopupLog(topUp.UserId, fmt.Sprintf("Waffo充值成功，充值额度: %v，支付金额: %.2f", logger.FormatQuota(quotaToAdd), topUp.Money), callerIp, topUp.PaymentMethod, PaymentMethodWaffo)
+		RecordTopupLog(topUp.UserId, fmt.Sprintf("Waffo充值成功，充值额度: %v，支付金额: %s %s", logger.FormatQuota(quotaToAdd), payment.PaidAmountForLog(), payment.Currency), callerIp, topUp.PaymentMethod, PaymentMethodWaffo)
+		logReferralRewardGrant(rewardGranted, rewardInviterId, topUp.UserId, topUp.TradeNo, rewardQuota, payment)
 	}
 
 	return nil
 }
 
-func RechargeWaffoPancake(tradeNo string) (err error) {
+func RechargeWaffoPancake(tradeNo string, callerIp string, payment VerifiedPayment) (err error) {
 	if tradeNo == "" {
 		return errors.New("未提供支付单号")
 	}
 
 	var quotaToAdd int
+	var rewardGranted bool
+	var rewardInviterId int
+	var rewardQuota int
 	topUp := &TopUp{}
 
 	refCol := "`trade_no`"
@@ -563,6 +724,7 @@ func RechargeWaffoPancake(tradeNo string) (err error) {
 			return errors.New("无效的充值额度")
 		}
 
+		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
 		if err := tx.Save(topUp).Error; err != nil {
@@ -573,6 +735,11 @@ func RechargeWaffoPancake(tradeNo string) (err error) {
 			return err
 		}
 
+		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
@@ -580,9 +747,14 @@ func RechargeWaffoPancake(tradeNo string) (err error) {
 		common.SysError("waffo pancake topup failed: " + err.Error())
 		return errors.New("充值失败，请稍后重试")
 	}
+	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {
+		common.SysError("waffo pancake topup cache refresh failed: " + err.Error())
+		return errors.New("充值已入账，额度缓存刷新失败，请稍后重试")
+	}
 
 	if quotaToAdd > 0 {
-		RecordLog(topUp.UserId, LogTypeTopup, fmt.Sprintf("Waffo Pancake充值成功，充值额度: %v，支付金额: %.2f", logger.FormatQuota(quotaToAdd), topUp.Money))
+		RecordTopupLog(topUp.UserId, fmt.Sprintf("Waffo Pancake充值成功，充值额度: %v，支付金额: %s %s", logger.FormatQuota(quotaToAdd), payment.PaidAmountForLog(), payment.Currency), callerIp, topUp.PaymentMethod, PaymentMethodWaffoPancake)
+		logReferralRewardGrant(rewardGranted, rewardInviterId, topUp.UserId, topUp.TradeNo, rewardQuota, payment)
 	}
 
 	return nil

@@ -61,6 +61,8 @@ type WaffoPancakeWebhookData struct {
 	Currency                      string
 	Amount                        string
 	TaxAmount                     string
+	Total                         string
+	PaymentID                     string
 	ProductName                   string
 	MerchantProvidedBuyerIdentity string
 }
@@ -179,6 +181,14 @@ func VerifyConfiguredWaffoPancakeWebhook(payload string, signatureHeader string)
 	if evt.Data.OrderMerchantExternalID != nil {
 		externalID = *evt.Data.OrderMerchantExternalID
 	}
+	total := ""
+	if evt.Data.Total != nil {
+		total = *evt.Data.Total
+	}
+	paymentID := ""
+	if evt.Data.PaymentID != nil {
+		paymentID = *evt.Data.PaymentID
+	}
 	return &WaffoPancakeWebhookEvent{
 		ID:        evt.ID,
 		Timestamp: evt.Timestamp,
@@ -193,6 +203,8 @@ func VerifyConfiguredWaffoPancakeWebhook(payload string, signatureHeader string)
 			Currency:                      evt.Data.Currency,
 			Amount:                        evt.Data.Amount,
 			TaxAmount:                     evt.Data.TaxAmount,
+			Total:                         total,
+			PaymentID:                     paymentID,
 			ProductName:                   evt.Data.ProductName,
 			MerchantProvidedBuyerIdentity: identity,
 		},

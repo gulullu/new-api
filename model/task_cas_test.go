@@ -42,6 +42,7 @@ func TestMain(m *testing.M) {
 		&ExternalIdentityClaim{},
 		&Token{},
 		&PasskeyCredential{},
+		&Option{},
 		&TwoFA{},
 		&TwoFABackupCode{},
 		&Log{},
@@ -49,6 +50,8 @@ func TestMain(m *testing.M) {
 		&QuotaData{},
 		&Ability{},
 		&TopUp{},
+		&ReferralPaymentState{},
+		&ReferralRewardClaim{},
 		&SubscriptionPlan{},
 		&SubscriptionOrder{},
 		&UserSubscription{},
@@ -72,6 +75,7 @@ func truncateTables(t *testing.T) {
 		DB.Exec("DELETE FROM external_identity_claims")
 		DB.Exec("DELETE FROM user_sessions")
 		DB.Exec("DELETE FROM passkey_credentials")
+		DB.Exec("DELETE FROM options")
 		DB.Exec("DELETE FROM two_fa_backup_codes")
 		DB.Exec("DELETE FROM two_fas")
 		DB.Exec("DELETE FROM tokens")
@@ -82,6 +86,8 @@ func truncateTables(t *testing.T) {
 		DB.Exec("DELETE FROM quota_data")
 		DB.Exec("DELETE FROM abilities")
 		DB.Exec("DELETE FROM top_ups")
+		DB.Exec("DELETE FROM referral_payment_states")
+		DB.Exec("DELETE FROM referral_reward_claims")
 		DB.Exec("DELETE FROM subscription_orders")
 		DB.Exec("DELETE FROM subscription_plans")
 		DB.Exec("DELETE FROM user_subscriptions")

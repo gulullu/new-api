@@ -9,13 +9,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting"
-	"io"
-	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thanhpk/randstr"
@@ -220,10 +222,49 @@ type CreemWebhookEvent struct {
 			UpdatedAt string `json:"updated_at"`
 			Mode      string `json:"mode"`
 		} `json:"customer"`
-		Status   string            `json:"status"`
+		Status      string `json:"status"`
+		Transaction struct {
+			Id   string `json:"id"`
+			Mode string `json:"mode"`
+		} `json:"transaction"`
 		Metadata map[string]string `json:"metadata"`
 		Mode     string            `json:"mode"`
 	} `json:"object"`
+}
+
+var errInvalidCreemWebhookMode = errors.New("invalid Creem webhook mode")
+
+func validateCreemWebhookMode(modes ...string) (bool, error) {
+	modeFound := false
+	production := false
+	for _, rawMode := range modes {
+		mode := strings.ToLower(strings.TrimSpace(rawMode))
+		if mode == "" {
+			continue
+		}
+
+		currentProduction := false
+		switch mode {
+		case "live", "prod", "production":
+			currentProduction = true
+		case "test", "sandbox", "local":
+			currentProduction = false
+		default:
+			return false, fmt.Errorf("%w: unsupported signed mode %q", errInvalidCreemWebhookMode, mode)
+		}
+		if modeFound && currentProduction != production {
+			return false, fmt.Errorf("%w: conflicting signed modes", errInvalidCreemWebhookMode)
+		}
+		modeFound = true
+		production = currentProduction
+	}
+	if !modeFound {
+		return false, fmt.Errorf("%w: signed mode is missing", errInvalidCreemWebhookMode)
+	}
+	if production == setting.CreemTestMode {
+		return false, fmt.Errorf("%w: signed mode does not match configured environment", errInvalidCreemWebhookMode)
+	}
+	return production, nil
 }
 
 func CreemWebhook(c *gin.Context) {
@@ -276,14 +317,65 @@ func CreemWebhook(c *gin.Context) {
 	switch webhookEvent.EventType {
 	case "checkout.completed":
 		handleCheckoutCompleted(c, &webhookEvent)
+	case "refund.created", "dispute.created":
+		handleCreemReferralReversal(c, &webhookEvent)
 	default:
 		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem webhook 忽略事件 event_type=%s event_id=%s", webhookEvent.EventType, webhookEvent.Id))
 		c.Status(http.StatusOK)
 	}
 }
 
+func handleCreemReferralReversal(c *gin.Context, event *CreemWebhookEvent) {
+	production, err := validateCreemWebhookMode(event.Object.Mode, event.Object.Transaction.Mode)
+	if err != nil {
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem 退款/拒付事件环境校验失败 event_id=%s event_type=%s error=%q", event.Id, event.EventType, err.Error()))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	if !production {
+		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem 测试环境退款/拒付事件不撤销正式邀请返利 event_id=%s event_type=%s", event.Id, event.EventType))
+		c.Status(http.StatusOK)
+		return
+	}
+
+	eventId := strings.TrimSpace(event.Id)
+	transactionId := strings.TrimSpace(event.Object.Transaction.Id)
+	if eventId == "" || transactionId == "" {
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem 退款/拒付事件缺少必要标识 event_id=%s event_type=%s transaction_id=%s", eventId, event.EventType, transactionId))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	outcome, err := model.ReverseReferralRewardByGatewayReference(
+		model.PaymentProviderCreem,
+		transactionId,
+		eventId,
+		event.EventType,
+	)
+	if err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem 退款/拒付邀请返利撤销失败 event_id=%s event_type=%s transaction_id=%s error=%q", eventId, event.EventType, transactionId, err.Error()))
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem 退款/拒付邀请返利撤销处理完成 event_id=%s event_type=%s transaction_id=%s changed=%t claim_id=%d", eventId, event.EventType, transactionId, outcome.Changed, outcome.ClaimId))
+	c.Status(http.StatusOK)
+}
+
 // 处理支付完成事件
 func handleCheckoutCompleted(c *gin.Context, event *CreemWebhookEvent) {
+	production, err := validateCreemWebhookMode(
+		event.Object.Mode,
+		event.Object.Order.Mode,
+		event.Object.Product.Mode,
+		event.Object.Customer.Mode,
+	)
+	if err != nil {
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem 支付完成事件环境校验失败 event_id=%s request_id=%s error=%q", event.Id, event.Object.RequestId, err.Error()))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
 	// 验证订单状态
 	if event.Object.Order.Status != "paid" {
 		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem 订单状态未支付，忽略处理 request_id=%s order_id=%s order_status=%s", event.Object.RequestId, event.Object.Order.Id, event.Object.Order.Status))
@@ -329,9 +421,9 @@ func handleCheckoutCompleted(c *gin.Context, event *CreemWebhookEvent) {
 		return
 	}
 
-	if topUp.Status != common.TopUpStatusPending {
+	if topUp.Status != common.TopUpStatusPending && topUp.Status != common.TopUpStatusSuccess {
 		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem 充值订单状态非 pending，忽略处理 trade_no=%s status=%s creem_order_id=%s", referenceId, topUp.Status, event.Object.Order.Id))
-		c.Status(http.StatusOK) // 已处理过的订单，返回成功避免重复处理
+		c.Status(http.StatusOK)
 		return
 	}
 
@@ -347,7 +439,20 @@ func handleCheckoutCompleted(c *gin.Context, event *CreemWebhookEvent) {
 		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem 回调客户姓名为空 trade_no=%s creem_order_id=%s", referenceId, event.Object.Order.Id))
 	}
 
-	err := model.RechargeCreem(referenceId, customerEmail, customerName, c.ClientIP())
+	payment, err := model.NewVerifiedMinorUnitPayment(
+		int64(event.Object.Order.AmountPaid),
+		event.Object.Order.Currency,
+		event.Id,
+		event.Object.Order.Transaction,
+		production,
+	)
+	if err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem webhook 实付金额无效 trade_no=%s creem_order_id=%s amount_paid=%d currency=%s error=%q", referenceId, event.Object.Order.Id, event.Object.Order.AmountPaid, event.Object.Order.Currency, err.Error()))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	err = model.RechargeCreem(referenceId, customerEmail, customerName, c.ClientIP(), payment)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem 充值处理失败 trade_no=%s creem_order_id=%s client_ip=%s error=%q", referenceId, event.Object.Order.Id, c.ClientIP(), err.Error()))
 		c.AbortWithStatus(http.StatusInternalServerError)

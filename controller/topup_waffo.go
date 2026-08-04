@@ -381,10 +381,60 @@ func WaffoWebhook(c *gin.Context) {
 		}
 		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo webhook 验签并解析成功 event_type=%s merchant_order_id=%s order_status=%s client_ip=%s", event.EventType, payload.Result.MerchantOrderID, payload.Result.OrderStatus, c.ClientIP()))
 		handleWaffoPayment(c, wh, &payload.Result.PaymentNotificationResult)
+	case core.EventRefund:
+		var payload core.RefundNotification
+		if err := common.Unmarshal(bodyBytes, &payload); err != nil || payload.Result == nil {
+			logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo 退款回调载荷解析失败 event_type=%s client_ip=%s error=%q body=%q", event.EventType, c.ClientIP(), err, bodyStr))
+			sendWaffoWebhookResponse(c, wh, false, "invalid refund payload")
+			return
+		}
+		result := payload.Result
+		outcome, err := reverseWaffoReferralReward(result, !setting.WaffoSandbox)
+		if err != nil {
+			logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo 退款撤销邀请返利失败 refund_request_id=%s original_payment_request_id=%s client_ip=%s error=%q", result.RefundRequestID, result.OrigPaymentRequestID, c.ClientIP(), err.Error()))
+			sendWaffoWebhookResponse(c, wh, false, "failed to reverse referral reward")
+			return
+		}
+		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo 退款撤销邀请返利处理完成 refund_request_id=%s original_payment_request_id=%s refund_status=%s production=%t claim_id=%d changed=%t client_ip=%s", result.RefundRequestID, result.OrigPaymentRequestID, result.RefundStatus, !setting.WaffoSandbox, outcome.ClaimId, outcome.Changed, c.ClientIP()))
+		sendWaffoWebhookResponse(c, wh, true, "")
 	default:
 		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo webhook 忽略事件 event_type=%s client_ip=%s", event.EventType, c.ClientIP()))
 		sendWaffoWebhookResponse(c, wh, true, "")
 	}
+}
+
+// reverseWaffoReferralReward maps a verified Waffo refund to the payment
+// reference recorded on the referral claim. A first payment that is partially
+// or fully refunded no longer qualifies for the referral reward.
+func reverseWaffoReferralReward(result *core.RefundNotificationResult, production bool) (model.ReferralRewardReversalResult, error) {
+	if result == nil {
+		return model.ReferralRewardReversalResult{}, errors.New("missing Waffo refund result")
+	}
+	if !production || (result.RefundStatus != core.RefundStatusPartiallyRefunded && result.RefundStatus != core.RefundStatusFullyRefunded) {
+		return model.ReferralRewardReversalResult{}, nil
+	}
+
+	gatewayReference := strings.TrimSpace(result.OrigPaymentRequestID)
+	if gatewayReference == "" {
+		return model.ReferralRewardReversalResult{}, errors.New("missing original payment request id")
+	}
+	reversalEventID := strings.TrimSpace(result.RefundRequestID)
+	if reversalEventID == "" {
+		reversalEventID = strings.TrimSpace(result.AcquiringRefundOrderID)
+	}
+	if reversalEventID == "" {
+		reversalEventID = strings.TrimSpace(result.MerchantRefundOrderID)
+	}
+	reason := "Waffo " + result.RefundStatus
+	if refundReason := strings.TrimSpace(result.RefundReason); refundReason != "" {
+		reason += ": " + refundReason
+	}
+	return model.ReverseReferralRewardByGatewayReference(
+		model.PaymentProviderWaffo,
+		gatewayReference,
+		reversalEventID,
+		reason,
+	)
 }
 
 // handleWaffoPayment 处理支付完成通知
@@ -408,7 +458,20 @@ func handleWaffoPayment(c *gin.Context, wh *core.WebhookHandler, result *core.Pa
 	LockOrder(merchantOrderId)
 	defer UnlockOrder(merchantOrderId)
 
-	if err := model.RechargeWaffo(merchantOrderId, c.ClientIP()); err != nil {
+	payment, err := model.NewVerifiedPayment(
+		result.OrderAmount,
+		result.OrderCurrency,
+		result.PaymentRequestID,
+		result.AcquiringOrderID,
+		!setting.WaffoSandbox,
+	)
+	if err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo webhook 实付金额无效 trade_no=%s order_amount=%q order_currency=%q client_ip=%s error=%q", merchantOrderId, result.OrderAmount, result.OrderCurrency, c.ClientIP(), err.Error()))
+		sendWaffoWebhookResponse(c, wh, false, "invalid verified payment amount")
+		return
+	}
+
+	if err := model.RechargeWaffo(merchantOrderId, c.ClientIP(), payment); err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo 充值处理失败 trade_no=%s client_ip=%s error=%q", merchantOrderId, c.ClientIP(), err.Error()))
 		sendWaffoWebhookResponse(c, wh, false, err.Error())
 		return

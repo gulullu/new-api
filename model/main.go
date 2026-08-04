@@ -272,6 +272,8 @@ func migrateDB() error {
 		&Log{},
 		&Midjourney{},
 		&TopUp{},
+		&ReferralPaymentState{},
+		&ReferralRewardClaim{},
 		&QuotaData{},
 		&Task{},
 		&Model{},
@@ -294,6 +296,9 @@ func migrateDB() error {
 		&AuthzRole{},
 	)
 	if err != nil {
+		return err
+	}
+	if err := InitializeReferralPaymentVerification(); err != nil {
 		return err
 	}
 	if err := InitializeUserAuthVersions(); err != nil {
@@ -335,6 +340,8 @@ func migrateDBFast() error {
 		{&Log{}, "Log"},
 		{&Midjourney{}, "Midjourney"},
 		{&TopUp{}, "TopUp"},
+		{&ReferralPaymentState{}, "ReferralPaymentState"},
+		{&ReferralRewardClaim{}, "ReferralRewardClaim"},
 		{&QuotaData{}, "QuotaData"},
 		{&Task{}, "Task"},
 		{&Model{}, "Model"},
@@ -376,6 +383,9 @@ func migrateDBFast() error {
 		if err != nil {
 			return err
 		}
+	}
+	if err := InitializeReferralPaymentVerification(); err != nil {
+		return err
 	}
 	if err := InitializeUserAuthVersions(); err != nil {
 		return err
