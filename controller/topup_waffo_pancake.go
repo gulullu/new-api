@@ -107,6 +107,7 @@ type saveWaffoPancakeRequest struct {
 	MerchantID string `json:"merchant_id"`
 	PrivateKey string `json:"private_key"`
 	ReturnURL  string `json:"return_url"`
+	Currency   string `json:"currency"`
 	StoreID    string `json:"store_id"`
 	ProductID  string `json:"product_id"`
 }
@@ -115,9 +116,10 @@ type createWaffoPancakePairRequest struct {
 	MerchantID string `json:"merchant_id"`
 	PrivateKey string `json:"private_key"`
 	ReturnURL  string `json:"return_url"`
+	Currency   string `json:"currency"`
 }
 
-// SaveWaffoPancake atomically persists all five operator-controlled fields.
+// SaveWaffoPancake atomically persists all six operator-controlled fields.
 // Catalog / pair endpoints are transient — only this one writes the OptionMap.
 func SaveWaffoPancake(c *gin.Context) {
 	var req saveWaffoPancakeRequest
@@ -130,6 +132,7 @@ func SaveWaffoPancake(c *gin.Context) {
 		req.MerchantID,
 		req.PrivateKey,
 		req.ReturnURL,
+		req.Currency,
 		req.StoreID,
 		req.ProductID,
 	); err != nil {
@@ -178,8 +181,17 @@ func CreateWaffoPancakePair(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 凭证未配置"})
 		return
 	}
+	currency := strings.TrimSpace(req.Currency)
+	if currency == "" {
+		currency = setting.WaffoPancakeCurrency
+	}
+	currency, err := setting.NormalizeWaffoPancakeCurrency(currency)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 币种无效"})
+		return
+	}
 	result, err := service.CreateWaffoPancakePrimaryPair(
-		c.Request.Context(), merchantID, privateKey, req.ReturnURL,
+		c.Request.Context(), merchantID, privateKey, currency, req.ReturnURL,
 	)
 	if err != nil {
 		orphan := result != nil && result.OrphanStore
@@ -370,6 +382,12 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
 		return
 	}
+	currency, err := setting.GetWaffoPancakeCurrency()
+	if err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 币种配置无效 user_id=%d error=%q", id, err.Error()))
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 币种配置无效"})
+		return
+	}
 
 	tradeNo := fmt.Sprintf("WAFFO_PANCAKE-%d-%d-%s", id, time.Now().UnixMilli(), randstr.String(6))
 	topUp := &model.TopUp{
@@ -391,6 +409,7 @@ func RequestWaffoPancakePay(c *gin.Context) {
 	expiresInSeconds := 45 * 60
 	session, err := service.CreateWaffoPancakeCheckoutSession(c.Request.Context(), &service.WaffoPancakeCreateSessionParams{
 		ProductID:     setting.WaffoPancakeProductID,
+		Currency:      currency,
 		BuyerIdentity: getWaffoPancakeBuyerIdentity(user),
 		PriceSnapshot: &service.WaffoPancakePriceSnapshot{
 			Amount:      formatWaffoPancakeAmount(payMoney),

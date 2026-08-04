@@ -4615,6 +4615,7 @@
     "Three calls made by the same vip user. Assume the base price of one call is 10.": "Ba cuộc gọi của cùng một người dùng vip. Giả sử giá cơ bản một cuộc gọi là 10.",
     "Three groups; the override matrix has exactly one cell filled in (highlighted).": "Ba nhóm; ma trận ghi đè chỉ có đúng một ô được điền (được tô sáng).",
     "Three steps to get started": "Ba bước để bắt đầu",
+    "Three-letter ISO 4217 code used for Waffo Pancake checkout and products, such as CNY or USD.": "Mã tiền tệ ISO 4217 gồm ba chữ cái dùng cho thanh toán và sản phẩm Waffo Pancake, chẳng hạn CNY hoặc USD.",
     "Throughput": "Thông lượng",
     "Throughput by group": "Thông lượng theo nhóm",
     "Throughput short": "TPS",
