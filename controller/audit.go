@@ -108,6 +108,23 @@ func recordManageAuditFor(c *gin.Context, targetUserId int, action string, param
 	markAuditLogged(c)
 }
 
+// recordTargetQuotaAudit records an administrator balance adjustment against
+// the affected user so it is visible in that user's own logs. Operator identity
+// and source IP remain in admin_info, which non-admin log responses strip.
+func recordTargetQuotaAudit(c *gin.Context, targetUserId int, action string, params map[string]interface{}) {
+	if params == nil {
+		params = map[string]interface{}{}
+	}
+	operatorUserId := c.GetInt("id")
+	if _, ok := params["target_user_id"]; !ok && targetUserId > 0 && targetUserId != operatorUserId {
+		params["target_user_id"] = targetUserId
+	}
+	adminInfo := auditOperatorInfo(c)
+	adminInfo["caller_ip"] = c.ClientIP()
+	model.RecordOperationAuditLog(targetUserId, auditContentEN(action, params), "", action, params, adminInfo, nil)
+	markAuditLogged(c)
+}
+
 // recordUserSecurityAudit 记录普通用户自己的安全敏感操作（如 passkey 绑定/解绑）。
 // 这类日志没有管理员操作者，不写 admin_info；同时不依赖 AdminAuth/RootAuth 的兜底。
 func recordUserSecurityAudit(c *gin.Context, userId int, action string, params map[string]interface{}) {
