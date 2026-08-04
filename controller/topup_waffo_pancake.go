@@ -487,8 +487,38 @@ func WaffoPancakeWebhook(c *gin.Context) {
 		return
 	}
 
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo Pancake webhook 验签成功 event_type=%s event_id=%s order_id=%s client_ip=%s", event.NormalizedEventType(), event.ID, event.Data.OrderID, c.ClientIP()))
-	if event.NormalizedEventType() != "order.completed" {
+	eventType := event.NormalizedEventType()
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo Pancake webhook 验签成功 event_type=%s event_id=%s order_id=%s client_ip=%s", eventType, event.ID, event.Data.OrderID, c.ClientIP()))
+	if eventType == "refund.succeeded" {
+		if expectedEnv != "prod" {
+			logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo Pancake 测试退款已验签，不撤销生产返利 event_id=%s order_id=%s client_ip=%s", event.ID, event.Data.OrderID, c.ClientIP()))
+			c.String(http.StatusOK, "OK")
+			return
+		}
+		tradeNo := strings.TrimSpace(event.Data.OrderMerchantExternalID)
+		if tradeNo == "" {
+			// A signed event without the business-side order identifier cannot be
+			// resolved by retrying; acknowledge it and leave an operator-visible log.
+			logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 退款回调缺少 orderMerchantExternalId event_id=%s order_id=%s client_ip=%s", event.ID, event.Data.OrderID, c.ClientIP()))
+			c.String(http.StatusOK, "OK")
+			return
+		}
+		// Pancake documents the delivery ID as the retry-stable idempotency key.
+		reversalEventID := strings.TrimSpace(event.ID)
+		if reversalEventID == "" {
+			reversalEventID = strings.TrimSpace(event.EventID)
+		}
+		outcome, err := reverseWaffoPancakeReferralReward(tradeNo, reversalEventID, expectedEnv == "prod")
+		if err != nil {
+			logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 退款撤销邀请返利失败 event_id=%s order_id=%s trade_no=%s client_ip=%s error=%q", event.ID, event.Data.OrderID, tradeNo, c.ClientIP(), err.Error()))
+			c.String(http.StatusInternalServerError, "retry")
+			return
+		}
+		logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo Pancake 退款撤销邀请返利处理完成 event_id=%s order_id=%s trade_no=%s claim_id=%d changed=%t client_ip=%s", event.ID, event.Data.OrderID, tradeNo, outcome.ClaimId, outcome.Changed, c.ClientIP()))
+		c.String(http.StatusOK, "OK")
+		return
+	}
+	if eventType != "order.completed" {
 		c.String(http.StatusOK, "OK")
 		return
 	}
@@ -536,7 +566,28 @@ func WaffoPancakeWebhook(c *gin.Context) {
 	LockOrder(tradeNo)
 	defer UnlockOrder(tradeNo)
 
-	if err := model.RechargeWaffoPancake(tradeNo); err != nil {
+	paidAmount := strings.TrimSpace(event.Data.Total)
+	if paidAmount == "" {
+		paidAmount = strings.TrimSpace(event.Data.Amount)
+	}
+	gatewayEventID := strings.TrimSpace(event.EventID)
+	if gatewayEventID == "" {
+		gatewayEventID = strings.TrimSpace(event.ID)
+	}
+	payment, err := model.NewVerifiedPayment(
+		paidAmount,
+		event.Data.Currency,
+		gatewayEventID,
+		event.Data.PaymentID,
+		expectedEnv == "prod",
+	)
+	if err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake webhook 实付金额无效 trade_no=%s event_id=%s amount=%q total=%q currency=%q client_ip=%s error=%q", tradeNo, event.ID, event.Data.Amount, event.Data.Total, event.Data.Currency, c.ClientIP(), err.Error()))
+		c.String(http.StatusInternalServerError, "retry")
+		return
+	}
+
+	if err := model.RechargeWaffoPancake(tradeNo, c.ClientIP(), payment); err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 充值处理失败 trade_no=%s event_id=%s order_id=%s client_ip=%s error=%q", tradeNo, event.ID, event.Data.OrderID, c.ClientIP(), err.Error()))
 		c.String(http.StatusInternalServerError, "retry")
 		return
@@ -544,4 +595,19 @@ func WaffoPancakeWebhook(c *gin.Context) {
 
 	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo Pancake 充值成功 trade_no=%s event_id=%s order_id=%s client_ip=%s", tradeNo, event.ID, event.Data.OrderID, c.ClientIP()))
 	c.String(http.StatusOK, "OK")
+}
+
+// reverseWaffoPancakeReferralReward is called only after webhook signature and
+// route/payload environment checks succeed. The provider-bound trade number
+// prevents a refund from affecting claims created by another gateway.
+func reverseWaffoPancakeReferralReward(tradeNo string, reversalEventID string, production bool) (model.ReferralRewardReversalResult, error) {
+	if !production {
+		return model.ReferralRewardReversalResult{}, nil
+	}
+	return model.ReverseReferralRewardByTradeNo(
+		model.PaymentProviderWaffoPancake,
+		tradeNo,
+		reversalEventID,
+		"Waffo Pancake refund.succeeded",
+	)
 }

@@ -156,6 +156,10 @@ export interface TopupInfo {
   payment_compliance_confirmed?: boolean
   /** Current compliance terms version */
   payment_compliance_terms_version?: string
+  /** Percentage of the invitee's first eligible payment awarded to the inviter */
+  referral_reward_percent?: number
+  /** Number of invitees whose first eligible payment earned a reward */
+  qualified_referrals?: number
 }
 
 /**
