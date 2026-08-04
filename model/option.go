@@ -112,6 +112,7 @@ func InitOptionMap() {
 	common.OptionMap["WaffoPancakeMerchantID"] = setting.WaffoPancakeMerchantID
 	common.OptionMap["WaffoPancakePrivateKey"] = setting.WaffoPancakePrivateKey
 	common.OptionMap["WaffoPancakeReturnURL"] = setting.WaffoPancakeReturnURL
+	common.OptionMap["WaffoPancakeCurrency"] = setting.WaffoPancakeCurrency
 	common.OptionMap["WaffoPancakeUnitPrice"] = strconv.FormatFloat(setting.WaffoPancakeUnitPrice, 'f', -1, 64)
 	common.OptionMap["WaffoPancakeMinTopUp"] = strconv.Itoa(setting.WaffoPancakeMinTopUp)
 	common.OptionMap["WaffoPancakeStoreID"] = setting.WaffoPancakeStoreID
@@ -212,6 +213,10 @@ func validateOptionValue(key string, value string) error {
 	if key == "MaxTokenAutoGroups" {
 		return setting.ValidateMaxTokenAutoGroups(value)
 	}
+	if key == "WaffoPancakeCurrency" {
+		_, err := setting.NormalizeWaffoPancakeCurrency(value)
+		return err
+	}
 	return nil
 }
 
@@ -278,6 +283,12 @@ func updateOptionMap(key string, value string) (err error) {
 		delete(common.OptionMap, key)
 		common.OptionMapRWMutex.Unlock()
 		return nil
+	}
+	if key == "WaffoPancakeCurrency" {
+		value, err = setting.NormalizeWaffoPancakeCurrency(value)
+		if err != nil {
+			return err
+		}
 	}
 	common.OptionMapRWMutex.Lock()
 	defer common.OptionMapRWMutex.Unlock()
@@ -487,6 +498,8 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.WaffoPancakePrivateKey = value
 	case "WaffoPancakeReturnURL":
 		setting.WaffoPancakeReturnURL = value
+	case "WaffoPancakeCurrency":
+		setting.WaffoPancakeCurrency = value
 	case "WaffoPancakeStoreID":
 		setting.WaffoPancakeStoreID = value
 	case "WaffoPancakeProductID":

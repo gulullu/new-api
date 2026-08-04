@@ -176,6 +176,7 @@ const paymentSchema = z.object({
   WaffoPancakeMerchantID: z.string(),
   WaffoPancakePrivateKey: z.string(),
   WaffoPancakeReturnURL: z.string(),
+  WaffoPancakeCurrency: z.string().regex(/^[A-Za-z]{3}$/),
 })
 
 type PaymentFormValues = z.infer<typeof paymentSchema>
@@ -457,6 +458,7 @@ export function PaymentSettingsSection({
       WaffoPancakeReturnURL: removeTrailingSlash(
         values.WaffoPancakeReturnURL.trim()
       ),
+      WaffoPancakeCurrency: values.WaffoPancakeCurrency.trim().toUpperCase(),
     }
 
     const initial = {
@@ -504,6 +506,8 @@ export function PaymentSettingsSection({
       WaffoPancakeReturnURL: removeTrailingSlash(
         initialRef.current.WaffoPancakeReturnURL.trim()
       ),
+      WaffoPancakeCurrency:
+        initialRef.current.WaffoPancakeCurrency.trim().toUpperCase(),
     }
 
     const updates: Array<{ key: string; value: string | number | boolean }> = []
@@ -705,6 +709,7 @@ export function PaymentSettingsSection({
       sanitized.WaffoPancakeMerchantID !== initial.WaffoPancakeMerchantID ||
       sanitized.WaffoPancakePrivateKey.length > 0 ||
       sanitized.WaffoPancakeReturnURL !== initial.WaffoPancakeReturnURL ||
+      sanitized.WaffoPancakeCurrency !== initial.WaffoPancakeCurrency ||
       waffoPancakeSelection.storeID !== waffoPancakeSavedBinding.storeID ||
       waffoPancakeSelection.productID !== waffoPancakeSavedBinding.productID
 
@@ -736,6 +741,7 @@ export function PaymentSettingsSection({
         merchantID: sanitized.WaffoPancakeMerchantID,
         privateKey: sanitized.WaffoPancakePrivateKey,
         returnURL: sanitized.WaffoPancakeReturnURL,
+        currency: sanitized.WaffoPancakeCurrency,
         storeID: waffoPancakeSelection.storeID,
         productID: waffoPancakeSelection.productID,
       })
@@ -794,6 +800,7 @@ export function PaymentSettingsSection({
     WaffoPancakeMerchantID: currentFormValues.WaffoPancakeMerchantID,
     WaffoPancakePrivateKey: currentFormValues.WaffoPancakePrivateKey,
     WaffoPancakeReturnURL: currentFormValues.WaffoPancakeReturnURL,
+    WaffoPancakeCurrency: currentFormValues.WaffoPancakeCurrency,
   }
 
   return (

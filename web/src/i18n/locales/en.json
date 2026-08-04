@@ -4615,6 +4615,7 @@
     "Three calls made by the same vip user. Assume the base price of one call is 10.": "Three calls made by the same vip user. Assume the base price of one call is 10.",
     "Three groups; the override matrix has exactly one cell filled in (highlighted).": "Three groups; the override matrix has exactly one cell filled in (highlighted).",
     "Three steps to get started": "Three steps to get started",
+    "Three-letter ISO 4217 code used for Waffo Pancake checkout and products, such as CNY or USD.": "Three-letter ISO 4217 code used for Waffo Pancake checkout and products, such as CNY or USD.",
     "Throughput": "Throughput",
     "Throughput by group": "Throughput by group",
     "Throughput short": "TPS",
