@@ -164,16 +164,16 @@ describe('affiliate rewards card layout', () => {
     await unmountCard(rendered)
   })
 
-  test('shows qualified referrals instead of the legacy registration count', async () => {
+  test('shows eligible payments instead of the legacy registration count', async () => {
     await i18n.changeLanguage('en')
-    const rendered = await renderCard({ qualifiedReferrals: 2 })
+    const rendered = await renderCard({ qualifiedPayments: 2 })
 
-    const qualified = rendered.container.querySelector(
-      '[data-referral-metric="qualified-referrals"]'
+    const rewarded = rendered.container.querySelector(
+      '[data-referral-metric="qualified-payments"]'
     )
-    assert.ok(qualified)
-    assert.equal(qualified.textContent?.includes('2'), true)
-    assert.equal(qualified.textContent?.includes('99'), false)
+    assert.ok(rewarded)
+    assert.equal(rewarded.textContent?.includes('2'), true)
+    assert.equal(rewarded.textContent?.includes('99'), false)
 
     await unmountCard(rendered)
   })
@@ -214,7 +214,7 @@ describe('affiliate rewards card layout', () => {
     await i18n.changeLanguage('zh')
     const rendered = await renderCard({
       rewardPercent: 3,
-      qualifiedReferrals: 1,
+      qualifiedPayments: 1,
     })
 
     const rules = rendered.container.querySelector('[data-referral-rules]')
@@ -223,7 +223,7 @@ describe('affiliate rewards card layout', () => {
     assert.equal(rules.textContent?.includes('仅注册不会获得赠送额度'), true)
     assert.equal(
       rules.textContent?.includes(
-        '充值面额、优惠前金额及其他结算币种均不作为计算基数'
+        '充值面额、优惠前金额及不支持的结算币种均不作为计算基数'
       ),
       true
     )
@@ -245,12 +245,13 @@ describe('affiliate rewards card layout', () => {
 
   test('keeps the referral rules translated in every supported Chinese locale', () => {
     const keys = [
-      'Invite friends and earn {{rewardRate}} of the amount they actually pay on their first eligible top-up.',
+      'Invite friends and earn {{rewardRate}} of the amount they actually pay on every eligible top-up.',
       'How referral rewards work',
       'Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}',
       'Invitees must register through your referral link. Registration alone grants neither free credit nor a referral reward.',
-      'Only the payment processor-confirmed amount actually paid in CNY or USD is used. The top-up face value, pre-discount amount, and other settlement currencies are not used as the reward basis.',
-      'Qualified referrals',
+      'Only the payment processor-confirmed amount actually paid in a supported fiat currency is used. The top-up face value, pre-discount amount, and unsupported settlement currencies are not used as the reward basis.',
+      'Eligible payments',
+      'Number of eligible referred payments',
       'Your Referral Link',
     ]
 

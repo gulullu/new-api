@@ -113,7 +113,7 @@ export function ReferralRewardsTable() {
               className='text-muted-foreground mt-1 text-xs leading-relaxed [overflow-wrap:anywhere] break-words whitespace-normal sm:text-sm'
             >
               {t(
-                "Review rewards earned from referred users' first eligible paid top-up."
+                "Review rewards earned from referred users' eligible paid top-ups."
               )}
             </p>
           </div>
@@ -135,7 +135,7 @@ export function ReferralRewardsTable() {
           isFetching={isFetching}
           emptyTitle={t('No Referral Rewards Yet')}
           emptyDescription={t(
-            "Rewards will appear here after a referred user's first eligible paid top-up is confirmed."
+            "Rewards will appear here after a referred user's eligible paid top-up is confirmed."
           )}
           skeletonKeyPrefix='referral-reward-skeleton'
           applyHeaderSize

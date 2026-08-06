@@ -149,7 +149,7 @@ export function UserInfoDialog({
                 )}
                 {userInfo.aff_count !== undefined && (
                   <InfoItem
-                    label={t('Invited Users')}
+                    label={t('Eligible payments')}
                     value={formatCompactNumber(userInfo.aff_count)}
                   />
                 )}

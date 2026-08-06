@@ -35,7 +35,7 @@ interface AffiliateRewardsCardProps {
   affiliateLink: string
   onTransfer: () => void
   rewardPercent?: number
-  qualifiedReferrals?: number
+  qualifiedPayments?: number
   complianceConfirmed?: boolean
   loading?: boolean
 }
@@ -45,7 +45,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
   const rulesHeadingId = useId()
   const referralLinkId = useId()
   const rewardPercent = props.rewardPercent ?? 3
-  const qualifiedReferrals = props.qualifiedReferrals ?? 0
+  const qualifiedPayments = props.qualifiedPayments ?? 0
   const complianceConfirmed = props.complianceConfirmed ?? true
   const rewardRate = `${rewardPercent}%`
 
@@ -96,7 +96,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
                 data-referral-summary
               >
                 {t(
-                  'Invite friends and earn {{rewardRate}} of the amount they actually pay on their first eligible top-up.',
+                  'Invite friends and earn {{rewardRate}} of the amount they actually pay on every eligible top-up.',
                   { rewardRate }
                 )}
               </p>
@@ -116,9 +116,9 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
                 formatQuota(props.user?.aff_history_quota ?? 0),
               ],
               [
-                'qualified-referrals',
-                t('Qualified referrals'),
-                String(qualifiedReferrals),
+                'qualified-payments',
+                t('Eligible payments'),
+                String(qualifiedPayments),
               ],
             ].map(([metric, label, value]) => (
               <div
@@ -208,13 +208,13 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
               [
                 t('When the reward is issued'),
                 t(
-                  'Each invitee can generate one reward only, after their first eligible paid top-up is successfully confirmed.'
+                  'Every eligible paid top-up from a referred user earns a reward after the payment is successfully confirmed.'
                 ),
               ],
               [
                 t('How the amount is calculated'),
                 t(
-                  'Only the payment processor-confirmed amount actually paid in CNY or USD is used. The top-up face value, pre-discount amount, and other settlement currencies are not used as the reward basis.'
+                  'Only the payment processor-confirmed amount actually paid in a supported fiat currency is used. The top-up face value, pre-discount amount, and unsupported settlement currencies are not used as the reward basis.'
                 ),
               ],
               [

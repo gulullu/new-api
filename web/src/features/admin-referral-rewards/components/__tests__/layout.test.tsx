@@ -22,7 +22,7 @@ import { after, describe, test } from 'node:test'
 
 import { Window } from 'happy-dom'
 
-import type { ReferralReward } from '../../types'
+import type { AdminReferralReward } from '../../types'
 
 const domWindow = new Window()
 const domGlobals = [
@@ -71,8 +71,8 @@ const { act } = React
 const { createRoot } = await import('react-dom/client')
 const { createInstance } = await import('i18next')
 const { I18nextProvider, initReactI18next } = await import('react-i18next')
-const { ReferralRewardMobileCard } =
-  await import('../referral-rewards-mobile-list')
+const { AdminReferralRewardMobileCard } =
+  await import('../admin-referral-rewards-mobile-list')
 
 const i18n = createInstance()
 await i18n.use(initReactI18next).init({
@@ -86,20 +86,23 @@ const reactTestGlobals = globalThis as typeof globalThis & {
 }
 reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 
-const reward: ReferralReward = {
-  id: 7,
-  invitee_label:
-    'g***u@gmail.com-with-an-intentionally-long-privacy-safe-label',
-  payment_provider: 'waffo_pancake_with_a_long_future_provider_suffix',
+const reward: AdminReferralReward = {
+  id: 9,
+  inviter_id: 101,
+  inviter_label: 'l***r-with-an-intentionally-long-masked-name',
+  invitee_id: 202,
+  invitee_label: 'g***u@example.com-with-an-intentionally-long-masked-email',
+  payment_provider: 'waffo_pancake',
   paid_amount: '90',
-  paid_currency: 'CNY',
-  reward_quota: 1_350_000,
+  paid_currency: 'USD',
   rate_basis_points: 300,
+  reward_quota: 1_350_000,
+  reversed_quota: 0,
   status: 'awarded',
   created_at: 1_754_265_600,
 }
 
-async function renderCard(item: ReferralReward) {
+async function renderCard(item: AdminReferralReward) {
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
@@ -107,7 +110,7 @@ async function renderCard(item: ReferralReward) {
   await act(async () => {
     root.render(
       <I18nextProvider i18n={i18n}>
-        <ReferralRewardMobileCard reward={item} />
+        <AdminReferralRewardMobileCard reward={item} />
       </I18nextProvider>
     )
   })
@@ -120,79 +123,53 @@ async function unmountCard(rendered: Awaited<ReturnType<typeof renderCard>>) {
   rendered.container.remove()
 }
 
-describe('referral reward details layout', () => {
+describe('admin referral reward dashboard layout', () => {
   after(() => {
     domWindow.close()
   })
 
-  test('shows long privacy-safe labels and fields without clipping them', async () => {
-    await i18n.changeLanguage('en')
+  test('keeps long masked identities readable without exposing a concrete currency', async () => {
     const rendered = await renderCard(reward)
-    const card = rendered.container.querySelector('[data-referral-reward-card]')
-    const invitee = rendered.container.querySelector('[data-referral-invitee]')
+    const card = rendered.container.querySelector('[data-admin-referral-card]')
+    const inviter = rendered.container.querySelector(
+      '[data-admin-referral-inviter]'
+    )
+    const invitee = rendered.container.querySelector(
+      '[data-admin-referral-invitee]'
+    )
 
     assert.ok(card)
+    assert.ok(inviter)
     assert.ok(invitee)
+    assert.equal(inviter.textContent, reward.inviter_label)
     assert.equal(invitee.textContent, reward.invitee_label)
+    assert.equal(inviter.classList.contains('whitespace-normal'), true)
     assert.equal(invitee.classList.contains('whitespace-normal'), true)
-    assert.equal(invitee.classList.contains('break-words'), true)
-    assert.equal(card.textContent?.includes(reward.payment_provider), true)
-    assert.equal(
-      invitee.querySelectorAll('[class*="truncate"], [class*="line-clamp"]')
-        .length,
-      0
-    )
-    for (const field of card.querySelectorAll('dd')) {
-      assert.equal(field.classList.contains('whitespace-normal'), true)
-      assert.equal(field.classList.contains('break-words'), true)
-      assert.equal(field.className.includes('truncate'), false)
-      assert.equal(field.className.includes('line-clamp'), false)
-    }
+    assert.equal(card.textContent?.includes('Fiat'), true)
+    assert.equal(card.textContent?.includes('USD'), false)
+    assert.equal(card.textContent?.includes('CNY'), false)
+    assert.equal(card.textContent?.includes('gateway'), false)
 
     await unmountCard(rendered)
   })
 
-  test('renders only the privacy-safe referral fields from an extended payload', async () => {
-    await i18n.changeLanguage('en')
-    const extendedPayload = {
-      ...reward,
-      invitee_id: 991_337,
-      top_up_id: 882_246,
-      trade_no: 'secret-trade-number',
-      gateway_event_id: 'secret-gateway-event',
-      gateway_payment_id: 'secret-gateway-payment',
-    }
-    const rendered = await renderCard(extendedPayload)
-    const text = rendered.container.textContent ?? ''
-
-    assert.equal(text.includes('991337'), false)
-    assert.equal(text.includes('882246'), false)
-    assert.equal(text.includes('secret-trade-number'), false)
-    assert.equal(text.includes('secret-gateway-event'), false)
-    assert.equal(text.includes('secret-gateway-payment'), false)
-
-    await unmountCard(rendered)
-  })
-
-  test('keeps referral detail labels translated in both Chinese locales', () => {
+  test('provides complete admin dashboard translations in both Chinese locales', () => {
     const keys = [
-      'Referral Rewards',
-      'Reward history',
-      'Invitee',
-      'Payment method',
-      'Fiat amount paid',
-      'Reward rate',
-      'Reward',
-      'Awarded at',
-      'Awarded',
-      'Reversed',
-      'Withheld',
-      'Private invitee',
-      'No Referral Rewards Yet',
-      "Rewards will appear here after a referred user's eligible paid top-up is confirmed.",
-      'Failed to load referral rewards',
-      "Review rewards earned from referred users' eligible paid top-ups.",
-      'Invitee identities are masked to protect their privacy.',
+      'Referral Management',
+      'Reward events',
+      'Active reward credits',
+      'Reversed reward credits',
+      'Referred users',
+      'Site-wide referral summary',
+      'Referral relationship',
+      'Deleted user',
+      'Fiat',
+      'Reward credits',
+      'Reversal reason',
+      'No referral records found',
+      'Failed to load referral data',
+      'Site-wide reward ledger',
+      'Search user ID, username, or email...',
     ]
 
     for (const key of keys) {

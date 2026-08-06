@@ -18,33 +18,40 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import type { TFunction } from 'i18next'
 
-import type { ReferralRewardStatus } from '../types'
+import { quotaUnitsToDollars } from '@/lib/format'
 
-export function formatReferralPaidAmount(
+import type { AdminReferralRewardStatus } from '../types'
+
+export function formatAdminReferralPaidAmount(
   amount: string,
   locale?: string
 ): string {
   const numericAmount = Number(amount)
-
-  if (!Number.isFinite(numericAmount)) {
-    return amount.trim() || '-'
-  }
+  if (!Number.isFinite(numericAmount)) return amount.trim() || '-'
 
   return new Intl.NumberFormat(locale, {
     maximumFractionDigits: 8,
   }).format(numericAmount)
 }
 
-export function formatReferralRewardRate(rateBasisPoints: number): string {
-  if (!Number.isFinite(rateBasisPoints)) return '-'
+export function formatAdminReferralCredits(
+  quota: number,
+  locale?: string
+): string {
+  const credits = quotaUnitsToDollars(quota)
+  if (!Number.isFinite(credits)) return '-'
 
-  return `${new Intl.NumberFormat(undefined, {
-    maximumFractionDigits: 2,
-  }).format(rateBasisPoints / 100)}%`
+  return new Intl.NumberFormat(locale, {
+    maximumFractionDigits: 4,
+  }).format(credits)
 }
 
-export function getReferralPaymentProviderLabel(provider: string): string {
-  const normalizedProvider = provider.trim().toLowerCase()
+export function formatAdminReferralRate(rateBasisPoints: number): string {
+  if (!Number.isFinite(rateBasisPoints)) return '-'
+  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(rateBasisPoints / 100)}%`
+}
+
+export function getAdminReferralProviderLabel(provider: string): string {
   const labels: Record<string, string> = {
     creem: 'Creem',
     epay: 'Epay',
@@ -52,26 +59,25 @@ export function getReferralPaymentProviderLabel(provider: string): string {
     waffo: 'Waffo',
     waffo_pancake: 'Waffo Pancake',
   }
-
-  return labels[normalizedProvider] ?? (provider.trim() || '-')
+  const normalized = provider.trim().toLowerCase()
+  return labels[normalized] ?? (provider.trim() || '-')
 }
 
-export function getReferralRewardStatusDisplay(
-  status: ReferralRewardStatus,
+export function getAdminReferralStatusDisplay(
+  status: AdminReferralRewardStatus,
   t: TFunction
 ): {
   label: string
-  variant: 'success' | 'danger' | 'warning' | 'neutral'
+  variant: 'success' | 'warning' | 'danger' | 'neutral'
 } {
   if (status === 'awarded') {
     return { label: t('Awarded'), variant: 'success' }
   }
-  if (status === 'reversed') {
-    return { label: t('Reversed'), variant: 'danger' }
-  }
   if (status === 'withheld') {
     return { label: t('Withheld'), variant: 'warning' }
   }
-
+  if (status === 'reversed') {
+    return { label: t('Reversed'), variant: 'danger' }
+  }
   return { label: status || t('Unknown'), variant: 'neutral' }
 }

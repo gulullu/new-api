@@ -16,21 +16,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
+import { useTranslation } from 'react-i18next'
 
-import { formatReferralPaidAmount, formatReferralRewardRate } from '../format'
+import { SectionPageLayout } from '@/components/layout'
 
-describe('referral reward formatting', () => {
-  test('shows the processor-confirmed fiat amount without a currency code', () => {
-    const formatted = formatReferralPaidAmount('90', 'en')
+import { AdminReferralRewardsTable } from './components/admin-referral-rewards-table'
 
-    assert.equal(formatted, '90')
-    assert.equal(formatted.includes('CNY'), false)
-    assert.equal(formatted.includes('USD'), false)
-  })
+export function AdminReferralRewards() {
+  const { t } = useTranslation()
 
-  test('formats three hundred basis points as three percent', () => {
-    assert.equal(formatReferralRewardRate(300), '3%')
-  })
-})
+  return (
+    <SectionPageLayout>
+      <SectionPageLayout.Title>
+        {t('Referral Management')}
+      </SectionPageLayout.Title>
+      <SectionPageLayout.Content>
+        <AdminReferralRewardsTable />
+      </SectionPageLayout.Content>
+    </SectionPageLayout>
+  )
+}

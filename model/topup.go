@@ -20,8 +20,8 @@ type TopUp struct {
 	PaymentMethod   string  `json:"payment_method" gorm:"type:varchar(50)"`
 	PaymentProvider string  `json:"payment_provider" gorm:"type:varchar(50);default:''"`
 	// ReferralPaymentVerified is set only by a signed, production payment
-	// callback. Manual completions and sandbox callbacks must not consume the
-	// user's first eligible referral payment.
+	// callback. It distinguishes verified external payments from manual or
+	// sandbox completions when referral rewards are evaluated.
 	ReferralPaymentVerified bool   `json:"-" gorm:"column:referral_payment_verified;not null;default:false;index"`
 	CreateTime              int64  `json:"create_time"`
 	CompleteTime            int64  `json:"complete_time"`
@@ -168,7 +168,7 @@ func Recharge(referenceId string, customerId string, callerIp string, payment Ve
 			return err
 		}
 
-		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		rewardGranted, rewardInviterId, rewardQuota, err = grantPaidReferralRewardTx(tx, topUp, payment)
 		if err != nil {
 			return err
 		}
@@ -197,7 +197,7 @@ func Recharge(referenceId string, customerId string, callerIp string, payment Ve
 }
 
 // RechargeEpay atomically completes a verified Epay payment, credits the buyer,
-// and grants any first-paid referral reward before acknowledging the webhook.
+// and grants any qualifying referral reward before acknowledging the webhook.
 func RechargeEpay(referenceId string, actualPaymentMethod string, callerIp string, payment VerifiedPayment) (err error) {
 	if referenceId == "" {
 		return errors.New("未提供支付单号")
@@ -253,7 +253,7 @@ func RechargeEpay(referenceId string, actualPaymentMethod string, callerIp strin
 		}
 
 		var rewardErr error
-		rewardGranted, rewardInviterId, rewardQuota, rewardErr = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		rewardGranted, rewardInviterId, rewardQuota, rewardErr = grantPaidReferralRewardTx(tx, topUp, payment)
 		if rewardErr != nil {
 			return rewardErr
 		}
@@ -580,7 +580,7 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 			return err
 		}
 
-		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		rewardGranted, rewardInviterId, rewardQuota, err = grantPaidReferralRewardTx(tx, topUp, payment)
 		if err != nil {
 			return err
 		}
@@ -660,7 +660,7 @@ func RechargeWaffo(tradeNo string, callerIp string, payment VerifiedPayment) (er
 			return err
 		}
 
-		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		rewardGranted, rewardInviterId, rewardQuota, err = grantPaidReferralRewardTx(tx, topUp, payment)
 		if err != nil {
 			return err
 		}
@@ -735,7 +735,7 @@ func RechargeWaffoPancake(tradeNo string, callerIp string, payment VerifiedPayme
 			return err
 		}
 
-		rewardGranted, rewardInviterId, rewardQuota, err = grantFirstPaidReferralRewardTx(tx, topUp, payment)
+		rewardGranted, rewardInviterId, rewardQuota, err = grantPaidReferralRewardTx(tx, topUp, payment)
 		if err != nil {
 			return err
 		}

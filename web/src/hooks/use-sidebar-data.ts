@@ -142,6 +142,12 @@ export function useSidebarData(): SidebarData {
             icon: Users,
           },
           {
+            title: t('Referral Management'),
+            url: '/admin/referral-rewards',
+            configUrls: ['/users'],
+            icon: BadgePercent,
+          },
+          {
             title: t('Redemption Codes'),
             url: '/redemption-codes',
             icon: Ticket,

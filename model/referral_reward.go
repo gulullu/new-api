@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	// ReferralRewardBasisPoints is the percentage of a referred user's first
-	// qualifying payment that is credited to the inviter. Basis points keep the
-	// calculation exact and make the API's displayed percentage match billing.
+	// ReferralRewardBasisPoints is the percentage of each qualifying payment
+	// made by a referred user that is credited to the inviter. Basis points keep
+	// the calculation exact and make the API's displayed percentage match billing.
 	ReferralRewardBasisPoints = 300
 	ReferralRewardPercent     = 3
 
@@ -29,6 +29,8 @@ const (
 	referralPaymentReferenceTrade   = "trade"
 
 	referralPaymentVerificationMigrationKey = "ReferralPaymentVerificationMigrationV1"
+	legacyReferralInviteeUniqueIndex        = "idx_referral_reward_claims_invitee_id"
+	referralPaymentReferenceUniqueIndex     = "uidx_referral_reward_claims_payment_reference"
 )
 
 // ReferralPaymentState serializes reward grants and payment reversals for one
@@ -47,31 +49,44 @@ type ReferralPaymentState struct {
 	UpdatedAt           int64  `json:"-" gorm:"autoUpdateTime"`
 }
 
-// ReferralRewardClaim is the immutable source of truth for first-paid-referral
-// rewards. The unique invitee constraint is the final idempotency barrier when
-// two different payments or duplicate gateway callbacks arrive concurrently.
-// Reversal fields are kept in the ledger so refunded or disputed payments can
-// be reconciled without rewriting the original award.
+// ReferralRewardClaim is the immutable source of truth for per-payment
+// referral rewards. PaymentReferenceDigest, TopUpId, and TradeNo provide
+// independent idempotency barriers when duplicate gateway callbacks arrive
+// concurrently. Reversal fields are kept in the ledger so refunded or disputed
+// payments can be reconciled without rewriting the original award.
 type ReferralRewardClaim struct {
-	Id               int    `json:"id"`
-	InviteeId        int    `json:"invitee_id" gorm:"column:invitee_id;uniqueIndex"`
-	InviterId        int    `json:"inviter_id" gorm:"column:inviter_id;index"`
-	TopUpId          int    `json:"top_up_id" gorm:"column:top_up_id;uniqueIndex"`
-	TradeNo          string `json:"trade_no" gorm:"type:varchar(255);uniqueIndex"`
-	PaymentProvider  string `json:"payment_provider" gorm:"type:varchar(50);index"`
-	PaidAmount       string `json:"paid_amount" gorm:"type:varchar(64)"`
-	PaidCurrency     string `json:"paid_currency" gorm:"type:varchar(12)"`
-	RateBasisPoints  int    `json:"rate_basis_points"`
-	RewardQuota      int    `json:"reward_quota"`
-	ReversedQuota    int    `json:"reversed_quota" gorm:"default:0"`
-	Status           string `json:"status" gorm:"type:varchar(24);index"`
-	GatewayEventId   string `json:"gateway_event_id" gorm:"type:varchar(255);index"`
-	GatewayPaymentId string `json:"gateway_payment_id" gorm:"type:varchar(255);index"`
-	ReversalEventId  string `json:"reversal_event_id" gorm:"type:varchar(255);index"`
-	ReversalReason   string `json:"reversal_reason" gorm:"type:varchar(255)"`
-	ReversedAt       int64  `json:"reversed_at"`
-	CreatedAt        int64  `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt        int64  `json:"updated_at" gorm:"autoUpdateTime"`
+	Id                     int     `json:"id"`
+	InviteeId              int     `json:"invitee_id" gorm:"column:invitee_id;index:idx_referral_reward_claims_invitee_lookup"`
+	InviterId              int     `json:"inviter_id" gorm:"column:inviter_id;index"`
+	TopUpId                int     `json:"top_up_id" gorm:"column:top_up_id;uniqueIndex"`
+	TradeNo                string  `json:"trade_no" gorm:"type:varchar(255);uniqueIndex"`
+	PaymentReferenceDigest *string `json:"-" gorm:"column:payment_reference_digest;type:char(64)"`
+	PaymentProvider        string  `json:"payment_provider" gorm:"type:varchar(50);index"`
+	PaidAmount             string  `json:"paid_amount" gorm:"type:varchar(64)"`
+	PaidCurrency           string  `json:"paid_currency" gorm:"type:varchar(12)"`
+	RateBasisPoints        int     `json:"rate_basis_points"`
+	RewardQuota            int     `json:"reward_quota"`
+	ReversedQuota          int     `json:"reversed_quota" gorm:"default:0"`
+	Status                 string  `json:"status" gorm:"type:varchar(24);index"`
+	GatewayEventId         string  `json:"gateway_event_id" gorm:"type:varchar(255);index"`
+	GatewayPaymentId       string  `json:"gateway_payment_id" gorm:"type:varchar(255);index"`
+	ReversalEventId        string  `json:"reversal_event_id" gorm:"type:varchar(255);index"`
+	ReversalReason         string  `json:"reversal_reason" gorm:"type:varchar(255)"`
+	ReversedAt             int64   `json:"reversed_at"`
+	CreatedAt              int64   `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt              int64   `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+// referralRewardPaymentReferenceIndex keeps unique-index creation separate
+// from AutoMigrate. SQLite cannot ALTER an existing table to add a column with
+// an inline UNIQUE constraint, but it can add the nullable column first and
+// create a unique index afterward.
+type referralRewardPaymentReferenceIndex struct {
+	PaymentReferenceDigest *string `gorm:"column:payment_reference_digest;uniqueIndex:uidx_referral_reward_claims_payment_reference"`
+}
+
+func (referralRewardPaymentReferenceIndex) TableName() string {
+	return "referral_reward_claims"
 }
 
 // ReferralRewardHistoryItem is the only referral-claim shape returned to an
@@ -136,7 +151,7 @@ func logReferralRewardGrant(granted bool, inviterId int, inviteeId int, tradeNo 
 	if !granted {
 		return
 	}
-	common.SysLog("first-paid referral reward awarded: inviter_id=" + decimal.NewFromInt(int64(inviterId)).String() +
+	common.SysLog("referral reward awarded: inviter_id=" + decimal.NewFromInt(int64(inviterId)).String() +
 		" invitee_id=" + decimal.NewFromInt(int64(inviteeId)).String() +
 		" trade_no=" + tradeNo +
 		" paid_amount=" + payment.PaidAmountForLog() +
@@ -197,10 +212,10 @@ func isReferralRewardProvider(provider string) bool {
 	}
 }
 
-// Referral rewards use RelayBases' configured one-unit billing basis. CNY and
-// USD are intentionally treated as one billing unit per credit; other
-// currencies must not be converted by their nominal amount because doing so
-// would over-credit zero-decimal currencies such as JPY.
+// Referral rewards use RelayBases' configured one-unit billing basis. The
+// supported settlement currencies are treated as one billing unit per credit;
+// other currencies must not be converted by their nominal amount because doing
+// so would over-credit zero-decimal currencies such as JPY.
 func isReferralRewardCurrency(currency string) bool {
 	switch strings.ToUpper(strings.TrimSpace(currency)) {
 	case "CNY", "USD":
@@ -218,6 +233,22 @@ func referralRewardProviders() []string {
 		PaymentProviderWaffo,
 		PaymentProviderWaffoPancake,
 	}
+}
+
+// MigrateReferralRewardsEveryPayment removes the legacy one-reward-per-invitee
+// uniqueness barrier. The replacement lookup index has a distinct name, so
+// this drop is safe and idempotent on SQLite, MySQL, and PostgreSQL.
+func MigrateReferralRewardsEveryPayment() error {
+	migrator := DB.Migrator()
+	if !migrator.HasIndex(&referralRewardPaymentReferenceIndex{}, referralPaymentReferenceUniqueIndex) {
+		if err := migrator.CreateIndex(&referralRewardPaymentReferenceIndex{}, referralPaymentReferenceUniqueIndex); err != nil {
+			return err
+		}
+	}
+	if !migrator.HasIndex(&ReferralRewardClaim{}, legacyReferralInviteeUniqueIndex) {
+		return nil
+	}
+	return migrator.DropIndex(&ReferralRewardClaim{}, legacyReferralInviteeUniqueIndex)
 }
 
 func referralPaymentReferenceDigest(paymentProvider string, referenceKind string, referenceValue string) (string, error) {
@@ -316,9 +347,8 @@ func referralRewardClaimReference(paymentProvider string, referenceKind string, 
 }
 
 // InitializeReferralPaymentVerification performs a one-time compatibility
-// migration. Successful external top-ups that predate this column are treated
-// as verified so existing paying users do not receive a second "first"
-// reward. Future manual completions remain unverified.
+// migration. Successful external top-ups that predate this column retain their
+// verified-payment classification. Future manual completions remain unverified.
 func InitializeReferralPaymentVerification() error {
 	var backfilled int64
 	err := DB.Transaction(func(tx *gorm.DB) error {
@@ -348,10 +378,10 @@ func InitializeReferralPaymentVerification() error {
 	return err
 }
 
-// grantFirstPaidReferralRewardTx awards exactly one referral reward per
-// invitee. It must be called inside the same transaction that marks the TopUp
-// successful and credits the buyer.
-func grantFirstPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPayment) (bool, int, int, error) {
+// grantPaidReferralRewardTx awards one referral reward for each qualifying
+// signed production payment. It must be called inside the same transaction that
+// marks the TopUp successful and credits the buyer.
+func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPayment) (bool, int, int, error) {
 	if tx == nil || topUp == nil {
 		return false, 0, 0, errors.New("missing referral reward transaction context")
 	}
@@ -359,7 +389,7 @@ func grantFirstPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedP
 		return false, 0, 0, nil
 	}
 	if !isReferralRewardCurrency(payment.Currency) {
-		common.SysError("skipped first-paid referral reward because verified payment currency is outside the configured billing basis: provider=" +
+		common.SysError("skipped referral reward because verified payment currency is outside the configured billing basis: provider=" +
 			topUp.PaymentProvider + " currency=" + strings.ToUpper(strings.TrimSpace(payment.Currency)))
 		return false, 0, 0, nil
 	}
@@ -368,7 +398,7 @@ func grantFirstPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedP
 		// A missing canonical provider reference must never turn a successful
 		// buyer payment into a failed top-up. Skipping the reward is the safe
 		// outcome because a later refund could not be correlated reliably.
-		common.SysError("skipped first-paid referral reward because verified payment lacks canonical reference: provider=" + topUp.PaymentProvider)
+		common.SysError("skipped referral reward because verified payment lacks canonical reference: provider=" + topUp.PaymentProvider)
 		return false, 0, 0, nil
 	}
 	paymentState, err := lockReferralPaymentState(tx, topUp.PaymentProvider, referenceKind, referenceValue)
@@ -386,20 +416,6 @@ func grantFirstPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedP
 		return false, 0, 0, err
 	}
 	if invitee.InviterId <= 0 || invitee.InviterId == invitee.Id {
-		return false, 0, 0, nil
-	}
-
-	// Users who completed an eligible external top-up before this transaction
-	// have already had their first payment and must never become newly eligible
-	// merely because this feature was deployed later.
-	var previousSuccessfulTopUps int64
-	if err := tx.Model(&TopUp{}).
-		Where("user_id = ? AND id <> ? AND status = ? AND referral_payment_verified = ? AND payment_provider IN ?", topUp.UserId, topUp.Id, common.TopUpStatusSuccess, true, referralRewardProviders()).
-		Limit(1).
-		Count(&previousSuccessfulTopUps).Error; err != nil {
-		return false, 0, 0, err
-	}
-	if previousSuccessfulTopUps > 0 {
 		return false, 0, 0, nil
 	}
 
@@ -441,18 +457,19 @@ func grantFirstPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedP
 	}
 
 	claim := &ReferralRewardClaim{
-		InviteeId:        topUp.UserId,
-		InviterId:        inviter.Id,
-		TopUpId:          topUp.Id,
-		TradeNo:          topUp.TradeNo,
-		PaymentProvider:  topUp.PaymentProvider,
-		PaidAmount:       payment.Amount.String(),
-		PaidCurrency:     payment.Currency,
-		RateBasisPoints:  ReferralRewardBasisPoints,
-		RewardQuota:      rewardQuota,
-		Status:           rewardStatus,
-		GatewayEventId:   payment.GatewayEventId,
-		GatewayPaymentId: payment.GatewayPaymentId,
+		InviteeId:              topUp.UserId,
+		InviterId:              inviter.Id,
+		TopUpId:                topUp.Id,
+		TradeNo:                topUp.TradeNo,
+		PaymentReferenceDigest: &paymentState.ReferenceDigest,
+		PaymentProvider:        topUp.PaymentProvider,
+		PaidAmount:             payment.Amount.String(),
+		PaidCurrency:           payment.Currency,
+		RateBasisPoints:        ReferralRewardBasisPoints,
+		RewardQuota:            rewardQuota,
+		Status:                 rewardStatus,
+		GatewayEventId:         payment.GatewayEventId,
+		GatewayPaymentId:       payment.GatewayPaymentId,
 	}
 	result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(claim)
 	if result.Error != nil {
@@ -462,7 +479,7 @@ func grantFirstPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedP
 		return false, 0, 0, nil
 	}
 	if rewardStatus == ReferralRewardStatusWithheld {
-		common.SysError("first-paid referral reward withheld because inviter quota accounting reached its supported range: inviter_id=" +
+		common.SysError("referral reward withheld because inviter quota accounting reached its supported range: inviter_id=" +
 			decimal.NewFromInt(int64(inviter.Id)).String() +
 			" invitee_id=" + decimal.NewFromInt(int64(invitee.Id)).String() +
 			" reward_quota=" + decimal.NewFromInt(int64(rewardQuota)).String())
@@ -486,7 +503,7 @@ func grantFirstPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedP
 	return true, inviter.Id, rewardQuota, nil
 }
 
-func GetQualifiedReferralCount(inviterId int) (int64, error) {
+func GetQualifiedReferralPaymentCount(inviterId int) (int64, error) {
 	var count int64
 	err := DB.Model(&ReferralRewardClaim{}).
 		Where("inviter_id = ? AND status IN ?", inviterId, []string{ReferralRewardStatusAwarded, ReferralRewardStatusWithheld}).

@@ -404,8 +404,8 @@ func WaffoWebhook(c *gin.Context) {
 }
 
 // reverseWaffoReferralReward maps a verified Waffo refund to the payment
-// reference recorded on the referral claim. A first payment that is partially
-// or fully refunded no longer qualifies for the referral reward.
+// reference recorded on the referral claim. A payment that is partially or
+// fully refunded no longer qualifies for its referral reward.
 func reverseWaffoReferralReward(result *core.RefundNotificationResult, production bool) (model.ReferralRewardReversalResult, error) {
 	if result == nil {
 		return model.ReferralRewardReversalResult{}, errors.New("missing Waffo refund result")
