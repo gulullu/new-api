@@ -3707,7 +3707,7 @@
     "How referral rewards work": "How referral rewards work",
     "Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}": "Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}",
     "Who is eligible": "Who is eligible",
-    "Invitees must register through your referral link. Registration rewards, if any, are separate; referral rewards begin only after an eligible payment is confirmed.": "Invitees must register through your referral link. Registration rewards, if any, are separate; referral rewards begin only after an eligible payment is confirmed.",
+    "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation.": "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation.",
     "When the reward is issued": "When the reward is issued",
     "Every eligible paid top-up from a referred user earns a reward after the payment is successfully confirmed.": "Every eligible paid top-up from a referred user earns a reward after the payment is successfully confirmed.",
     "How the amount is calculated": "How the amount is calculated",

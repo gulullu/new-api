@@ -3707,7 +3707,7 @@
     "How referral rewards work": "推薦獎勵規則",
     "Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}": "推薦獎勵 = 所有優惠後的訂單實付金額 × {{rewardRate}}",
     "Who is eligible": "參與條件",
-    "Invitees must register through your referral link. Registration rewards, if any, are separate; referral rewards begin only after an eligible payment is confirmed.": "受邀用戶須透過您的推薦連結註冊。註冊贈送（如有）與推薦返利相互獨立；推薦返利僅在符合條件的支付確認後產生。",
+    "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation.": "新用戶註冊可獲得平台贈送額度。邀請行為本身不產生推薦返利；受邀用戶每筆符合條件的支付確認後，才會產生對應返利。",
     "When the reward is issued": "發放條件",
     "Every eligible paid top-up from a referred user earns a reward after the payment is successfully confirmed.": "受邀用戶每筆符合條件的付費儲值經支付確認後，均會產生一次獎勵。",
     "How the amount is calculated": "計算方式",

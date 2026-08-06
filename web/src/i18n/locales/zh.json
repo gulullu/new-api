@@ -3707,7 +3707,7 @@
     "How referral rewards work": "推荐奖励规则",
     "Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}": "推荐奖励 = 所有优惠后的订单实付金额 × {{rewardRate}}",
     "Who is eligible": "参与条件",
-    "Invitees must register through your referral link. Registration rewards, if any, are separate; referral rewards begin only after an eligible payment is confirmed.": "受邀用户须通过您的推荐链接注册。注册赠送（如有）与推荐返利相互独立；推荐返利仅在符合条件的支付确认后产生。",
+    "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation.": "新用户注册可获得平台赠送额度。邀请行为本身不产生推荐返利；受邀用户每笔符合条件的支付确认后，才会产生对应返利。",
     "When the reward is issued": "发放条件",
     "Every eligible paid top-up from a referred user earns a reward after the payment is successfully confirmed.": "受邀用户每笔符合条件的付费充值经支付确认后，均会产生一次奖励。",
     "How the amount is calculated": "计算方式",
