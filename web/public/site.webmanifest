@@ -1,0 +1,17 @@
+{
+  "name": "RelayBases",
+  "short_name": "RelayBases",
+  "description": "API access layer for builders and teams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/relaybases-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
