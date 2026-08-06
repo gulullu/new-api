@@ -221,7 +221,7 @@ describe('affiliate rewards card layout', () => {
     assert.ok(rules)
     assert.equal(rules.textContent?.includes('订单实付金额 × 3%'), true)
     assert.equal(
-      rules.textContent?.includes('注册赠送（如有）与推荐返利相互独立'),
+      rules.textContent?.includes('邀请行为本身不产生推荐返利'),
       true
     )
     assert.equal(
@@ -251,7 +251,7 @@ describe('affiliate rewards card layout', () => {
       'Invite friends and earn {{rewardRate}} of the amount they actually pay on every eligible top-up.',
       'How referral rewards work',
       'Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}',
-      'Invitees must register through your referral link. Registration rewards, if any, are separate; referral rewards begin only after an eligible payment is confirmed.',
+      "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation.",
       'Only the payment processor-confirmed amount actually paid in a supported fiat currency is used. The top-up face value, pre-discount amount, and unsupported settlement currencies are not used as the reward basis.',
       'Eligible payments',
       'Number of eligible referred payments',

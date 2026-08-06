@@ -202,7 +202,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
               [
                 t('Who is eligible'),
                 t(
-                  'Invitees must register through your referral link. Registration rewards, if any, are separate; referral rewards begin only after an eligible payment is confirmed.'
+                  "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation."
                 ),
               ],
               [
