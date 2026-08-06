@@ -16,21 +16,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
+import { api } from '@/lib/api'
 
-import { formatReferralPaidAmount, formatReferralRewardRate } from '../format'
+import type {
+  GetAdminReferralRewardsParams,
+  GetAdminReferralRewardsResponse,
+} from './types'
 
-describe('referral reward formatting', () => {
-  test('shows the processor-confirmed fiat amount without a currency code', () => {
-    const formatted = formatReferralPaidAmount('90', 'en')
+export async function getAdminReferralRewards(
+  params: GetAdminReferralRewardsParams = {}
+): Promise<GetAdminReferralRewardsResponse> {
+  const query = new URLSearchParams()
+  query.set('p', String(params.page ?? 1))
+  query.set('page_size', String(params.page_size ?? 20))
+  if (params.keyword?.trim()) query.set('keyword', params.keyword.trim())
+  if (params.status) query.set('status', params.status)
+  if (params.provider) query.set('provider', params.provider)
 
-    assert.equal(formatted, '90')
-    assert.equal(formatted.includes('CNY'), false)
-    assert.equal(formatted.includes('USD'), false)
-  })
-
-  test('formats three hundred basis points as three percent', () => {
-    assert.equal(formatReferralRewardRate(300), '3%')
-  })
-})
+  const response = await api.get(
+    `/api/user/referral-rewards/admin?${query.toString()}`
+  )
+  return response.data
+}

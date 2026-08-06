@@ -108,7 +108,11 @@ export function ReferralRewards() {
               affiliateLink={affiliateLink}
               onTransfer={() => setTransferDialogOpen(true)}
               rewardPercent={topupInfo?.referral_reward_percent ?? 3}
-              qualifiedReferrals={topupInfo?.qualified_referrals ?? 0}
+              qualifiedPayments={
+                topupInfo?.qualified_payments ??
+                topupInfo?.qualified_referrals ??
+                0
+              }
               complianceConfirmed={
                 topupInfo?.payment_compliance_confirmed !== false
               }

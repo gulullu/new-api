@@ -8,11 +8,38 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 
+	"github.com/glebarez/sqlite"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
+
+type legacyFirstPaymentReferralRewardClaim struct {
+	Id               int
+	InviteeId        int    `gorm:"column:invitee_id;uniqueIndex:idx_referral_reward_claims_invitee_id"`
+	InviterId        int    `gorm:"column:inviter_id;index"`
+	TopUpId          int    `gorm:"column:top_up_id;uniqueIndex"`
+	TradeNo          string `gorm:"type:varchar(255);uniqueIndex"`
+	PaymentProvider  string `gorm:"type:varchar(50);index"`
+	PaidAmount       string `gorm:"type:varchar(64)"`
+	PaidCurrency     string `gorm:"type:varchar(12)"`
+	RateBasisPoints  int
+	RewardQuota      int
+	ReversedQuota    int    `gorm:"default:0"`
+	Status           string `gorm:"type:varchar(24);index"`
+	GatewayEventId   string `gorm:"type:varchar(255);index"`
+	GatewayPaymentId string `gorm:"type:varchar(255);index"`
+	ReversalEventId  string `gorm:"type:varchar(255);index"`
+	ReversalReason   string `gorm:"type:varchar(255)"`
+	ReversedAt       int64
+	CreatedAt        int64 `gorm:"autoCreateTime"`
+	UpdatedAt        int64 `gorm:"autoUpdateTime"`
+}
+
+func (legacyFirstPaymentReferralRewardClaim) TableName() string {
+	return "referral_reward_claims"
+}
 
 func createReferralRewardUsers(t *testing.T, inviterID int, inviteeID int) {
 	t.Helper()
@@ -270,7 +297,7 @@ func TestMissingCanonicalReferenceSkipsRewardWithoutFailingTopUp(t *testing.T) {
 	assert.Zero(t, claimCount)
 }
 
-func TestFirstPaidReferralRewardUsesVerifiedAmountAndIsIdempotent(t *testing.T) {
+func TestReferralRewardUsesVerifiedAmountForEveryPaymentAndIsIdempotent(t *testing.T) {
 	truncateTables(t)
 	createReferralRewardUsers(t, 5101, 5102)
 	topUp := createReferralTopUp(t, 5102, "reward-first-real-payment", PaymentProviderEpay, common.TopUpStatusPending)
@@ -307,9 +334,64 @@ func TestFirstPaidReferralRewardUsesVerifiedAmountAndIsIdempotent(t *testing.T) 
 	var claimCount int64
 	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5102).Count(&claimCount).Error)
 	assert.Equal(t, int64(1), claimCount)
+
+	// A distinct later payment from the same invitee earns its own reward.
+	secondTopUp := createReferralTopUp(t, 5102, "reward-second-real-payment", PaymentProviderEpay, common.TopUpStatusPending)
+	secondPayment, err := NewVerifiedPayment("50", "CNY", "epay-event-2", "epay-payment-2", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeEpay(secondTopUp.TradeNo, "alipay", "127.0.0.1", secondPayment))
+
+	secondReward := expectedReferralRewardQuota(t, "50")
+	require.NoError(t, DB.First(&inviter, 5101).Error)
+	assert.Equal(t, 2, inviter.AffCount)
+	assert.Equal(t, wantReward+secondReward, inviter.AffQuota)
+	assert.Equal(t, wantReward+secondReward, inviter.AffHistoryQuota)
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5102).Count(&claimCount).Error)
+	assert.Equal(t, int64(2), claimCount)
+
+	var secondClaim ReferralRewardClaim
+	require.NoError(t, DB.Where("top_up_id = ?", secondTopUp.Id).First(&secondClaim).Error)
+	assert.Equal(t, "50", secondClaim.PaidAmount)
+	require.NotNil(t, claim.PaymentReferenceDigest)
+	require.NotNil(t, secondClaim.PaymentReferenceDigest)
+	assert.NotEqual(t, *claim.PaymentReferenceDigest, *secondClaim.PaymentReferenceDigest)
+
+	// Reusing the same canonical provider payment reference on another local
+	// order must not create another referral reward.
+	replayedTopUp := createReferralTopUp(t, 5102, "reward-replayed-provider-payment", PaymentProviderEpay, common.TopUpStatusPending)
+	replayedPayment, err := NewVerifiedPayment("50", "CNY", "epay-event-2-replayed", "epay-payment-2", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeEpay(replayedTopUp.TradeNo, "alipay", "127.0.0.1", replayedPayment))
+	require.NoError(t, DB.First(&inviter, 5101).Error)
+	assert.Equal(t, 2, inviter.AffCount)
+	assert.Equal(t, wantReward+secondReward, inviter.AffQuota)
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5102).Count(&claimCount).Error)
+	assert.Equal(t, int64(2), claimCount)
 }
 
-func TestFirstPaidReferralRewardRejectsSandboxAndLaterPayments(t *testing.T) {
+func TestMigrateReferralRewardsEveryPaymentRemovesLegacyInviteeUniqueness(t *testing.T) {
+	legacyDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, legacyDB.AutoMigrate(&legacyFirstPaymentReferralRewardClaim{}))
+	assert.True(t, legacyDB.Migrator().HasIndex(&legacyFirstPaymentReferralRewardClaim{}, legacyReferralInviteeUniqueIndex))
+	// Production runs the current AutoMigrate before the explicit legacy-index
+	// cleanup, so exercise that ordering here as well.
+	require.NoError(t, legacyDB.AutoMigrate(&ReferralRewardClaim{}))
+
+	previousDB := DB
+	DB = legacyDB
+	t.Cleanup(func() {
+		DB = previousDB
+	})
+
+	require.NoError(t, MigrateReferralRewardsEveryPayment())
+	assert.False(t, legacyDB.Migrator().HasIndex(&legacyFirstPaymentReferralRewardClaim{}, legacyReferralInviteeUniqueIndex))
+	assert.True(t, legacyDB.Migrator().HasIndex(&referralRewardPaymentReferenceIndex{}, referralPaymentReferenceUniqueIndex))
+	require.NoError(t, legacyDB.Create(&legacyFirstPaymentReferralRewardClaim{InviteeId: 1, TopUpId: 1, TradeNo: "legacy-one"}).Error)
+	require.NoError(t, legacyDB.Create(&legacyFirstPaymentReferralRewardClaim{InviteeId: 1, TopUpId: 2, TradeNo: "legacy-two"}).Error)
+}
+
+func TestReferralRewardRejectsSandboxButAllowsPaymentsAfterHistoricalTopUp(t *testing.T) {
 	t.Run("sandbox callback", func(t *testing.T) {
 		truncateTables(t)
 		createReferralRewardUsers(t, 5201, 5202)
@@ -327,7 +409,7 @@ func TestFirstPaidReferralRewardRejectsSandboxAndLaterPayments(t *testing.T) {
 		assert.Zero(t, count)
 	})
 
-	t.Run("existing successful topup", func(t *testing.T) {
+	t.Run("existing successful topup does not block a new payment", func(t *testing.T) {
 		truncateTables(t)
 		createReferralRewardUsers(t, 5301, 5302)
 		historical := createReferralTopUp(t, 5302, "reward-historical-payment", PaymentProviderStripe, common.TopUpStatusSuccess)
@@ -339,15 +421,15 @@ func TestFirstPaidReferralRewardRejectsSandboxAndLaterPayments(t *testing.T) {
 
 		var inviter User
 		require.NoError(t, DB.First(&inviter, 5301).Error)
-		assert.Zero(t, inviter.AffCount)
-		assert.Zero(t, inviter.AffQuota)
+		assert.Equal(t, 1, inviter.AffCount)
+		assert.Equal(t, expectedReferralRewardQuota(t, "90"), inviter.AffQuota)
 		var count int64
 		require.NoError(t, DB.Model(&ReferralRewardClaim{}).Count(&count).Error)
-		assert.Zero(t, count)
+		assert.Equal(t, int64(1), count)
 	})
 }
 
-func TestFirstPaidReferralRewardRejectsUnsupportedNominalCurrency(t *testing.T) {
+func TestReferralRewardRejectsUnsupportedNominalCurrency(t *testing.T) {
 	truncateTables(t)
 	createReferralRewardUsers(t, 5321, 5322)
 	topUp := createReferralTopUp(t, 5322, "reward-unsupported-currency", PaymentProviderStripe, common.TopUpStatusPending)
@@ -368,7 +450,7 @@ func TestFirstPaidReferralRewardRejectsUnsupportedNominalCurrency(t *testing.T) 
 	assert.Zero(t, count)
 }
 
-func TestManualCompletionDoesNotConsumeFirstVerifiedReferralPayment(t *testing.T) {
+func TestManualCompletionDoesNotEarnReferralReward(t *testing.T) {
 	truncateTables(t)
 	createReferralRewardUsers(t, 5351, 5352)
 	manual := createReferralTopUp(t, 5352, "reward-manual-completion", PaymentProviderStripe, common.TopUpStatusPending)
@@ -689,4 +771,43 @@ func TestReferralRewardReversalReclaimsTransferredQuotaAndIsIdempotent(t *testin
 	paymentStates = nil
 	require.NoError(t, DB.Find(&paymentStates).Error)
 	assert.Len(t, paymentStates, 1)
+}
+
+func TestReferralRewardReversalOnlyReclaimsMatchingPayment(t *testing.T) {
+	truncateTables(t)
+	createReferralRewardUsers(t, 5901, 5902)
+
+	firstTopUp := createReferralTopUp(t, 5902, "reward-reversal-first-payment", PaymentProviderEpay, common.TopUpStatusPending)
+	firstPayment, err := NewVerifiedPayment("90", "CNY", "reversal-first-event", "reversal-first-payment", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeEpay(firstTopUp.TradeNo, "alipay", "127.0.0.1", firstPayment))
+
+	secondTopUp := createReferralTopUp(t, 5902, "reward-reversal-second-payment", PaymentProviderEpay, common.TopUpStatusPending)
+	secondPayment, err := NewVerifiedPayment("50", "CNY", "reversal-second-event", "reversal-second-payment", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeEpay(secondTopUp.TradeNo, "alipay", "127.0.0.1", secondPayment))
+
+	firstReward := expectedReferralRewardQuota(t, "90")
+	secondReward := expectedReferralRewardQuota(t, "50")
+	outcome, err := ReverseReferralRewardByGatewayReference(
+		PaymentProviderEpay,
+		"reversal-first-payment",
+		"refund-first-only",
+		"first payment refunded",
+	)
+	require.NoError(t, err)
+	assert.True(t, outcome.Changed)
+	assert.Equal(t, firstReward, outcome.RewardQuota)
+
+	var inviter User
+	require.NoError(t, DB.First(&inviter, 5901).Error)
+	assert.Equal(t, 1, inviter.AffCount)
+	assert.Equal(t, secondReward, inviter.AffQuota)
+	assert.Equal(t, secondReward, inviter.AffHistoryQuota)
+
+	var claims []ReferralRewardClaim
+	require.NoError(t, DB.Where("invitee_id = ?", 5902).Order("id ASC").Find(&claims).Error)
+	require.Len(t, claims, 2)
+	assert.Equal(t, ReferralRewardStatusReversed, claims[0].Status)
+	assert.Equal(t, ReferralRewardStatusAwarded, claims[1].Status)
 }

@@ -233,7 +233,7 @@ export function useUsersColumns(): ColumnDef<User>[] {
               <TooltipTrigger
                 render={
                   <StatusBadge
-                    label={`${t('Invited')}: ${affCount}`}
+                    label={`${t('Eligible payments')}: ${affCount}`}
                     variant='neutral'
                     copyable={false}
                     className='cursor-help'
@@ -241,7 +241,9 @@ export function useUsersColumns(): ColumnDef<User>[] {
                 }
               />
               <TooltipContent>
-                <p className='text-xs'>{t('Number of users invited')}</p>
+                <p className='text-xs'>
+                  {t('Number of eligible referred payments')}
+                </p>
               </TooltipContent>
             </Tooltip>
             <Tooltip>

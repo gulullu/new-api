@@ -16,21 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
-
-import { formatReferralPaidAmount, formatReferralRewardRate } from '../format'
-
-describe('referral reward formatting', () => {
-  test('shows the processor-confirmed fiat amount without a currency code', () => {
-    const formatted = formatReferralPaidAmount('90', 'en')
-
-    assert.equal(formatted, '90')
-    assert.equal(formatted.includes('CNY'), false)
-    assert.equal(formatted.includes('USD'), false)
-  })
-
-  test('formats three hundred basis points as three percent', () => {
-    assert.equal(formatReferralRewardRate(300), '3%')
-  })
-})
+export {
+  formatAdminReferralCredits,
+  formatAdminReferralPaidAmount,
+  formatAdminReferralRate,
+  getAdminReferralProviderLabel,
+  getAdminReferralStatusDisplay,
+} from './format'

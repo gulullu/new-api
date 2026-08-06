@@ -16,21 +16,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
+import { useTranslation } from 'react-i18next'
 
-import { formatReferralPaidAmount, formatReferralRewardRate } from '../format'
+interface AdminReferralUserIdentityProps {
+  label: string
+  id: number
+}
 
-describe('referral reward formatting', () => {
-  test('shows the processor-confirmed fiat amount without a currency code', () => {
-    const formatted = formatReferralPaidAmount('90', 'en')
+export function AdminReferralUserIdentity(
+  props: AdminReferralUserIdentityProps
+) {
+  const { t } = useTranslation()
 
-    assert.equal(formatted, '90')
-    assert.equal(formatted.includes('CNY'), false)
-    assert.equal(formatted.includes('USD'), false)
-  })
-
-  test('formats three hundred basis points as three percent', () => {
-    assert.equal(formatReferralRewardRate(300), '3%')
-  })
-})
+  return (
+    <div className='min-w-0'>
+      <div className='min-w-0 font-medium [overflow-wrap:anywhere] break-words whitespace-normal'>
+        {props.label || t('Deleted user')}
+      </div>
+      <div className='text-muted-foreground mt-0.5 text-xs tabular-nums'>
+        {t('User ID')}: {props.id}
+      </div>
+    </div>
+  )
+}

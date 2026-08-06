@@ -135,6 +135,7 @@ func SetApiRouter(router *gin.Engine) {
 			{
 				adminRoute.GET("/", controller.GetAllUsers)
 				adminRoute.GET("/topup", controller.GetAllTopUps)
+				adminRoute.GET("/referral-rewards/admin", middleware.DisableCache(), controller.AdminGetReferralRewards)
 				adminRoute.POST("/topup/complete", controller.AdminCompleteTopUp)
 				adminRoute.POST("/topup/referral-reward/:id/reverse", middleware.CriticalRateLimit(), controller.AdminReverseReferralReward)
 				adminRoute.GET("/search", controller.SearchUsers)
