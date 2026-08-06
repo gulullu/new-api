@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
-import { type ReactNode, useState, useEffect } from 'react'
+import { type ReactNode, useCallback, useEffect, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import {
@@ -48,11 +48,11 @@ import {
 } from '@/components/ui/sidebar'
 
 import { checkIsActive } from '../lib/url-utils'
-import {
-  type NavCollapsible,
-  type NavChatPresets,
-  type NavLink,
-  type NavGroup as NavGroupProps,
+import type {
+  NavCollapsible,
+  NavChatPresets,
+  NavGroup as NavGroupProps,
+  NavLink,
 } from '../types'
 import { ChatPresetsItem } from './chat-presets-item'
 
@@ -118,16 +118,31 @@ function NavBadge({ children }: { children: ReactNode }) {
 }
 
 /**
+ * Let the router finish handling the link click before closing the modal
+ * sidebar. Unmounting the sheet in the same event can race touch navigation on
+ * mobile browsers, especially when focus-management primitives are involved.
+ */
+function useCloseMobileSidebarAfterNavigation() {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  return useCallback(() => {
+    if (!isMobile) return
+
+    window.requestAnimationFrame(() => setOpenMobile(false))
+  }, [isMobile, setOpenMobile])
+}
+
+/**
  * Sidebar menu link item
  */
 function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
-  const { setOpenMobile } = useSidebar()
+  const closeMobileSidebar = useCloseMobileSidebarAfterNavigation()
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={checkIsActive(href, item)}
         tooltip={item.title}
-        render={<Link to={item.url} onClick={() => setOpenMobile(false)} />}
+        render={<Link to={item.url} onClick={closeMobileSidebar} />}
       >
         {item.icon && <item.icon className='shrink-0' />}
         <span className='min-w-0 flex-1 truncate'>{item.title}</span>
@@ -147,7 +162,7 @@ function SidebarMenuCollapsible({
   item: NavCollapsible
   href: string
 }) {
-  const { setOpenMobile } = useSidebar()
+  const closeMobileSidebar = useCloseMobileSidebarAfterNavigation()
   // 检查当前路径是否匹配子菜单项
   const isSubItemActive = checkIsActive(href, item)
   // 使用受控状态，初始值基于当前路径是否匹配
@@ -183,9 +198,7 @@ function SidebarMenuCollapsible({
             <SidebarMenuSubItem key={subItem.title}>
               <SidebarMenuSubButton
                 isActive={checkIsActive(href, subItem)}
-                render={
-                  <Link to={subItem.url} onClick={() => setOpenMobile(false)} />
-                }
+                render={<Link to={subItem.url} onClick={closeMobileSidebar} />}
               >
                 {subItem.icon && <subItem.icon className='shrink-0' />}
                 <span className='min-w-0 flex-1 truncate'>{subItem.title}</span>

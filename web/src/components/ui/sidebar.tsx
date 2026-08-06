@@ -530,6 +530,12 @@ function SidebarMenuButton({
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
   } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const { isMobile, state } = useSidebar()
+  // Tooltips are only useful when the desktop sidebar is collapsed and the
+  // label is hidden. Keeping expanded/mobile links wrapped in a tooltip
+  // trigger adds focus and pointer handlers to touch targets; on mobile this
+  // can consume the first tap before link navigation runs.
+  const shouldRenderTooltip =
+    Boolean(tooltip) && state === 'collapsed' && !isMobile
   const comp = useRender({
     defaultTagName: 'button',
     props: mergeProps<'button'>(
@@ -538,7 +544,7 @@ function SidebarMenuButton({
       },
       props
     ),
-    render: !tooltip ? render : <TooltipTrigger render={render} />,
+    render: shouldRenderTooltip ? <TooltipTrigger render={render} /> : render,
     state: {
       slot: 'sidebar-menu-button',
       sidebar: 'menu-button',
@@ -547,7 +553,7 @@ function SidebarMenuButton({
     },
   })
 
-  if (!tooltip) {
+  if (!shouldRenderTooltip) {
     return comp
   }
 
