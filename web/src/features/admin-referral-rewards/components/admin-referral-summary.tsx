@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 
-import { formatAdminReferralCredits } from '../lib'
+import { formatAdminReferralCount, formatAdminReferralCredits } from '../lib'
 import type { AdminReferralRewardSummary } from '../types'
 
 interface AdminReferralSummaryProps {
@@ -72,8 +72,8 @@ function SummaryCard(props: SummaryCardProps) {
 export function AdminReferralSummary(props: AdminReferralSummaryProps) {
   const { t, i18n } = useTranslation()
   const summary = props.summary
-  const locale = i18n.resolvedLanguage
-  const number = (value: number) => new Intl.NumberFormat(locale).format(value)
+  const locale = i18n.resolvedLanguage || i18n.language
+  const number = (value: number) => formatAdminReferralCount(value, locale)
 
   const cards: SummaryCardProps[] = [
     {

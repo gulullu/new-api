@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import type { TFunction } from 'i18next'
 
+import { toIntlLocale } from '@/i18n/languages'
 import { quotaUnitsToDollars } from '@/lib/format'
 
 import type { AdminReferralRewardStatus } from '../types'
@@ -29,7 +30,7 @@ export function formatAdminReferralPaidAmount(
   const numericAmount = Number(amount)
   if (!Number.isFinite(numericAmount)) return amount.trim() || '-'
 
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(toIntlLocale(locale), {
     maximumFractionDigits: 8,
   }).format(numericAmount)
 }
@@ -41,9 +42,20 @@ export function formatAdminReferralCredits(
   const credits = quotaUnitsToDollars(quota)
   if (!Number.isFinite(credits)) return '-'
 
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(toIntlLocale(locale), {
     maximumFractionDigits: 4,
   }).format(credits)
+}
+
+export function formatAdminReferralCount(
+  value: number,
+  locale?: string
+): string {
+  if (!Number.isFinite(value)) return '-'
+
+  return new Intl.NumberFormat(toIntlLocale(locale), {
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 export function formatAdminReferralRate(rateBasisPoints: number): string {

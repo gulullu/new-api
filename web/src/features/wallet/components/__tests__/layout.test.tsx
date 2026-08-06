@@ -220,7 +220,10 @@ describe('affiliate rewards card layout', () => {
     const rules = rendered.container.querySelector('[data-referral-rules]')
     assert.ok(rules)
     assert.equal(rules.textContent?.includes('订单实付金额 × 3%'), true)
-    assert.equal(rules.textContent?.includes('仅注册不会获得赠送额度'), true)
+    assert.equal(
+      rules.textContent?.includes('注册赠送（如有）与推荐返利相互独立'),
+      true
+    )
     assert.equal(
       rules.textContent?.includes(
         '充值面额、优惠前金额及不支持的结算币种均不作为计算基数'
@@ -248,7 +251,7 @@ describe('affiliate rewards card layout', () => {
       'Invite friends and earn {{rewardRate}} of the amount they actually pay on every eligible top-up.',
       'How referral rewards work',
       'Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}',
-      'Invitees must register through your referral link. Registration alone grants neither free credit nor a referral reward.',
+      'Invitees must register through your referral link. Registration rewards, if any, are separate; referral rewards begin only after an eligible payment is confirmed.',
       'Only the payment processor-confirmed amount actually paid in a supported fiat currency is used. The top-up face value, pre-discount amount, and unsupported settlement currencies are not used as the reward basis.',
       'Eligible payments',
       'Number of eligible referred payments',

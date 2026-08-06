@@ -27,9 +27,7 @@ export function AdminReferralRewards() {
 
   return (
     <SectionPageLayout>
-      <SectionPageLayout.Title>
-        {t('Referral Management')}
-      </SectionPageLayout.Title>
+      <SectionPageLayout.Title>{t('Referrals')}</SectionPageLayout.Title>
       <SectionPageLayout.Content>
         <AdminReferralRewardsTable />
       </SectionPageLayout.Content>

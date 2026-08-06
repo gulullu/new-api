@@ -16,11 +16,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export {
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
+
+import {
   formatAdminReferralCount,
   formatAdminReferralCredits,
   formatAdminReferralPaidAmount,
-  formatAdminReferralRate,
-  getAdminReferralProviderLabel,
-  getAdminReferralStatusDisplay,
-} from './format'
+} from '../format'
+
+describe('admin referral reward formatting', () => {
+  test('accepts the simplified Chinese interface language code', () => {
+    assert.doesNotThrow(() => formatAdminReferralPaidAmount('1234.5', 'zhCN'))
+    assert.equal(formatAdminReferralPaidAmount('1234.5', 'zhCN'), '1,234.5')
+    assert.equal(formatAdminReferralCredits(625000, 'zhCN'), '1.25')
+    assert.equal(formatAdminReferralCount(1234, 'zhCN'), '1,234')
+  })
+
+  test('accepts the traditional Chinese interface language code', () => {
+    assert.doesNotThrow(() => formatAdminReferralPaidAmount('90', 'zhTW'))
+    assert.equal(formatAdminReferralPaidAmount('90', 'zhTW'), '90')
+  })
+})
