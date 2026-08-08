@@ -180,7 +180,7 @@ describe('referral reward details layout', () => {
       'Reward history',
       'Invitee',
       'Payment method',
-      'Fiat amount paid',
+      'Actual Amount',
       'Reward rate',
       'Reward',
       'Awarded at',
