@@ -4615,7 +4615,6 @@
     "Three calls made by the same vip user. Assume the base price of one call is 10.": "Три вызова одного пользователя vip. Пусть базовая цена одного вызова равна 10.",
     "Three groups; the override matrix has exactly one cell filled in (highlighted).": "Три группы; в матрице переопределений заполнена ровно одна ячейка (выделена).",
     "Three steps to get started": "Три шага для начала работы",
-    "Three-letter ISO 4217 code used for Waffo Pancake checkout and products, such as CNY or USD.": "Трёхбуквенный код валюты ISO 4217 для оплаты и продуктов Waffo Pancake, например CNY или USD.",
     "Throughput": "Пропускная способность",
     "Throughput by group": "Пропускная способность по группам",
     "Throughput short": "TPS",

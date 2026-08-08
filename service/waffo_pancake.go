@@ -21,7 +21,6 @@ type WaffoPancakePriceSnapshot struct {
 // OrderMerchantExternalID = our trade_no; Pancake echoes it back in webhooks.
 type WaffoPancakeCreateSessionParams struct {
 	ProductID               string
-	Currency                string
 	BuyerIdentity           string
 	PriceSnapshot           *WaffoPancakePriceSnapshot
 	BuyerEmail              string
@@ -113,15 +112,11 @@ func CreateWaffoPancakeCheckoutSession(ctx context.Context, params *WaffoPancake
 	if err != nil {
 		return nil, fmt.Errorf("build Waffo Pancake client: %w", err)
 	}
-	currency, err := setting.NormalizeWaffoPancakeCurrency(params.Currency)
-	if err != nil {
-		return nil, err
-	}
 
 	sdkParams := pancake.AuthenticatedCheckoutParams{
 		CreateCheckoutSessionParams: pancake.CreateCheckoutSessionParams{
 			ProductID:               params.ProductID,
-			Currency:                currency,
+			Currency:                "USD",
 			BuyerEmail:              optionalString(params.BuyerEmail),
 			ExpiresInSeconds:        params.ExpiresInSeconds,
 			OrderMerchantExternalID: optionalString(params.OrderMerchantExternalID),
@@ -336,7 +331,7 @@ func CreateWaffoPancakeProductForPlan(ctx context.Context, merchantID, privateKe
 // CreateWaffoPancakePrimaryProduct mints (and publishes) the wallet-top-up
 // OnetimeProduct under storeID. Per-checkout price overrides via PriceSnapshot
 // are what make the "1.00" seed price irrelevant at runtime.
-func CreateWaffoPancakePrimaryProduct(ctx context.Context, merchantID, privateKey, storeID, currency, returnURL string) (string, error) {
+func CreateWaffoPancakePrimaryProduct(ctx context.Context, merchantID, privateKey, storeID, returnURL string) (string, error) {
 	storeID = strings.TrimSpace(storeID)
 	if storeID == "" {
 		return "", fmt.Errorf("store id is required to create a product")
@@ -345,15 +340,11 @@ func CreateWaffoPancakePrimaryProduct(ctx context.Context, merchantID, privateKe
 	if err != nil {
 		return "", err
 	}
-	currency, err = setting.NormalizeWaffoPancakeCurrency(currency)
-	if err != nil {
-		return "", err
-	}
 	prodRes, err := client.OnetimeProducts.Create(ctx, pancake.CreateOnetimeProductParams{
 		StoreID: storeID,
 		Name:    defaultWaffoPancakeProductName,
 		Prices: pancake.Prices{
-			currency: {
+			"USD": {
 				Amount:      "1.00", // overridden at checkout via PriceSnapshot
 				TaxCategory: pancake.TaxCategory("saas"),
 			},
@@ -384,12 +375,12 @@ type WaffoPancakePairResult struct {
 // CreateWaffoPancakePrimaryPair mints a Store + OnetimeProduct in one
 // round-trip — the canonical "+ Create" entry point. Nothing is persisted
 // to settings; the operator's final Save commits the chosen IDs.
-func CreateWaffoPancakePrimaryPair(ctx context.Context, merchantID, privateKey, currency, returnURL string) (*WaffoPancakePairResult, error) {
+func CreateWaffoPancakePrimaryPair(ctx context.Context, merchantID, privateKey, returnURL string) (*WaffoPancakePairResult, error) {
 	storeID, err := CreateWaffoPancakePrimaryStore(ctx, merchantID, privateKey)
 	if err != nil {
 		return nil, err
 	}
-	productID, err := CreateWaffoPancakePrimaryProduct(ctx, merchantID, privateKey, storeID, currency, returnURL)
+	productID, err := CreateWaffoPancakePrimaryProduct(ctx, merchantID, privateKey, storeID, returnURL)
 	if err != nil {
 		return &WaffoPancakePairResult{
 			StoreID:     storeID,
@@ -409,21 +400,16 @@ func CreateWaffoPancakePrimaryPair(ctx context.Context, merchantID, privateKey, 
 // at the end of the configuration flow via model.UpdateOptionsBulk (single
 // DB transaction). A blank privateKey is treated as "keep current"
 // (Stripe-style API-secret UX) and is omitted from the bulk payload.
-func SaveWaffoPancakeConfig(ctx context.Context, merchantID, privateKey, returnURL, currency, storeID, productID string) error {
+func SaveWaffoPancakeConfig(ctx context.Context, merchantID, privateKey, returnURL, storeID, productID string) error {
 	merchantID = strings.TrimSpace(merchantID)
 	storeID = strings.TrimSpace(storeID)
 	productID = strings.TrimSpace(productID)
 	if merchantID == "" || storeID == "" || productID == "" {
 		return fmt.Errorf("merchant id, store id, and product id are required to save")
 	}
-	currency, err := resolveWaffoPancakeConfigCurrency(currency)
-	if err != nil {
-		return err
-	}
 	values := map[string]string{
 		"WaffoPancakeMerchantID": merchantID,
 		"WaffoPancakeReturnURL":  strings.TrimSpace(returnURL),
-		"WaffoPancakeCurrency":   currency,
 		"WaffoPancakeStoreID":    storeID,
 		"WaffoPancakeProductID":  productID,
 	}
@@ -434,16 +420,6 @@ func SaveWaffoPancakeConfig(ctx context.Context, merchantID, privateKey, returnU
 		return fmt.Errorf("persist Waffo Pancake config: %w", err)
 	}
 	return nil
-}
-
-// Older admin frontends do not send a currency in the atomic save request.
-// Preserve the active setting in that case so saving credentials cannot
-// silently switch an existing CNY checkout back to the historical USD default.
-func resolveWaffoPancakeConfigCurrency(value string) (string, error) {
-	if strings.TrimSpace(value) == "" {
-		value = setting.WaffoPancakeCurrency
-	}
-	return setting.NormalizeWaffoPancakeCurrency(value)
 }
 
 type WaffoPancakeCatalogProduct struct {

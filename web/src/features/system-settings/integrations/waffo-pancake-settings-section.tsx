@@ -46,7 +46,6 @@ export type WaffoPancakeSettingsValues = {
   WaffoPancakeMerchantID: string
   WaffoPancakePrivateKey: string
   WaffoPancakeReturnURL: string
-  WaffoPancakeCurrency: string
 }
 
 export interface WaffoPancakeBinding {
@@ -296,7 +295,6 @@ export function WaffoPancakeSettingsSection({
         merchantID,
         privateKey,
         returnURL: trimmedReturn,
-        currency: values.WaffoPancakeCurrency,
       })
       if (
         body?.message === 'success' &&
@@ -448,26 +446,6 @@ export function WaffoPancakeSettingsSection({
           <p className='text-muted-foreground text-xs'>
             {t(
               'The environment (test vs production) is decided by the key you paste here — use the Test key while integrating, then swap to the Production key when going live.'
-            )}
-          </p>
-        </div>
-
-        <div className='grid gap-1.5'>
-          <Label>{t('Currency')}</Label>
-          <Input
-            value={values.WaffoPancakeCurrency}
-            maxLength={3}
-            autoComplete='off'
-            onChange={(event) =>
-              onValueChange(
-                'WaffoPancakeCurrency',
-                event.target.value.toUpperCase()
-              )
-            }
-          />
-          <p className='text-muted-foreground text-xs'>
-            {t(
-              'Three-letter ISO 4217 code used for Waffo Pancake checkout and products, such as CNY or USD.'
             )}
           </p>
         </div>

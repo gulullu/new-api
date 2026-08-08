@@ -4632,7 +4632,6 @@
     "Three calls made by the same vip user. Assume the base price of one call is 10.": "同一個 vip 用戶發起三次呼叫，假設模型單次呼叫基礎價格為 10：",
     "Three groups; the override matrix has exactly one cell filled in (highlighted).": "三個分組；覆蓋矩陣只填了一個格子（高亮顯示）。",
     "Three steps to get started": "三步快速上手",
-    "Three-letter ISO 4217 code used for Waffo Pancake checkout and products, such as CNY or USD.": "Waffo Pancake 結帳和產品使用的三字母 ISO 4217 貨幣代碼，例如 CNY 或 USD。",
     "Throughput": "吞吐量",
     "Throughput by group": "各分組吞吐量",
     "Throughput short": "吞吐",
