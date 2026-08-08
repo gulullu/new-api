@@ -227,21 +227,31 @@ func isReferralRewardCurrency(currency string) bool {
 }
 
 // referralRewardBillingAmount keeps the claim's paid amount/currency untouched
-// for audit purposes while converting Waffo Pancake's USD checkout amount back
-// to RelayBases billing units. Other supported gateways already use a one-unit
-// payment basis, so their verified amount is returned unchanged.
+// for audit purposes while converting USD checkout amounts from gateways with
+// a configurable per-credit unit price back to RelayBases billing units. Other
+// supported gateway/currency combinations already use a one-unit payment basis,
+// so their verified amount is returned unchanged.
 func referralRewardBillingAmount(topUp *TopUp, payment VerifiedPayment) (decimal.Decimal, bool) {
 	if topUp == nil {
 		return decimal.Zero, false
 	}
-	if topUp.PaymentProvider != PaymentProviderWaffoPancake ||
-		!strings.EqualFold(strings.TrimSpace(payment.Currency), "USD") {
+	if !strings.EqualFold(strings.TrimSpace(payment.Currency), "USD") {
 		return payment.Amount, true
 	}
 
-	unitPrice := decimal.NewFromFloat(setting.WaffoPancakeUnitPrice)
+	unitPriceValue := 0.0
+	switch topUp.PaymentProvider {
+	case PaymentProviderStripe:
+		unitPriceValue = setting.StripeUnitPrice
+	case PaymentProviderWaffoPancake:
+		unitPriceValue = setting.WaffoPancakeUnitPrice
+	default:
+		return payment.Amount, true
+	}
+
+	unitPrice := decimal.NewFromFloat(unitPriceValue)
 	if !unitPrice.IsPositive() {
-		common.SysError("skipped referral reward because Waffo Pancake unit price is invalid")
+		common.SysError("skipped referral reward because payment unit price is invalid: provider=" + topUp.PaymentProvider)
 		return decimal.Zero, false
 	}
 	return payment.Amount.Div(unitPrice), true

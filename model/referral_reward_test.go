@@ -16,27 +16,39 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestReferralRewardBillingAmountNormalizesWaffoPancakeUSD(t *testing.T) {
-	originalUnitPrice := setting.WaffoPancakeUnitPrice
+func TestReferralRewardBillingAmountNormalizesConfiguredUSDGateways(t *testing.T) {
+	originalStripeUnitPrice := setting.StripeUnitPrice
+	originalWaffoPancakeUnitPrice := setting.WaffoPancakeUnitPrice
+	setting.StripeUnitPrice = 0.1473
 	setting.WaffoPancakeUnitPrice = 0.1473
 	t.Cleanup(func() {
-		setting.WaffoPancakeUnitPrice = originalUnitPrice
+		setting.StripeUnitPrice = originalStripeUnitPrice
+		setting.WaffoPancakeUnitPrice = originalWaffoPancakeUnitPrice
 	})
 
 	payment, err := NewVerifiedPayment("2.95", "USD", "event", "payment", true)
 	require.NoError(t, err)
+	expected := decimal.RequireFromString("2.95").Div(decimal.RequireFromString("0.1473"))
 
-	amount, ok := referralRewardBillingAmount(&TopUp{
-		PaymentProvider: PaymentProviderWaffoPancake,
-	}, payment)
-	require.True(t, ok)
-	assert.True(t, amount.Equal(decimal.RequireFromString("2.95").Div(decimal.RequireFromString("0.1473"))))
+	for _, provider := range []string{PaymentProviderStripe, PaymentProviderWaffoPancake} {
+		amount, ok := referralRewardBillingAmount(&TopUp{PaymentProvider: provider}, payment)
+		require.True(t, ok)
+		assert.True(t, amount.Equal(expected), provider)
+	}
 
 	unchanged, ok := referralRewardBillingAmount(&TopUp{
-		PaymentProvider: PaymentProviderStripe,
+		PaymentProvider: PaymentProviderCreem,
 	}, payment)
 	require.True(t, ok)
 	assert.True(t, unchanged.Equal(payment.Amount))
+
+	cnyPayment, err := NewVerifiedPayment("20", "CNY", "event-cny", "payment-cny", true)
+	require.NoError(t, err)
+	unchanged, ok = referralRewardBillingAmount(&TopUp{
+		PaymentProvider: PaymentProviderStripe,
+	}, cnyPayment)
+	require.True(t, ok)
+	assert.True(t, unchanged.Equal(cnyPayment.Amount))
 }
 
 type legacyFirstPaymentReferralRewardClaim struct {
