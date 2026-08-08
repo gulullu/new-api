@@ -8,6 +8,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
+	"github.com/QuantumNous/new-api/setting"
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -225,6 +226,27 @@ func isReferralRewardCurrency(currency string) bool {
 	}
 }
 
+// referralRewardBillingAmount keeps the claim's paid amount/currency untouched
+// for audit purposes while converting Waffo Pancake's USD checkout amount back
+// to RelayBases billing units. Other supported gateways already use a one-unit
+// payment basis, so their verified amount is returned unchanged.
+func referralRewardBillingAmount(topUp *TopUp, payment VerifiedPayment) (decimal.Decimal, bool) {
+	if topUp == nil {
+		return decimal.Zero, false
+	}
+	if topUp.PaymentProvider != PaymentProviderWaffoPancake ||
+		!strings.EqualFold(strings.TrimSpace(payment.Currency), "USD") {
+		return payment.Amount, true
+	}
+
+	unitPrice := decimal.NewFromFloat(setting.WaffoPancakeUnitPrice)
+	if !unitPrice.IsPositive() {
+		common.SysError("skipped referral reward because Waffo Pancake unit price is invalid")
+		return decimal.Zero, false
+	}
+	return payment.Amount.Div(unitPrice), true
+}
+
 func referralRewardProviders() []string {
 	return []string{
 		PaymentProviderEpay,
@@ -433,7 +455,11 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 		return false, 0, 0, nil
 	}
 
-	rewardDecimal := payment.Amount.
+	rewardBillingAmount, ok := referralRewardBillingAmount(topUp, payment)
+	if !ok || !rewardBillingAmount.IsPositive() {
+		return false, 0, 0, nil
+	}
+	rewardDecimal := rewardBillingAmount.
 		Mul(decimal.NewFromInt(ReferralRewardBasisPoints)).
 		Div(decimal.NewFromInt(10000)).
 		Mul(decimal.NewFromFloat(common.QuotaPerUnit)).

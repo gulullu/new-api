@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/setting"
 
 	"github.com/glebarez/sqlite"
 	"github.com/shopspring/decimal"
@@ -14,6 +15,29 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
+
+func TestReferralRewardBillingAmountNormalizesWaffoPancakeUSD(t *testing.T) {
+	originalUnitPrice := setting.WaffoPancakeUnitPrice
+	setting.WaffoPancakeUnitPrice = 0.1473
+	t.Cleanup(func() {
+		setting.WaffoPancakeUnitPrice = originalUnitPrice
+	})
+
+	payment, err := NewVerifiedPayment("2.95", "USD", "event", "payment", true)
+	require.NoError(t, err)
+
+	amount, ok := referralRewardBillingAmount(&TopUp{
+		PaymentProvider: PaymentProviderWaffoPancake,
+	}, payment)
+	require.True(t, ok)
+	assert.True(t, amount.Equal(decimal.RequireFromString("2.95").Div(decimal.RequireFromString("0.1473"))))
+
+	unchanged, ok := referralRewardBillingAmount(&TopUp{
+		PaymentProvider: PaymentProviderStripe,
+	}, payment)
+	require.True(t, ok)
+	assert.True(t, unchanged.Equal(payment.Amount))
+}
 
 type legacyFirstPaymentReferralRewardClaim struct {
 	Id               int
