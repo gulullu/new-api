@@ -4615,7 +4615,6 @@
     "Three calls made by the same vip user. Assume the base price of one call is 10.": "同じ vip ユーザーによる3回の呼び出し。1回の基本価格を 10 とします：",
     "Three groups; the override matrix has exactly one cell filled in (highlighted).": "3つのグループ。上書きマトリクスには1つのセルだけ値が入っています（ハイライト表示）。",
     "Three steps to get started": "3ステップで始める",
-    "Three-letter ISO 4217 code used for Waffo Pancake checkout and products, such as CNY or USD.": "Waffo Pancake のチェックアウトと商品で使用する3文字の ISO 4217 通貨コード（CNY、USD など）。",
     "Throughput": "スループット",
     "Throughput by group": "グループ別スループット",
     "Throughput short": "TPS",
