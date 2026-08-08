@@ -74,16 +74,11 @@ export function useAdminReferralRewardsColumns(): ColumnDef<AdminReferralReward>
     },
     {
       accessorKey: 'paid_amount',
-      header: t('Fiat amount paid'),
+      header: t('Actual Amount'),
       cell: ({ row }) => (
-        <div className='min-w-0'>
-          <div className={`${WRAP_CLASS} font-medium tabular-nums`}>
-            {formatAdminReferralPaidAmount(row.original.paid_amount, locale)}
-          </div>
-          <div className='text-muted-foreground mt-0.5 text-xs'>
-            {t('Fiat')}
-          </div>
-        </div>
+        <span className={`${WRAP_CLASS} font-medium tabular-nums`}>
+          {formatAdminReferralPaidAmount(row.original.paid_amount, locale)}
+        </span>
       ),
       size: 130,
     },

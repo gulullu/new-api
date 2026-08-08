@@ -145,7 +145,7 @@ describe('admin referral reward dashboard layout', () => {
     assert.equal(invitee.textContent, reward.invitee_label)
     assert.equal(inviter.classList.contains('whitespace-normal'), true)
     assert.equal(invitee.classList.contains('whitespace-normal'), true)
-    assert.equal(card.textContent?.includes('Fiat'), true)
+    assert.equal(card.textContent?.includes('Fiat'), false)
     assert.equal(card.textContent?.includes('USD'), false)
     assert.equal(card.textContent?.includes('CNY'), false)
     assert.equal(card.textContent?.includes('gateway'), false)
@@ -163,7 +163,7 @@ describe('admin referral reward dashboard layout', () => {
       'Site-wide referral summary',
       'Referral relationship',
       'Deleted user',
-      'Fiat',
+      'Actual Amount',
       'Reward credits',
       'Reversal reason',
       'No referral records found',

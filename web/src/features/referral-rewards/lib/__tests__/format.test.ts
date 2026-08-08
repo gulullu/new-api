@@ -22,7 +22,7 @@ import { describe, test } from 'node:test'
 import { formatReferralPaidAmount, formatReferralRewardRate } from '../format'
 
 describe('referral reward formatting', () => {
-  test('shows the processor-confirmed fiat amount without a currency code', () => {
+  test('shows the processor-confirmed paid amount without a currency code', () => {
     const formatted = formatReferralPaidAmount('90', 'en')
 
     assert.equal(formatted, '90')

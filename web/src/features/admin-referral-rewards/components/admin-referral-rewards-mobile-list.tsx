@@ -130,11 +130,10 @@ export function AdminReferralRewardMobileCard(props: {
         <MobileField label={t('Payment method')}>
           {getAdminReferralProviderLabel(reward.payment_provider)}
         </MobileField>
-        <MobileField label={t('Fiat amount paid')}>
+        <MobileField label={t('Actual Amount')}>
           <span className='font-medium tabular-nums'>
             {formatAdminReferralPaidAmount(reward.paid_amount, locale)}
-          </span>{' '}
-          <span className='text-muted-foreground text-xs'>{t('Fiat')}</span>
+          </span>
         </MobileField>
         <MobileField label={t('Reward credits')}>
           <span className='font-semibold tabular-nums'>

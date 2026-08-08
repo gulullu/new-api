@@ -62,7 +62,7 @@ export function useReferralRewardsColumns(): ColumnDef<ReferralReward>[] {
     },
     {
       accessorKey: 'paid_amount',
-      header: t('Fiat amount paid'),
+      header: t('Actual Amount'),
       cell: ({ row }) => (
         <span className={`${WRAPPED_VALUE_CLASS} font-medium tabular-nums`}>
           {formatReferralPaidAmount(
