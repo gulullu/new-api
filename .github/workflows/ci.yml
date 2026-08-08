@@ -85,4 +85,7 @@ jobs:
         run: bun run typecheck
 
       - name: Test
-        run: bun test
+        run: |
+          find src -type f \( -name '*.test.ts' -o -name '*.test.tsx' -o -name '*.spec.ts' -o -name '*.spec.tsx' \) -print0 \
+            | sort -z \
+            | xargs -0 -n 1 bun test
