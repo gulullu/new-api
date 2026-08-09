@@ -171,11 +171,11 @@ export function AdminReferralRewardsTable() {
             </IconBadge>
             <div className='min-w-0'>
               <h2 className='text-sm font-semibold [overflow-wrap:anywhere] break-words whitespace-normal'>
-                {t('Site-wide reward ledger')}
+                {t('Site-wide referral rewards')}
               </h2>
               <p className='text-muted-foreground mt-1 text-xs leading-relaxed [overflow-wrap:anywhere] break-words whitespace-normal sm:text-sm'>
                 {t(
-                  'All referral rewards. Identities are masked; payment references are hidden.'
+                  'Review referral rewards across the site. User details are partially hidden for privacy.'
                 )}
               </p>
             </div>

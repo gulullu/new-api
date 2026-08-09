@@ -170,7 +170,7 @@ describe('affiliate rewards card layout', () => {
     await unmountCard(rendered)
   })
 
-  test('shows distinct eligible invitees instead of the legacy registration count', async () => {
+  test('shows successful referrals instead of the legacy registration count', async () => {
     await i18n.changeLanguage('en')
     const rendered = await renderCard({ qualifiedInvitees: 2 })
 
@@ -235,13 +235,12 @@ describe('affiliate rewards card layout', () => {
     assert.ok(transferNote)
     assert.ok(rules)
     assert.equal(rules.open, false)
-    assert.equal(summary.textContent?.includes('优惠后实付金额返利 3%'), true)
-    assert.equal(transferNote.textContent?.includes('确认后可转入余额'), true)
-    assert.equal(
-      rules.textContent?.includes('仅受邀用户首笔已验签实付充值可获返利'),
-      true
-    )
-    assert.equal(rules.textContent?.includes('不按充值面额或优惠前金额'), true)
+    assert.equal(summary.textContent?.includes('实付金额 3% 的返利'), true)
+    assert.equal(transferNote.textContent?.includes('可用返利可转入'), true)
+    assert.equal(rules.textContent?.includes('仅首次成功充值参与返利'), true)
+    assert.equal(rules.textContent?.includes('按实付金额计算'), true)
+    assert.equal(rules.textContent?.includes('已验签'), false)
+    assert.equal(rules.textContent?.includes('优惠后'), false)
 
     const clippedElements = rendered.container.querySelectorAll(
       '[class*="truncate"], [class*="line-clamp"]'
@@ -274,13 +273,13 @@ describe('affiliate rewards card layout', () => {
 
   test('keeps the referral rules translated in every supported locale', () => {
     const keys = [
-      'First verified paid top-up: {{rewardRate}} of the amount paid after discounts.',
-      'Eligible invitees',
-      'Confirmed rewards can be transferred to your balance.',
-      'Full referral rules',
+      "Earn {{rewardRate}} of the amount paid on each invitee's first top-up.",
+      'Successful referrals',
+      'Available rewards can be transferred to your balance.',
+      'Referral rules',
       'New users still receive registration credit. Inviting alone earns no reward.',
-      "Only the invitee's first verified paid top-up can earn a reward; later top-ups do not, even if the first was ineligible.",
-      'Rewards use only the processor-confirmed amount paid after discounts in a supported currency, not the top-up value or pre-discount price.',
+      "Only an invitee's first successful top-up can earn a reward, based on the amount paid. Later top-ups do not qualify.",
+      'Redemption codes, promotional credits, manually added credits, and failed or canceled orders do not qualify. Rewards from refunded or disputed orders may be deducted.',
       'Your Referral Link',
     ]
 

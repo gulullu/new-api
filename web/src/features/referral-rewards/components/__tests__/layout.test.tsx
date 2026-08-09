@@ -187,7 +187,7 @@ describe('referral reward details layout', () => {
       'Reward history',
       'Invitee',
       'Payment method',
-      'Actual Amount',
+      'Amount paid',
       'Reward rate',
       'Reward',
       'Awarded at',
@@ -196,10 +196,10 @@ describe('referral reward details layout', () => {
       'Withheld',
       'Private invitee',
       'No Referral Rewards Yet',
-      'Confirmed rewards will appear here.',
+      'Referral rewards will appear here.',
       'Failed to load referral rewards',
       'Rewards from invited users.',
-      'Invitee details are masked.',
+      'Personal details are partially hidden for privacy.',
     ]
 
     const resources = [en, zh, zhTW, fr, ja, ru, vi]

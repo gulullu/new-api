@@ -37,10 +37,9 @@ export function UserReferralInfoCell(props: UserReferralInfoCellProps) {
   const inviterId = props.user.inviter_id ?? 0
   const qualifiedInvitees = props.user.qualified_referral_invitees ?? 0
   const affHistoryQuota = props.user.aff_history_quota ?? 0
-  const inviteeCountLabel =
-    qualifiedInvitees === 1
-      ? t('{{count}} eligible invitee', { count: qualifiedInvitees })
-      : t('{{count}} eligible invitees', { count: qualifiedInvitees })
+  const inviteeCountLabel = t('Successful referrals: {{count}}', {
+    count: qualifiedInvitees,
+  })
 
   return (
     <div
@@ -61,7 +60,7 @@ export function UserReferralInfoCell(props: UserReferralInfoCellProps) {
         <TooltipContent>
           <p className='max-w-64 text-xs leading-relaxed whitespace-normal'>
             {t(
-              'Invitees whose first verified paid top-up produced a reward; reversed rewards are excluded.'
+              'Invited users whose first top-up earned a reward. Refunded or disputed payments are not counted.'
             )}
           </p>
         </TooltipContent>
@@ -80,7 +79,7 @@ export function UserReferralInfoCell(props: UserReferralInfoCellProps) {
         <TooltipContent>
           <p className='text-xs'>
             {t(
-              'Cumulative referral reward credits, net of refunds and disputes.'
+              'Referral rewards earned so far, excluding refunds and disputes.'
             )}
           </p>
         </TooltipContent>

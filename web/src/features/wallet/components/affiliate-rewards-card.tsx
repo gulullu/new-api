@@ -96,7 +96,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
                 data-referral-summary
               >
                 {t(
-                  'First verified paid top-up: {{rewardRate}} of the amount paid after discounts.',
+                  "Earn {{rewardRate}} of the amount paid on each invitee's first top-up.",
                   { rewardRate }
                 )}
               </p>
@@ -117,7 +117,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
               ],
               [
                 'eligible-invitees',
-                t('Eligible invitees'),
+                t('Successful referrals'),
                 String(qualifiedInvitees),
               ],
             ].map(([metric, label, value]) => (
@@ -141,7 +141,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
           className='text-muted-foreground text-xs leading-relaxed break-words whitespace-normal'
           data-referral-transfer-note
         >
-          {t('Confirmed rewards can be transferred to your balance.')}
+          {t('Available rewards can be transferred to your balance.')}
         </p>
 
         <div className='border-border/60 bg-background/45 min-w-0 space-y-2 rounded-lg border p-2.5 sm:p-3'>
@@ -194,7 +194,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
             data-referral-rules
           >
             <summary className='cursor-pointer text-sm font-semibold break-words select-none'>
-              {t('Full referral rules')}
+              {t('Referral rules')}
             </summary>
             <ul className='text-muted-foreground mt-3 grid min-w-0 list-disc gap-2 pl-5 text-xs leading-relaxed lg:grid-cols-2'>
               {[
@@ -202,16 +202,13 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
                   'New users still receive registration credit. Inviting alone earns no reward.'
                 ),
                 t(
-                  "Only the invitee's first verified paid top-up can earn a reward; later top-ups do not, even if the first was ineligible."
+                  "Only an invitee's first successful top-up can earn a reward, based on the amount paid. Later top-ups do not qualify."
                 ),
                 t(
-                  'Rewards use only the processor-confirmed amount paid after discounts in a supported currency, not the top-up value or pre-discount price.'
+                  'Redemption codes, promotional credits, manually added credits, and failed or canceled orders do not qualify. Rewards from refunded or disputed orders may be deducted.'
                 ),
                 t(
-                  'Codes, promotional credits, administrator adjustments, and failed, canceled, duplicate, refunded, or disputed orders are ineligible. Related rewards may be withheld, reversed, or recovered.'
-                ),
-                t(
-                  'Rewards linked to self-referrals, bulk sign-ups, duplicate accounts, fraud, or other abuse may be withheld, reversed, or recovered. Related accounts may be suspended.'
+                  'Self-referrals, bulk sign-ups, duplicate accounts, fraud, or other abuse may result in canceled rewards or account restrictions.'
                 ),
               ].map((rule) => (
                 <li key={rule} className='break-words whitespace-normal'>

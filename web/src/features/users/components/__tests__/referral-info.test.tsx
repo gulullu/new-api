@@ -138,7 +138,7 @@ describe('user referral information', () => {
     domWindow.close()
   })
 
-  test('uses distinct eligible invitees instead of legacy counters', async () => {
+  test('uses distinct successful referrals instead of legacy counters', async () => {
     await i18n.changeLanguage('en')
     const rendered = await renderCell(user)
     const referralInfo = rendered.container.querySelector(
@@ -147,7 +147,7 @@ describe('user referral information', () => {
 
     assert.ok(referralInfo)
     assert.equal(
-      referralInfo.textContent?.includes('2 eligible invitees'),
+      referralInfo.textContent?.includes('Successful referrals: 2'),
       true
     )
     assert.equal(referralInfo.textContent?.includes('99'), false)
@@ -160,7 +160,7 @@ describe('user referral information', () => {
     await unmountCell(rendered)
   })
 
-  test('uses a singular label for one eligible invitee', async () => {
+  test('uses the same compact count label for one successful referral', async () => {
     await i18n.changeLanguage('en')
     const rendered = await renderCell({
       ...user,
@@ -168,12 +168,8 @@ describe('user referral information', () => {
     })
 
     assert.equal(
-      rendered.container.textContent?.includes('1 eligible invitee'),
+      rendered.container.textContent?.includes('Successful referrals: 1'),
       true
-    )
-    assert.equal(
-      rendered.container.textContent?.includes('1 eligible invitees'),
-      false
     )
 
     await unmountCell(rendered)
@@ -184,7 +180,7 @@ describe('user referral information', () => {
     const rendered = await renderCell({ ...user, inviter_id: 0 })
     const text = rendered.container.textContent ?? ''
 
-    assert.equal(text.includes('2 eligible invitees'), true)
+    assert.equal(text.includes('Successful referrals: 2'), true)
     assert.equal(text.includes('Rewards'), true)
     assert.equal(text.includes('Inviter #'), false)
     assert.equal(text.includes('No Inviter'), false)
@@ -195,13 +191,12 @@ describe('user referral information', () => {
   test('keeps compact referral labels translated in every locale', () => {
     const keys = [
       'Referral',
-      '{{count}} eligible invitee',
-      '{{count}} eligible invitees',
-      'Invitees whose first verified paid top-up produced a reward; reversed rewards are excluded.',
+      'Successful referrals: {{count}}',
+      'Invited users whose first top-up earned a reward. Refunded or disputed payments are not counted.',
       'Rewards',
-      'Cumulative referral reward credits, net of refunds and disputes.',
+      'Referral rewards earned so far, excluding refunds and disputes.',
       'Inviter #{{id}}',
-      'Eligible invitees',
+      'Successful referrals',
     ]
 
     const resources = [en, zh, zhTW, fr, ja, ru, vi]

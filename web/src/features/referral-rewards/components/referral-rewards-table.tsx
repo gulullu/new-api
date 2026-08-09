@@ -120,7 +120,7 @@ export function ReferralRewardsTable() {
         <div className='bg-muted/40 text-muted-foreground flex min-w-0 items-start gap-2 rounded-lg px-2.5 py-2 text-xs leading-relaxed lg:max-w-sm'>
           <ShieldCheck className='text-chart-2 mt-0.5 size-4 shrink-0' />
           <p className='[overflow-wrap:anywhere] break-words whitespace-normal'>
-            {t('Invitee details are masked.')}
+            {t('Personal details are partially hidden for privacy.')}
           </p>
         </div>
       </header>
@@ -132,7 +132,7 @@ export function ReferralRewardsTable() {
           isLoading={isLoadingData}
           isFetching={isFetching}
           emptyTitle={t('No Referral Rewards Yet')}
-          emptyDescription={t('Confirmed rewards will appear here.')}
+          emptyDescription={t('Referral rewards will appear here.')}
           skeletonKeyPrefix='referral-reward-skeleton'
           applyHeaderSize
           toolbarProps={null}
