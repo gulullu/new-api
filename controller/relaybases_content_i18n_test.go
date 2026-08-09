@@ -66,7 +66,6 @@ func TestGetStatusLocalizesConfiguredContentByExplicitLocale(t *testing.T) {
 	assert.Equal(t, "Qu’est-ce que RelayBases ?", payload.Data.FAQ[0]["question"])
 	assert.Contains(t, payload.Data.FAQ[0]["answer"], "passerelle unifiée")
 	assert.Equal(t, "fr", response.Header().Get("Content-Language"))
-	assert.Equal(t, "content", response.Header().Get("X-RelayBases-Native-Features"))
 	assert.Equal(t, "private, no-store", response.Header().Get("Cache-Control"))
 }
 

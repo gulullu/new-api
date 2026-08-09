@@ -20,7 +20,6 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { t } from 'i18next'
 import { toast } from 'sonner'
 
-import { installRelayBasesNativeCapabilityInterceptor } from '@/features/relaybases/native-capabilities'
 import {
   applyAuthRotation,
   clearAuthentication,
@@ -49,8 +48,6 @@ export const api = axios.create({
     'Cache-Control': 'no-store',
   },
 })
-
-installRelayBasesNativeCapabilityInterceptor(api)
 
 const inFlightGet = new Map<string, Promise<unknown>>()
 const originalGet = api.get.bind(api)
