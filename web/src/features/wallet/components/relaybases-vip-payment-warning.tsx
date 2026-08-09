@@ -107,7 +107,7 @@ export function RelayBasesVipPaymentActions(
         {props.processing && (
           <Loader2 aria-hidden='true' className='animate-spin' />
         )}
-        {t('Continue without the VIP discount')}
+        {t('Continue payment')}
       </AlertDialogAction>
     </AlertDialogFooter>
   )

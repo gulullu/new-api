@@ -286,7 +286,7 @@ describe('RelayBases VIP payment warning', () => {
       'Your account is eligible for the VIP 20% top-up discount. Because Stripe and Waffo use overseas payment channels with higher processing fees, this discount is not applied automatically.',
       'Contact support to top up at the VIP rate. If you continue, you will pay the amount shown above, including any public discount already displayed, but without the VIP discount.',
       'Contact support for the VIP discount',
-      'Continue without the VIP discount',
+      'Continue payment',
     ]
 
     for (const locale of supportedLocales) {
@@ -308,9 +308,23 @@ describe('RelayBases VIP payment warning', () => {
       resources.zh.translation['Contact support for the VIP discount'],
       '联系客服享受 8 折'
     )
-    assert.equal(
-      resources.zh.translation['Continue without the VIP discount'],
-      '继续支付（不享 VIP 8 折）'
+    assert.equal(resources.zh.translation['Continue payment'], '继续支付')
+    assert.deepEqual(
+      Object.fromEntries(
+        supportedLocales.map((locale) => [
+          locale,
+          resources[locale].translation['Continue payment'],
+        ])
+      ),
+      {
+        en: 'Continue',
+        zh: '继续支付',
+        'zh-TW': '繼續付款',
+        fr: 'Continuer',
+        ja: '続行',
+        ru: 'Продолжить',
+        vi: 'Tiếp tục',
+      }
     )
   })
 })
