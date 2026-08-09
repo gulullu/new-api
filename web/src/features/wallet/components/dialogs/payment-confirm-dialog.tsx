@@ -35,6 +35,10 @@ import { formatLocalCurrencyAmount } from '@/lib/currency'
 import { DEFAULT_DISCOUNT_RATE } from '../../constants'
 import { formatCurrency, getPaymentIcon } from '../../lib'
 import type { PaymentMethod } from '../../types'
+import {
+  RelayBasesVipPaymentActions,
+  RelayBasesVipPaymentNotice,
+} from '../relaybases-vip-payment-warning'
 
 interface PaymentConfirmDialogProps {
   open: boolean
@@ -47,6 +51,7 @@ interface PaymentConfirmDialogProps {
   processing: boolean
   discountRate?: number
   usdExchangeRate?: number
+  showRelayBasesVipPaymentWarning?: boolean
 }
 
 export function PaymentConfirmDialog({
@@ -60,6 +65,7 @@ export function PaymentConfirmDialog({
   processing,
   discountRate = DEFAULT_DISCOUNT_RATE,
   usdExchangeRate = 1,
+  showRelayBasesVipPaymentWarning = false,
 }: PaymentConfirmDialogProps) {
   const { t } = useTranslation()
   const hasDiscount = discountRate > 0 && discountRate < 1 && paymentAmount > 0
@@ -68,7 +74,7 @@ export function PaymentConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className='max-sm:w-[calc(100vw-1.5rem)] sm:max-w-md'>
+      <AlertDialogContent className='max-h-[calc(100dvh-1.5rem)] overflow-y-auto max-sm:w-[calc(100vw-1.5rem)] sm:max-w-md'>
         <AlertDialogHeader>
           <AlertDialogTitle className='text-xl font-semibold'>
             {t('Confirm Payment')}
@@ -139,17 +145,27 @@ export function PaymentConfirmDialog({
               </div>
             </div>
           </div>
+
+          {showRelayBasesVipPaymentWarning && <RelayBasesVipPaymentNotice />}
         </div>
 
-        <AlertDialogFooter className='grid grid-cols-2 gap-2 sm:flex'>
-          <AlertDialogCancel disabled={processing}>
-            {t('Cancel')}
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} disabled={processing}>
-            {processing && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-            {t('Confirm Payment')}
-          </AlertDialogAction>
-        </AlertDialogFooter>
+        {showRelayBasesVipPaymentWarning ? (
+          <RelayBasesVipPaymentActions
+            processing={processing}
+            onContactSupport={() => onOpenChange(false)}
+            onContinue={onConfirm}
+          />
+        ) : (
+          <AlertDialogFooter className='grid grid-cols-2 gap-2 sm:flex'>
+            <AlertDialogCancel disabled={processing}>
+              {t('Cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={onConfirm} disabled={processing}>
+              {processing && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+              {t('Confirm Payment')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        )}
       </AlertDialogContent>
     </AlertDialog>
   )

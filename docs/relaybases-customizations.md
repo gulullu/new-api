@@ -55,6 +55,7 @@
 | 模块 | 当前状态 | 关键位置 | 升级注意 |
 | --- | --- | --- | --- |
 | RelayBases 公网分享元数据 | 在部署入口增加 RelayBases favicon、manifest、Open Graph、Telegram/X 卡片和说明文案。它只定制部署外观；不得删除或改写仓库内 new-api、QuantumNous、AGPL、版权和源码归属。 | [web/index.html](../web/index.html)、[web/public](../web/public) | 官方重构入口模板时仅重新应用部署元数据，不批量替换官方名称。 |
+| VIP 海外渠道支付确认提醒 | 仅当用户分组精确为 `vip` 且选择 Stripe、Waffo 或 Waffo Pancake 时，在付款摘要内提示海外渠道手续费较高、VIP 8 折不会自动应用，并提供前往 RelayBases 官方 Telegram 客服或按当前显示金额继续付款两种选择。当前显示金额可能已包含公开充值优惠；本提示只说明 VIP 优惠，不改变支付、折扣或入账计算。 | [web/src/features/wallet/relaybases-vip-payment-warning-policy.ts](../web/src/features/wallet/relaybases-vip-payment-warning-policy.ts)、[web/src/features/wallet/components/relaybases-vip-payment-warning.tsx](../web/src/features/wallet/components/relaybases-vip-payment-warning.tsx)、[web/src/features/wallet/components/dialogs/payment-confirm-dialog.tsx](../web/src/features/wallet/components/dialogs/payment-confirm-dialog.tsx) | 官方若支持按用户分组与渠道配置确认提醒，迁移到官方能力后删除本地组件和单个布尔接线；保持客服地址与官网 canonical 入口一致。 |
 | 自动路由展示 | 自动分组、`auto_groups`、熔断路由和主要 UI 是 `v1.0.0-rc.24` 的官方功能，不是 RelayBases 后端魔改。当前 fork 仅有与官方实际单层动效一致的测试期望调整；可用分组与顺序是运行配置。 | [web/src/features/keys/components/api-key-group-cell.tsx](../web/src/features/keys/components/api-key-group-cell.tsx)、[web/src/features/keys/components/__tests__/api-key-group-cell.test.tsx](../web/src/features/keys/components/__tests__/api-key-group-cell.test.tsx)、[setting/user_usable_group.go](../setting/user_usable_group.go)、[service/group.go](../service/group.go) | 升级时以官方实现为准；若官方测试已修复，删除本地测试差异。外部公告/文档文案不应变成路由实现。 |
 | 移动侧栏 | 仅桌面折叠态包装 tooltip；移动端链接先交给路由处理，再在下一帧关闭侧栏，避免首击被焦点/tooltip 处理吞掉。 | [web/src/components/ui/sidebar.tsx](../web/src/components/ui/sidebar.tsx)、[web/src/components/layout/components/nav-group.tsx](../web/src/components/layout/components/nav-group.tsx)、[web/src/components/ui/__tests__/sidebar-tooltip.test.tsx](../web/src/components/ui/__tests__/sidebar-tooltip.test.tsx) | 官方若修复相同触摸竞态，删除本地 hook 和测试，不叠加两套延迟关闭逻辑。 |
 | 版本与 CI 兼容 | `VERSION` 明确记录当前官方基线；前端 CI 将 Bun 测试按文件串行执行以规避共享 DOM/全局状态互扰。 | [VERSION](../VERSION)、[.github/workflows/ci.yml](../.github/workflows/ci.yml) | 每次升级同步版本；先验证官方测试隔离是否已修复，再决定是否继续串行。 |
@@ -143,7 +144,7 @@ Worker 不得改写支付 API JSON、伪造回调、计算或赠送额度、决�
 | 历史数据 | 旧 CNY/USD 订单字段为空时显示“币种不可用”；不得显示裸 `money` 或按当前配置推断。 |
 | 推荐返利 | 每位受邀用户仅首笔已验签正式付款可获 3%，首笔不合格时资格不顺延；CNY/USD 原币种留账；订单单位价在建单与回调间变化；历史已付费但无返利；并发首单；注册不返；优惠后实付为基数；无邀请人、禁用邀请人、沙盒、重复回调、退款、争议和额度溢出。既有历史返利与余额必须保持不变。 |
 | 统计与隐私 | 用户列表按 `invitee_id` 去重统计 `awarded + withheld`，排除 `reversed`；`aff_count` 不参与；普通用户仅见脱敏身份，管理员页面不泄露支付引用。 |
-| 前端 | 中/英文桌面与移动端；`Ɍ` 额度与 `USD/CNY` 实付不混淆；返利表桌面/移动一致；移动侧栏首击导航有效。 |
+| 前端 | 中/英文桌面与移动端；`Ɍ` 额度与 `USD/CNY` 实付不混淆；返利表桌面/移动一致；移动侧栏首击导航有效；VIP 仅在 Stripe/Waffo/Waffo Pancake 确认页看到完整双选项，其他分组和渠道仍使用官方确认流程。 |
 | 构建 | 后端相关单测后运行 `go test ./...`；前端使用 Bun 执行 typecheck、测试和 production build；`relaykit` 有改动时额外执行 `cd relaykit && GOWORK=off go build ./...`。 |
 
 ## 8. 维护记录模板
@@ -154,4 +155,5 @@ Worker 不得改写支付 API JSON、伪造回调、计算或赠送额度、决�
 | --- | --- | --- | --- | --- | --- |
 | 2026-08-09 | `v1.0.0-rc.24` / `5c3abffe` | 新增订单实付快照、ISO 币种展示和有效受邀支付投影 | `top_ups.payment_amount`、`top_ups.payment_currency`；User 投影不落库 | 无新增 | 见第 4、7 节；回滚保留新增列 |
 | 2026-08-09 | `v1.0.0-rc.24` / `88786a2b` | 推荐返利改为每位受邀用户仅首笔已验签正式付款可获返利，首笔不合格时不顺延；新增订单单位价快照、去重受邀用户投影、转余额缓存失效和精简的七语言界面 | `top_ups.referral_unit_price`；既有返利账本和用户返利余额不修改；User 投影不落库 | 无新增 | 见第 4、7 节；回滚保留新增列和全部历史返利 |
+| 2026-08-09 | `v1.0.0-rc.24` / `5259a8e0` | 新增 VIP 海外渠道支付确认提醒和七语言双选项；支付与折扣计算不变 | 无 | RelayBases Telegram 客服 `https://t.me/relaybases` | 定向组件/交互/i18n 测试；回滚删除独立组件及确认弹窗的布尔接线 |
 | YYYY-MM-DD | tag + commit | 一句话说明 | 字段/迁移/无 | Worker/支付平台/无 | 测试命令、发布版本、回滚提交 |
