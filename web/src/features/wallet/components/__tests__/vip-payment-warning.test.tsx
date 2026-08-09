@@ -90,6 +90,8 @@ const { I18nextProvider, initReactI18next } = await import('react-i18next')
 const { PAYMENT_TYPES } = await import('../../constants')
 const { RelayBasesVipPaymentActions, RelayBasesVipPaymentNotice } =
   await import('../relaybases-vip-payment-warning')
+const { PaymentConfirmDialog } =
+  await import('../dialogs/payment-confirm-dialog')
 const {
   RELAYBASES_SUPPORT_URL,
   resolveRelayBasesVipPaymentUserGroup,
@@ -143,6 +145,43 @@ async function unmountWarning(rendered: RenderedWarning) {
   rendered.container.remove()
 }
 
+async function renderPaymentDialog(options: {
+  processing?: boolean
+  showVipWarning: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  const container = document.createElement('div')
+  document.body.append(container)
+  const root = createRoot(container)
+
+  await act(async () => {
+    root.render(
+      <I18nextProvider i18n={i18n}>
+        <PaymentConfirmDialog
+          open
+          onOpenChange={options.onOpenChange ?? (() => undefined)}
+          onConfirm={() => undefined}
+          topupAmount={20}
+          paymentAmount={2.85}
+          paymentMethod={{ name: 'Stripe', type: PAYMENT_TYPES.STRIPE }}
+          calculating={false}
+          processing={options.processing ?? false}
+          showRelayBasesVipPaymentWarning={options.showVipWarning}
+        />
+      </I18nextProvider>
+    )
+  })
+
+  return { container, root }
+}
+
+async function unmountPaymentDialog(
+  rendered: Awaited<ReturnType<typeof renderPaymentDialog>>
+) {
+  await act(async () => rendered.root.unmount())
+  rendered.container.remove()
+}
+
 describe('RelayBases VIP payment warning', () => {
   after(() => {
     domWindow.close()
@@ -192,6 +231,58 @@ describe('RelayBases VIP payment warning', () => {
       resolveRelayBasesVipPaymentUserGroup('default', 'vip'),
       'default'
     )
+  })
+
+  test('shows an accessible top-right close action only for the VIP dialog', async () => {
+    await i18n.changeLanguage('en')
+    const openChanges: boolean[] = []
+    const rendered = await renderPaymentDialog({
+      showVipWarning: true,
+      onOpenChange: (open) => openChanges.push(open),
+    })
+
+    const closeButton = document.querySelector(
+      '[data-relaybases-vip-close]'
+    ) as HTMLButtonElement | null
+    assert.ok(closeButton)
+    assert.equal(closeButton.getAttribute('aria-label'), 'Close')
+    assert.equal(closeButton.classList.contains('absolute'), true)
+    assert.equal(closeButton.classList.contains('top-2'), true)
+    assert.equal(closeButton.classList.contains('right-2'), true)
+    assert.ok(closeButton.querySelector('svg[aria-hidden="true"]'))
+
+    await act(async () => closeButton.click())
+    assert.deepEqual(openChanges, [false])
+    await unmountPaymentDialog(rendered)
+
+    const regularDialog = await renderPaymentDialog({
+      showVipWarning: false,
+    })
+    assert.equal(document.querySelector('[data-relaybases-vip-close]'), null)
+    assert.equal(
+      document.querySelector('[data-slot="alert-dialog-cancel"]')?.textContent,
+      'Cancel'
+    )
+    await unmountPaymentDialog(regularDialog)
+  })
+
+  test('disables the VIP close action while payment is processing', async () => {
+    await i18n.changeLanguage('en')
+    const openChanges: boolean[] = []
+    const rendered = await renderPaymentDialog({
+      processing: true,
+      showVipWarning: true,
+      onOpenChange: (open) => openChanges.push(open),
+    })
+    const closeButton = document.querySelector(
+      '[data-relaybases-vip-close]'
+    ) as HTMLButtonElement
+
+    assert.equal(closeButton.disabled, true)
+    await act(async () => closeButton.click())
+    assert.deepEqual(openChanges, [])
+
+    await unmountPaymentDialog(rendered)
   })
 
   test('shows clear support and continue choices without truncating copy', async () => {

@@ -37,6 +37,7 @@ import { formatCurrency, getPaymentIcon } from '../../lib'
 import type { PaymentMethod } from '../../types'
 import {
   RelayBasesVipPaymentActions,
+  RelayBasesVipPaymentClose,
   RelayBasesVipPaymentNotice,
 } from '../relaybases-vip-payment-warning'
 
@@ -75,6 +76,9 @@ export function PaymentConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className='max-h-[calc(100dvh-1.5rem)] overflow-y-auto max-sm:w-[calc(100vw-1.5rem)] sm:max-w-md'>
+        {showRelayBasesVipPaymentWarning && (
+          <RelayBasesVipPaymentClose processing={processing} />
+        )}
         <AlertDialogHeader>
           <AlertDialogTitle className='text-xl font-semibold'>
             {t('Confirm Payment')}
