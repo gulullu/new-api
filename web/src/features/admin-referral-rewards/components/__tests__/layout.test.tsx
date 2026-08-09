@@ -169,13 +169,13 @@ describe('admin referral reward dashboard layout', () => {
       'Site-wide referral summary',
       'Referral relationship',
       'Deleted user',
-      'Actual Amount',
+      'Amount paid',
       'Reward credits',
       'Reversal reason',
       'No referral records found',
       'Failed to load referral data',
-      'Site-wide reward ledger',
-      'All referral rewards. Identities are masked; payment references are hidden.',
+      'Site-wide referral rewards',
+      'Review referral rewards across the site. User details are partially hidden for privacy.',
       'Search user ID, username, or email...',
     ]
 

@@ -159,7 +159,7 @@ async function renderDialog(fixture: UserInfo): Promise<RenderedDialog> {
       </I18nextProvider>
     )
   })
-  await act(async () => waitForText('Eligible invitees'))
+  await act(async () => waitForText('Successful referrals'))
 
   return { host, root }
 }
@@ -184,9 +184,9 @@ describe('usage-log user information dialog', () => {
     )
     const text = document.body.textContent ?? ''
 
-    assert.equal(text.includes('Eligible invitees'), true)
+    assert.equal(text.includes('Successful referrals'), true)
     assert.equal(text.includes('Invitee payments'), false)
-    assert.match(text, /Eligible invitees\s*2/)
+    assert.match(text, /Successful referrals\s*2/)
     assert.equal(text.includes('88'), false)
 
     await unmountDialog(rendered)
@@ -198,7 +198,7 @@ describe('usage-log user information dialog', () => {
     )
     const text = document.body.textContent ?? ''
 
-    assert.match(text, /Eligible invitees\s*3/)
+    assert.match(text, /Successful referrals\s*3/)
     assert.equal(text.includes('Invitee payments'), false)
 
     await unmountDialog(rendered)
@@ -208,12 +208,15 @@ describe('usage-log user information dialog', () => {
     const resources = [en, zh, zhTW, fr, ja, ru, vi]
 
     for (const resource of resources) {
-      assert.equal(typeof resource.translation['Eligible invitees'], 'string')
+      assert.equal(
+        typeof resource.translation['Successful referrals'],
+        'string'
+      )
     }
     for (const resource of resources.slice(1)) {
       assert.notEqual(
-        resource.translation['Eligible invitees'],
-        'Eligible invitees'
+        resource.translation['Successful referrals'],
+        'Successful referrals'
       )
     }
   })

@@ -118,7 +118,7 @@ export function ReferralRewardMobileCard(props: ReferralRewardMobileCardProps) {
         <ReferralRewardField label={t('Payment method')}>
           {getReferralPaymentProviderLabel(props.reward.payment_provider)}
         </ReferralRewardField>
-        <ReferralRewardField label={t('Actual Amount')}>
+        <ReferralRewardField label={t('Amount paid')}>
           <span className='font-medium tabular-nums'>
             {formatReferralPaidAmount(
               props.reward.paid_amount,
@@ -173,7 +173,7 @@ export function ReferralRewardsMobileList(
             </EmptyMedia>
             <EmptyTitle>{t('No Referral Rewards Yet')}</EmptyTitle>
             <EmptyDescription className='break-words whitespace-normal'>
-              {t('Confirmed rewards will appear here.')}
+              {t('Referral rewards will appear here.')}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

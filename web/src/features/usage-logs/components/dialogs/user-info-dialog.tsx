@@ -154,7 +154,7 @@ export function UserInfoDialog({
                 )}
                 {qualifiedReferralInvitees !== undefined && (
                   <InfoItem
-                    label={t('Eligible invitees')}
+                    label={t('Successful referrals')}
                     value={formatCompactNumber(qualifiedReferralInvitees)}
                   />
                 )}
