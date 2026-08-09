@@ -23,6 +23,7 @@ import { SectionPageLayout } from '@/components/layout'
 import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { getSelf } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth-store'
 
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
 import { BillingHistoryDialog } from './components/dialogs/billing-history-dialog'
@@ -47,6 +48,10 @@ import {
   getMinTopupAmount,
   dispatchSelectedPayment,
 } from './lib'
+import {
+  resolveRelayBasesVipPaymentUserGroup,
+  shouldShowRelayBasesVipPaymentWarning,
+} from './relaybases-vip-payment-warning-policy'
 import type {
   UserWalletData,
   PaymentMethod,
@@ -61,6 +66,7 @@ interface WalletProps {
 
 export function Wallet(props: WalletProps) {
   const { t } = useTranslation()
+  const authenticatedUserGroup = useAuthStore((state) => state.auth.user?.group)
   const [user, setUser] = useState<UserWalletData | null>(null)
   const [userLoading, setUserLoading] = useState(true)
   const [topupAmount, setTopupAmount] = useState(0)
@@ -365,6 +371,13 @@ export function Wallet(props: WalletProps) {
         processing={processing || waffoProcessing || pancakeProcessing}
         discountRate={getDiscountRate()}
         usdExchangeRate={effectiveUsdExchangeRate}
+        showRelayBasesVipPaymentWarning={shouldShowRelayBasesVipPaymentWarning(
+          resolveRelayBasesVipPaymentUserGroup(
+            user?.group,
+            authenticatedUserGroup
+          ),
+          selectedPaymentMethod?.type
+        )}
       />
 
       <TransferDialog
