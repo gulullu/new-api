@@ -25,6 +25,8 @@ import { RichContent } from '@/components/rich-content'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTheme } from '@/context/theme-provider'
+import { withRelayBasesDocumentPreferences } from '@/features/relaybases/navigation/document-preferences'
 import { isHttpUrl, isLikelyHtml } from '@/lib/content-format'
 
 import type { LegalDocumentResponse } from './types'
@@ -42,7 +44,8 @@ export function LegalDocument({
   fetchDocument,
   emptyMessage,
 }: LegalDocumentProps) {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
+  const { resolvedTheme } = useTheme()
   const { data, isLoading } = useQuery({
     queryKey: [queryKey],
     queryFn: fetchDocument,
@@ -54,6 +57,13 @@ export function LegalDocument({
   const isUrl = hasContent && isHttpUrl(rawContent)
   const contentIsHtml = hasContent && isLikelyHtml(rawContent)
   const success = data?.success ?? false
+  const preferredDocumentUrl = isUrl
+    ? withRelayBasesDocumentPreferences(
+        rawContent,
+        i18n.language,
+        resolvedTheme === 'dark' ? 'dark' : 'light'
+      )
+    : rawContent
 
   if (isLoading) {
     return (
@@ -107,7 +117,7 @@ export function LegalDocument({
               <Button
                 render={
                   <a
-                    href={rawContent}
+                    href={preferredDocumentUrl}
                     target='_blank'
                     rel='noopener noreferrer'
                   />

@@ -1,0 +1,145 @@
+{
+  "navigation": {
+    "serviceStatus": "Trạng thái dịch vụ",
+    "infiniteCanvas": "Khung vẽ vô hạn"
+  },
+  "auth": {
+    "signupOffer": {
+      "ariaLabel": "Quyền lợi khi đăng ký",
+      "status": "sẵn sàng",
+      "trial": "Có sẵn tín dụng dùng thử",
+      "trialDetail": "Khả dụng sau khi đăng ký",
+      "models": "Truy cập hợp nhất các mô hình hiện có",
+      "modelsDetail": "Xem Kho mô hình hiện tại",
+      "credits": "Ɍ1 = 1 API Credit",
+      "creditsDetail": "Được cộng theo số lượng hiển thị khi thanh toán",
+      "pricing": "Đơn hàng được định giá bằng USD",
+      "pricingDetail": "Trang thanh toán hiển thị số tiền cần trả",
+      "ready": "Tạo API Key sau khi đăng ký."
+    },
+    "legal": {
+      "both": "Khi đăng ký, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement> và <privacy>Chính sách quyền riêng tư</privacy>.",
+      "agreementOnly": "Khi đăng ký, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement>.",
+      "privacyOnly": "Khi đăng ký, bạn đồng ý với <privacy>Chính sách quyền riêng tư</privacy>."
+    }
+  },
+  "logExport": {
+    "action": "Xuất",
+    "ariaLabel": "Xuất nhật ký chung sang Excel",
+    "submitting": "Đang gửi…",
+    "exporting": "Đang xuất…",
+    "failed": "Xuất dữ liệu thất bại",
+    "pending": "Bản xuất vẫn đang chạy. Vui lòng thử lại sau.",
+    "downloadStarted": "Đã bắt đầu tải xuống",
+    "downloadStartedRows": "Đã bắt đầu tải xuống · {{rows}} dòng"
+  },
+  "wallet": {
+    "labels": {
+      "creditsReceived": "API Credits nhận được (Ɍ)",
+      "customCredits": "Số API Credits tùy chọn (Ɍ)",
+      "pay": "Thanh toán",
+      "save": "Tiết kiệm",
+      "amountToPay": "Số tiền cần thanh toán"
+    },
+    "minimum": {
+      "placeholder": "Tối thiểu Ɍ{{amount}}",
+      "notice": "Mức nạp tối thiểu: Ɍ{{amount}}. Nhà cung cấp thanh toán thu một khoản phí cố định cho mỗi giao dịch thành công cùng với phí theo tỷ lệ phần trăm, vì vậy phí của khoản nạp quá nhỏ có thể gần bằng hoặc vượt quá số tiền thanh toán. Cảm ơn bạn đã thông cảm.",
+      "card": "Mức nạp tối thiểu: Ɍ{{amount}}. Hãy tăng số tiền để tiếp tục."
+    },
+    "payment": {
+      "stripe": "Hỗ trợ thẻ và các phương thức thanh toán trực tuyến phổ biến, tùy theo khả năng cung cấp.",
+      "waffo": "Hỗ trợ thẻ và các phương thức thanh toán trực tuyến phổ biến, tùy theo khả năng cung cấp.",
+      "generic": "Tiếp tục đến nhà cung cấp đã chọn để kiểm tra và hoàn tất thanh toán.",
+      "accessibleName": "Thanh toán bằng {{name}}"
+    },
+    "creditsNotice": {
+      "title": "Bạn nhận được gì sau khi thanh toán",
+      "body": "Sau khi thanh toán, số API Credits hiển thị khi thanh toán sẽ được cộng vào tài khoản và trừ dần khi bạn sử dụng API. Ɍ biểu thị số dư Credits. Đơn hàng được định giá bằng USD và trang thanh toán hiển thị số tiền phải trả.",
+      "refund": "Credits trả phí chưa sử dụng và đủ điều kiện có thể được hoàn theo Chính sách hoàn tiền. Credits đã sử dụng, miễn phí, khuyến mãi, dùng thử, thưởng thêm hoặc phần thưởng thường không được hoàn lại.",
+      "docsLink": "Tìm hiểu về Ɍ và API Credits",
+      "refundLink": "Đọc Chính sách hoàn tiền"
+    }
+  },
+  "pricing": {
+    "creditNote": {
+      "accessibleName": "Thông tin định giá RelayBases API Credits",
+      "body": "Giá mô hình, số dư và mức sử dụng được hiển thị bằng RelayBases API Credits (Ɍ). Đơn hàng được định giá bằng USD và trang thanh toán hiển thị số tiền phải trả. Khoản trừ cuối cùng theo hóa đơn trong bảng điều khiển.",
+      "link": "Tìm hiểu cách Ɍ và API Credits hoạt động"
+    },
+    "tags": {
+      "imageGeneration": "tạo-ảnh",
+      "imageEditing": "chỉnh-sửa-ảnh",
+      "videoGeneration": "tạo-video",
+      "asyncTask": "tác-vụ-bất-đồng-bộ",
+      "syncEndpoint": "giao-diện-đồng-bộ",
+      "perSecondPricing": "tính-phí-theo-giây"
+    },
+    "vendors": {
+      "alibaba": "Alibaba",
+      "zai": "Z.AI"
+    },
+    "modelDescriptions": {
+      "claude-fable-5": "Claude Fable 5, mô hình được phát hành rộng rãi có khả năng nhất của Anthropic dành cho các tác nhân hoạt động lâu dài, lý luận, mã hóa và nghiên cứu phức tạp.",
+      "claude-haiku-4-5-20251001": "Claude Haiku 4.5, một mô hình nhẹ, nhanh dành cho các tác vụ hàng loạt và trò chuyện có độ trễ thấp.",
+      "claude-opus-4-5-20251101": "Claude Opus 4.5, một mô hình lý luận hàng đầu cho việc mã hóa và phân tích phức tạp.",
+      "claude-opus-4-6": "Claude Opus 4.6, lý luận và mã hóa hàng đầu cho các nhiệm vụ có ngữ cảnh dài.",
+      "claude-opus-4-7": "Claude Opus 4.7, lý luận hàng đầu cho các tác nhân, mã hóa và nghiên cứu.",
+      "claude-opus-4-8": "Claude Opus 4.8, phiên bản mới nhất của Opus dành cho lập luận và mã phức tạp.",
+      "claude-opus-5": "Claude Opus 5, một mô hình Anthropic tiên tiến dành cho công việc doanh nghiệp và mã hóa tác nhân phức tạp, với lý luận sâu sắc và cửa sổ ngữ cảnh mã thông báo 1M.",
+      "claude-sonnet-5": "Claude Sonnet 5, một mô hình lý luận tốc độ cao dành cho mã hóa, tác nhân, phân tích và khối lượng công việc theo ngữ cảnh dài 1M mã thông báo.",
+      "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5, cân bằng hiệu suất cao cho mã, phân tích và tác nhân.",
+      "claude-sonnet-4-6": "Claude Sonnet 4.6, mô hình chung hiệu suất cao cho mã và ngữ cảnh dài.",
+      "codex-auto-review": "Codex Auto Review, được điều chỉnh để tự động đánh giá mã và kiểm tra kho lưu trữ, với các mức giá tiêu chuẩn và ngữ cảnh dài riêng biệt.",
+      "deepseek-v4-flash": "DeepSeek V4 Flash (DeepSeek-V4-Flash): Ngữ cảnh 1M, đầu ra lên tới 384K; hỗ trợ các chế độ không suy nghĩ và suy nghĩ, với chế độ suy nghĩ được bật theo mặc định; hỗ trợ Đầu ra JSON, Lệnh gọi công cụ và hoàn thành tiền tố trò chuyện; FIM chỉ được hỗ trợ ở chế độ không suy nghĩ; giới hạn đồng thời 2500.",
+      "deepseek-v4-pro": "DeepSeek V4 Pro (DeepSeek-V4-Pro): Ngữ cảnh 1M, đầu ra lên tới 384K; hỗ trợ các chế độ không suy nghĩ và suy nghĩ, với chế độ suy nghĩ được bật theo mặc định; hỗ trợ Đầu ra JSON, Lệnh gọi công cụ và hoàn thành tiền tố trò chuyện; FIM chỉ được hỗ trợ ở chế độ không suy nghĩ; giới hạn đồng thời 500.",
+      "gemini-3.1-pro-high": "Lộ trình cao cấp của Gemini 3.1 Pro dành cho công việc lập luận, mã và đa phương thức phức tạp.",
+      "gemini-3.1-pro-low": "Tuyến đường thấp của Gemini 3.1 Pro dành cho công việc lý luận, mã và đa phương thức phức tạp.",
+      "gemini-3.5-flash-high": "Gemini 3.5 Flash lộ trình cao cho các tác vụ đa phương thức có độ trễ thấp.",
+      "gemini-3.5-flash-low": "Tuyến đường flash thấp của Gemini 3.5 dành cho các tác vụ đa phương thức có độ trễ thấp.",
+      "gemini-3.6-flash-high": "Gemini 3.6 Flash lộ trình tư duy cao cho mã hóa phức tạp, thực thi tác nhân và lý luận không gian và đa phương thức.",
+      "gemini-3.6-flash-medium": "Gemini 3.6 Lộ trình tư duy trung bình nhanh chóng, cân bằng tốc độ và trí thông minh cho các nhiệm vụ tổng hợp và đa phương thức.",
+      "gemini-3.6-flash-low": "Gemini 3.6 Lộ trình suy nghĩ thấp dành cho các vòng lặp tác nhân có độ trễ thấp và các tác vụ đa phương thức có khối lượng lớn.",
+      "gpt-5.3-codex-spark": "GPT-5.3 Codex Spark, mã hóa có độ trễ thấp để chỉnh sửa và tái cấu trúc nhanh chóng.",
+      "gpt-5.4": "GPT-5.4, lý luận chung biên giới cho mã phức tạp và ngữ cảnh dài.",
+      "gpt-5.4-openai-compact": "GPT-5.4 OpenAI Compact, một mô hình tiện ích hệ thống để nén ngữ cảnh tự động trong các tác vụ chạy dài. Nó được gọi tự động khi cần thiết và không nhằm mục đích sử dụng trực tiếp.",
+      "gpt-5.4-mini": "GPT-5.4 mini, lý luận tiết kiệm chi phí cho các tác vụ có thông lượng cao.",
+      "gpt-5.5": "GPT-5.5, lý luận chung hàng đầu cho công việc chuyên môn phức tạp.",
+      "gpt-5.5-openai-compact": "GPT-5.5 OpenAI Compact, một mô hình tiện ích hệ thống để nén ngữ cảnh tự động trong các tác vụ chạy dài. Nó được gọi tự động khi cần thiết và không nhằm mục đích sử dụng trực tiếp.",
+      "gpt-5.6-luna": "GPT-5.6 Luna, một mô hình nhanh và tiết kiệm chi phí dành cho các tác vụ có khối lượng lớn, nhạy cảm với độ trễ, với các mức giá tiêu chuẩn và bối cảnh dài riêng biệt.",
+      "gpt-5.6-terra": "GPT-5.6 Terra, một mô hình cân bằng giữa bậc Sol hàng đầu và bậc Luna tiết kiệm chi phí cho các tác vụ mã hóa, lý luận và tác nhân hàng ngày, với các bậc giá tiêu chuẩn và ngữ cảnh dài riêng biệt.",
+      "gpt-5.6-sol": "GPT-5.6 Sol, sản phẩm hàng đầu của dòng GPT-5.6, xuất sắc trong các quy trình lý luận, mã hóa và tác nhân phức tạp, đặc biệt mạnh về mã hóa dòng lệnh và nhiều bước.",
+      "gpt-5.6-sol-openai-compact": "GPT-5.6 Sol OpenAI Compact, một mô hình tiện ích hệ thống để nén ngữ cảnh tự động trong các tác vụ chạy dài. Nó được gọi tự động khi cần thiết và không nhằm mục đích sử dụng trực tiếp.",
+      "gpt-audio-1.5": "GPT Audio 1.5, một mẫu âm thanh đa năng dành cho Hoàn thành trò chuyện với đầu vào và đầu ra âm thanh, phát trực tuyến và gọi chức năng.",
+      "gpt-image-2": "GPT Image 2 hỗ trợ tạo và chỉnh sửa hình ảnh thông qua điểm cuối hình ảnh Azure. Việc thanh toán dựa trên mức sử dụng thực tế, với mức phí tối thiểu là Ɍ0,08 cho mỗi hình ảnh được tạo hoặc chỉnh sửa. Nếu mức sử dụng thực tế vượt quá mức tối thiểu, thanh toán sử dụng thực tế sẽ được áp dụng. Dự luật điều khiển có thẩm quyền.",
+      "gpt-realtime-2.1": "GPT Realtime 2.1, một mô hình lý luận thời gian thực dành cho các tác nhân giọng nói nâng cao với khả năng nhận dạng chữ và số được cải thiện, xử lý im lặng và tiếng ồn, hành vi gián đoạn, lý luận có thể định cấu hình và sử dụng công cụ.",
+      "gpt-realtime-2.1-mini": "GPT Realtime 2.1 mini, một mô hình suy luận chắt lọc nhanh hơn, chi phí thấp hơn dành cho tương tác giọng nói theo thời gian thực qua WebRTC, WebSocket hoặc SIP bằng cách sử dụng công cụ.",
+      "gpt-realtime-whisper": "GPT Realtime Whisper là mô hình nhận dạng giọng nói trực tuyến cho phiên âm thời gian thực có độ trễ thấp, cập nhật dần và tính phí theo thời lượng.",
+      "grok-4.5": "Grok 4.5, mô hình biên giới của SpaceXAI dành cho công việc mã hóa, tác vụ và tri thức. Nó hỗ trợ cửa sổ ngữ cảnh 500K, đầu vào văn bản và hình ảnh, lý luận có thể định cấu hình, gọi hàm, đầu ra có cấu trúc, tìm kiếm trên web, tìm kiếm X và thực thi mã.",
+      "grok-composer-2.5-fast": "Composer 2.5 Fast, mô hình tác nhân mã hóa biên giới bên thứ nhất của Cursor được phân phối thông qua Grok Build. Tuyến Nhanh cung cấp thông tin tương tự ở độ trễ thấp hơn, vượt trội trong các tác vụ kéo dài liên tục, tuân theo hướng dẫn phức tạp, sử dụng công cụ, chỉnh sửa tệp và công việc trên thiết bị đầu cuối. Chỉ có văn bản; đầu vào hình ảnh không được hỗ trợ.",
+      "grok-imagine-edit": "Grok Hãy tưởng tượng mô hình tương thích chỉnh sửa hình ảnh đồng bộ. Sử dụng /v1/images/edits với 1-3 hình ảnh tham khảo. Ɍ0,08 được tính cho mỗi hình ảnh được trả về.",
+      "grok-imagine-image-quality": "Grok Hãy tưởng tượng việc tạo và chỉnh sửa hình ảnh đồng bộ ở 1K hoặc 2K. Sử dụng /v1/images/generations hoặc /v1/images/edits; chỉnh sửa hỗ trợ tối đa 3 hình ảnh tham khảo. Ɍ0,08 được tính cho mỗi hình ảnh được trả về.",
+      "grok-imagine-video": "Grok Imagine Video hỗ trợ năm chế độ không đồng bộ thông qua RelayBases /v1/videos: chuyển văn bản thành video, một hình ảnh thành video, tham chiếu đến video với 1-7 hình ảnh, chỉnh sửa video với một MP4 tối đa 8,7 giây và phần mở rộng video 2-10 giây từ MP4 2-15 giây. Thế hệ hỗ trợ 1-15 giây, bảy tỷ lệ khung hình API và 480p/720p; chỉnh sửa và mở rộng kế thừa tỷ lệ nguồn và độ phân giải lên tới 720p. Thanh toán là Ɍ0,08 mỗi giây không có hệ số nhân x4 không đồng bộ; chỉnh sửa sử dụng số giây nguồn đã được xác minh và tiện ích mở rộng chỉ sử dụng thời lượng đã thêm.",
+      "grok-imagine-video-1.5": "Grok Imagine Video 1.5 chỉ hỗ trợ việc tạo một hình ảnh thành video dưới dạng tác vụ không đồng bộ. Sử dụng /v1/videos với chính xác một hình ảnh, 1-15 giây và đầu ra 480p, 720p hoặc 1080p. Thanh toán là Ɍ0,16 mỗi giây được tạo, không có hệ số nhân x4 không đồng bộ.",
+      "nana-banana-2": "Tạo và chỉnh sửa hình ảnh không đồng bộ. Hỗ trợ tối đa 9 hình ảnh tham chiếu; gửi một nhiệm vụ và thăm dò ý kiến ​​​​cho kết quả. Cuộc gọi không đồng bộ có giá x4.",
+      "nana-banana-2_sync": "Nana Banana 2 tạo và chỉnh sửa hình ảnh đồng bộ. Sử dụng /v1/images/generations và nhận hình ảnh cuối cùng dưới dạng phản hồi tương thích với OpenAI.",
+      "nana-banana-pro": "Tạo và chỉnh sửa hình ảnh không đồng bộ. Hỗ trợ tối đa 9 hình ảnh tham chiếu; gửi một nhiệm vụ và thăm dò ý kiến ​​​​cho kết quả. Cuộc gọi không đồng bộ có giá x4.",
+      "nana-banana-pro_sync": "Nana Banana Pro tạo và chỉnh sửa hình ảnh đồng bộ. Sử dụng /v1/images/generations và nhận hình ảnh cuối cùng dưới dạng phản hồi tương thích với OpenAI.",
+      "veo-3-1": "Tạo video có thời lượng cố định 8 giây. Hỗ trợ văn bản thành video, khung hình đầu/cuối và tối đa 9 ảnh tham chiếu. Lệnh gọi bất đồng bộ có hệ số x4.",
+      "veo-omni-flash": "Tạo video có thời lượng cố định 10 giây với khung hình đầu/cuối và nhiều ảnh tham chiếu. Hỗ trợ tối đa 9 ảnh; lệnh gọi bất đồng bộ có hệ số x4.",
+      "veo-omni-flash-video-edit": "Chỉnh sửa video với một video tham chiếu và nhiều hình ảnh tham chiếu. Đầu ra tối đa 10 giây và bị hạn chế bởi video tham chiếu. Cuộc gọi không đồng bộ có giá x4.",
+      "video-fast-480p": "Có thể lựa chọn 4-15 giây; được tính theo thời lượng nhân với đơn giá cơ sở. Cuộc gọi không đồng bộ có giá x4. Hỗ trợ tài liệu tham khảo hình ảnh, video và âm thanh.",
+      "video-fast-720p": "Có thể lựa chọn 4-15 giây; được tính theo thời lượng nhân với đơn giá cơ sở. Cuộc gọi không đồng bộ có giá x4. Hỗ trợ tài liệu tham khảo hình ảnh, video và âm thanh.",
+      "video-pro-480p": "Có thể lựa chọn 4-15 giây; được tính theo thời lượng nhân với đơn giá cơ sở. Cuộc gọi không đồng bộ có giá x4. Hỗ trợ tài liệu tham khảo hình ảnh, video và âm thanh.",
+      "video-pro-720p": "Có thể lựa chọn 4-15 giây; được tính theo thời lượng nhân với đơn giá cơ sở. Cuộc gọi không đồng bộ có giá x4. Hỗ trợ tài liệu tham khảo hình ảnh, video và âm thanh.",
+      "video-pro-1080p": "Có thể lựa chọn 4-15 giây; được tính theo thời lượng nhân với đơn giá cơ sở. Cuộc gọi không đồng bộ có giá x4. Hỗ trợ tài liệu tham khảo hình ảnh, video và âm thanh.",
+      "video-standard-720p": "Thời lượng cố định 15 giây, tính phí theo thời lượng nhân đơn giá cơ sở. Lệnh gọi bất đồng bộ có hệ số x4. Hỗ trợ ảnh, video và âm thanh tham chiếu.",
+      "glm-5.1": "GLM-5.1, mô hình văn bản hàng đầu của Z.AI dành cho mã hóa đường chân trời dài, các tác nhân phức tạp và lý luận có cấu trúc.",
+      "glm-5.2": "GLM-5.2, mẫu hàng đầu của Z.AI dành cho các tác vụ có phạm vi dài, với bối cảnh 1M có thể sử dụng và đầu ra tối đa 128K cho các tác nhân mã hóa, kỹ thuật quy mô dự án và gỡ lỗi phức tạp.",
+      "kimi-k2.6": "Kimi K2.6, mô hình ngữ cảnh dài của Moonshot dành cho các tác vụ mã hóa, tác nhân và tài liệu phức tạp.",
+      "kimi-k2.7-code": "Mã Kimi K2.7, mô hình tập trung vào mã hóa của Moonshot dành cho mã cấp kho lưu trữ, lập trình tác nhân và phát triển ngữ cảnh dài.",
+      "kimi-k3": "Kimi K3, mô hình ngữ cảnh 1M hàng đầu của Moonshot dành cho công việc lập trình có tầm nhìn dài và kiến thức từ đầu đến cuối, luôn lý luận bằng các lệnh gọi công cụ, đầu ra có cấu trúc và bộ nhớ đệm ngữ cảnh tự động.",
+      "minimax-m3": "MiniMax M3, mô hình ngữ cảnh 1M dành cho mã hóa, tác nhân và lý luận văn bản trong thời gian dài.",
+      "tts-1-hd": "TTS-1 HD, mô hình chuyển văn bản thành giọng nói chất lượng cao để tạo giọng nói tự nhiên thông qua điểm cuối Giọng nói API Âm thanh."
+    }
+  }
+}

@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { relayBasesContentRequestConfig } from '@/features/relaybases/content/locale'
 import { api } from '@/lib/api'
 
 import { API_ENDPOINTS } from './constants'
@@ -62,8 +63,12 @@ export async function getUserModels(group: string): Promise<ModelOption[]> {
 /**
  * Get user groups
  */
-export async function getUserGroups(): Promise<GroupOption[]> {
-  const res = await api.get(API_ENDPOINTS.USER_GROUPS)
+export async function getUserGroups(locale?: string): Promise<GroupOption[]> {
+  const request = relayBasesContentRequestConfig(locale)
+  const res = await api.get(API_ENDPOINTS.USER_GROUPS, {
+    params: request.params,
+    headers: request.headers,
+  })
   const { data } = res
 
   if (!data.success || !data.data) {

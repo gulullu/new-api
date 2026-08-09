@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 import { getTopupInfo } from '../api'
 import {
@@ -163,12 +163,17 @@ function parseDiscountMap(data: unknown): Record<number, number> {
   )
 }
 
-export function useTopupInfo() {
+export function useTopupInfo(refreshKey = 'default') {
   const [topupInfo, setTopupInfo] = useState<TopupInfo | null>(null)
   const [presetAmounts, setPresetAmounts] = useState<PresetAmount[]>([])
   const [loading, setLoading] = useState(true)
+  const [resolvedRefreshKey, setResolvedRefreshKey] = useState<string | null>(
+    null
+  )
+  const requestSequence = useRef(0)
 
   const fetchTopupInfo = useCallback(async () => {
+    const requestId = ++requestSequence.current
     try {
       setLoading(true)
 
@@ -177,8 +182,15 @@ export function useTopupInfo() {
       if (!response.success || !response.data) {
         // eslint-disable-next-line no-console
         console.error('Failed to fetch topup info:', response.message)
+        if (requestId === requestSequence.current) {
+          setTopupInfo(null)
+          setPresetAmounts([])
+          setResolvedRefreshKey(refreshKey)
+        }
         return
       }
+
+      if (requestId !== requestSequence.current) return
 
       const processedData: TopupInfo = {
         ...response.data,
@@ -195,6 +207,7 @@ export function useTopupInfo() {
       }
 
       setTopupInfo(processedData)
+      setResolvedRefreshKey(refreshKey)
 
       if (processedData.amount_options.length > 0) {
         const customPresets = mergePresetAmounts(
@@ -208,12 +221,16 @@ export function useTopupInfo() {
         setPresetAmounts(defaultPresets)
       }
     } catch (err) {
+      if (requestId !== requestSequence.current) return
       // eslint-disable-next-line no-console
       console.error('Failed to fetch topup info:', err)
+      setTopupInfo(null)
+      setPresetAmounts([])
+      setResolvedRefreshKey(refreshKey)
     } finally {
-      setLoading(false)
+      if (requestId === requestSequence.current) setLoading(false)
     }
-  }, [])
+  }, [refreshKey])
 
   useEffect(() => {
     let cancelled = false
@@ -224,13 +241,14 @@ export function useTopupInfo() {
 
     return () => {
       cancelled = true
+      requestSequence.current += 1
     }
   }, [fetchTopupInfo])
 
   return {
-    topupInfo,
-    presetAmounts,
-    loading,
+    topupInfo: resolvedRefreshKey === refreshKey ? topupInfo : null,
+    presetAmounts: resolvedRefreshKey === refreshKey ? presetAmounts : [],
+    loading: loading || resolvedRefreshKey !== refreshKey,
     refetch: fetchTopupInfo,
   }
 }

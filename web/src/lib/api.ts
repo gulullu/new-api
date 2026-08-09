@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { relayBasesContentRequestConfig } from '@/features/relaybases/content/locale'
 import { api } from '@/lib/http-client'
 
 export {
@@ -54,12 +55,16 @@ export async function getUserModels(): Promise<{
   return res.data
 }
 
-export async function getUserGroups(): Promise<{
+export async function getUserGroups(locale?: string): Promise<{
   success: boolean
   message?: string
   data?: Record<string, { desc: string; ratio: number | string }>
 }> {
-  const res = await api.get('/api/user/self/groups')
+  const request = relayBasesContentRequestConfig(locale)
+  const res = await api.get('/api/user/self/groups', {
+    params: request.params,
+    headers: request.headers,
+  })
   return res.data
 }
 
@@ -67,17 +72,25 @@ export async function getUserGroups(): Promise<{
 // System APIs
 // ============================================================================
 
-export async function getStatus() {
-  const res = await api.get('/api/status')
+export async function getStatus(locale?: string) {
+  const request = relayBasesContentRequestConfig(locale)
+  const res = await api.get('/api/status', {
+    params: request.params,
+    headers: request.headers,
+  })
   return res.data?.data as Record<string, unknown>
 }
 
-export async function getNotice(): Promise<{
+export async function getNotice(locale?: string): Promise<{
   success: boolean
   message?: string
   data?: string
 }> {
-  const res = await api.get('/api/notice')
+  const request = relayBasesContentRequestConfig(locale)
+  const res = await api.get('/api/notice', {
+    params: request.params,
+    headers: request.headers,
+  })
   return res.data
 }
 

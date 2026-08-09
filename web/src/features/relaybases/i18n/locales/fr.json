@@ -1,0 +1,145 @@
+{
+  "navigation": {
+    "serviceStatus": "État du service",
+    "infiniteCanvas": "Canevas infini"
+  },
+  "auth": {
+    "signupOffer": {
+      "ariaLabel": "Avantages de l’inscription",
+      "status": "prêt",
+      "trial": "Crédit d’essai inclus",
+      "trialDetail": "Disponible après l’inscription",
+      "models": "Accès unifié aux modèles disponibles",
+      "modelsDetail": "Consultez la place de marché des modèles actuelle",
+      "credits": "Ɍ1 = 1 crédit API",
+      "creditsDetail": "Crédités selon le montant indiqué lors du paiement",
+      "pricing": "Commandes tarifées en USD",
+      "pricingDetail": "La page de paiement affiche le montant dû",
+      "ready": "Créez une clé API après l’inscription."
+    },
+    "legal": {
+      "both": "En vous inscrivant, vous acceptez les <agreement>Conditions d’utilisation</agreement> et la <privacy>Politique de confidentialité</privacy>.",
+      "agreementOnly": "En vous inscrivant, vous acceptez les <agreement>Conditions d’utilisation</agreement>.",
+      "privacyOnly": "En vous inscrivant, vous acceptez la <privacy>Politique de confidentialité</privacy>."
+    }
+  },
+  "logExport": {
+    "action": "Exporter",
+    "ariaLabel": "Exporter les journaux courants vers Excel",
+    "submitting": "Envoi…",
+    "exporting": "Exportation…",
+    "failed": "Échec de l’exportation",
+    "pending": "L’exportation est toujours en cours. Réessayez plus tard.",
+    "downloadStarted": "Téléchargement démarré",
+    "downloadStartedRows": "Téléchargement démarré · {{rows}} lignes"
+  },
+  "wallet": {
+    "labels": {
+      "creditsReceived": "Crédits API reçus (Ɍ)",
+      "customCredits": "Crédits API personnalisés (Ɍ)",
+      "pay": "Payer",
+      "save": "Économiser",
+      "amountToPay": "Montant à payer"
+    },
+    "minimum": {
+      "placeholder": "Minimum Ɍ{{amount}}",
+      "notice": "Recharge minimale : Ɍ{{amount}}. Les prestataires de paiement facturent des frais fixes sur chaque transaction réussie, auxquels s’ajoute un pourcentage ; pour une très petite recharge, ces frais peuvent approcher ou dépasser le montant payé. Merci de votre compréhension.",
+      "card": "Recharge minimale : Ɍ{{amount}}. Augmentez le montant pour continuer."
+    },
+    "payment": {
+      "stripe": "Prend en charge les cartes et les principaux moyens de paiement en ligne, selon leur disponibilité.",
+      "waffo": "Prend en charge les cartes et les principaux moyens de paiement en ligne, selon leur disponibilité.",
+      "generic": "Continuez vers le prestataire sélectionné pour vérifier et terminer le paiement.",
+      "accessibleName": "Payer avec {{name}}"
+    },
+    "creditsNotice": {
+      "title": "Ce que vous recevez après le paiement",
+      "body": "Après le paiement, les crédits API indiqués lors du règlement sont ajoutés à votre compte puis déduits au fil de vos appels API. Ɍ représente votre solde de crédits. Les commandes sont libellées en USD et la page de paiement affiche le montant dû.",
+      "refund": "Les crédits payants non utilisés et éligibles peuvent être remboursés conformément à la politique de remboursement. Les crédits utilisés, gratuits, promotionnels, d’essai, bonus ou de récompense ne sont normalement pas remboursables.",
+      "docsLink": "Comprendre Ɍ et les crédits API",
+      "refundLink": "Lire la politique de remboursement"
+    }
+  },
+  "pricing": {
+    "creditNote": {
+      "accessibleName": "Informations tarifaires des crédits API RelayBases",
+      "body": "Les prix, les soldes et l’utilisation sont affichés en crédits API RelayBases (Ɍ). Les commandes sont libellées en USD et la page de paiement indique le montant dû. La facture de la console fait foi.",
+      "link": "Comprendre Ɍ et les crédits API"
+    },
+    "tags": {
+      "imageGeneration": "génération-d’image",
+      "imageEditing": "édition-d’image",
+      "videoGeneration": "génération-vidéo",
+      "asyncTask": "tâche-asynchrone",
+      "syncEndpoint": "interface-synchrone",
+      "perSecondPricing": "tarification-à-la-seconde"
+    },
+    "vendors": {
+      "alibaba": "Alibaba",
+      "zai": "Z.AI"
+    },
+    "modelDescriptions": {
+      "claude-fable-5": "Claude Fable 5, le modèle d'Anthropic le plus performant et largement diffusé pour les agents de longue durée, le raisonnement complexe, le codage et la recherche.",
+      "claude-haiku-4-5-20251001": "Claude Haiku 4.5, un modèle léger et rapide pour les tâches de chat et de lots à faible latence.",
+      "claude-opus-4-5-20251101": "Claude Opus 4.5, un modèle de raisonnement phare pour le codage et l'analyse complexes.",
+      "claude-opus-4-6": "Claude Opus 4.6, raisonnement et codage phare pour les tâches à contexte long.",
+      "claude-opus-4-7": "Claude Opus 4.7, raisonnement phare pour les agents, le codage et la recherche.",
+      "claude-opus-4-8": "Claude Opus 4.8, dernier produit phare d'Opus pour le raisonnement et le code complexes.",
+      "claude-opus-5": "Claude Opus 5, un modèle anthropique avancé pour le codage agent complexe et le travail d'entreprise, avec un raisonnement approfondi et une fenêtre contextuelle de 1 million de jetons.",
+      "claude-sonnet-5": "Claude Sonnet 5, un modèle de raisonnement à grande vitesse pour le codage, les agents, l'analyse et les charges de travail à contexte long de 1 million de jetons.",
+      "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5, hautes performances équilibrées pour le code, l'analyse et les agents.",
+      "claude-sonnet-4-6": "Claude Sonnet 4.6, modèle général performant pour le code et le contexte long.",
+      "codex-auto-review": "Codex Auto Review, optimisé pour la révision automatisée du code et les vérifications des référentiels, avec des niveaux de tarification standard et à contexte long distincts.",
+      "deepseek-v4-flash": "DeepSeek V4 Flash (DeepSeek-V4-Flash) : 1 M de contexte, jusqu'à 384 Ko en sortie ; prend en charge les modes de non-réflexion et de réflexion, la réflexion étant activée par défaut ; prend en charge la sortie JSON, les appels d'outils et la complétion des préfixes de discussion ; FIM est pris en charge uniquement en mode sans réflexion ; limite de concurrence 2500.",
+      "deepseek-v4-pro": "DeepSeek V4 Pro (DeepSeek-V4-Pro) : 1 M de contexte, jusqu'à 384 Ko en sortie ; prend en charge les modes de non-réflexion et de réflexion, la réflexion étant activée par défaut ; prend en charge la sortie JSON, les appels d'outils et la complétion des préfixes de discussion ; FIM est pris en charge uniquement en mode sans réflexion ; limite de concurrence 500.",
+      "gemini-3.1-pro-high": "Gemini 3.1 Pro High Route pour le raisonnement complexe, le code et le travail multimodal.",
+      "gemini-3.1-pro-low": "Gemini 3.1 Pro low route pour le raisonnement complexe, le code et le travail multimodal.",
+      "gemini-3.5-flash-high": "Gemini 3.5 Flash High Route pour les tâches multimodales à faible latence.",
+      "gemini-3.5-flash-low": "Gemini 3.5 Flash low route pour les tâches multimodales à faible latence.",
+      "gemini-3.6-flash-high": "Gemini 3.6 Flash est une voie de réflexion avancée pour le codage complexe, l'exécution agentique et le raisonnement multimodal et spatial.",
+      "gemini-3.6-flash-medium": "Gemini 3.6 Flash, un itinéraire à réflexion moyenne, équilibrant vitesse et intelligence pour les tâches agents générales et multimodales.",
+      "gemini-3.6-flash-low": "Gemini 3.6 Flash est un itinéraire à faible réflexion pour les boucles agentiques à faible latence et les tâches multimodales à volume élevé.",
+      "gpt-5.3-codex-spark": "GPT-5.3 Codex Spark, codage à faible latence pour des modifications et des refactorisations rapides.",
+      "gpt-5.4": "GPT-5.4, raisonnement général frontalier pour un code complexe et un contexte long.",
+      "gpt-5.4-openai-compact": "GPT-5.4 OpenAI Compact, un modèle utilitaire système pour le compactage automatique du contexte dans les tâches de longue durée. Il est invoqué automatiquement en cas de besoin et n'est pas destiné à une utilisation directe.",
+      "gpt-5.4-mini": "GPT-5.4 mini, raisonnement rentable pour les tâches à haut débit.",
+      "gpt-5.5": "GPT-5.5, raisonnement général phare pour un travail professionnel complexe.",
+      "gpt-5.5-openai-compact": "GPT-5.5 OpenAI Compact, un modèle utilitaire système pour le compactage automatique du contexte dans les tâches de longue durée. Il est invoqué automatiquement en cas de besoin et n'est pas destiné à une utilisation directe.",
+      "gpt-5.6-luna": "GPT-5.6 Luna, un modèle rapide et rentable pour les tâches à volume élevé et sensibles à la latence, avec des niveaux de tarification standard et à contexte long distincts.",
+      "gpt-5.6-terra": "GPT-5.6 Terra, un modèle équilibré entre les niveaux phares Sol et Luna économiques pour les tâches quotidiennes de codage, de raisonnement et d'agent, avec des niveaux de tarification standard et à long contexte distincts.",
+      "gpt-5.6-sol": "GPT-5.6 Sol, le produit phare de la série GPT-5.6, excellant dans le raisonnement complexe, le codage et les flux de travail agents, particulièrement performant en ligne de commande et en codage en plusieurs étapes.",
+      "gpt-5.6-sol-openai-compact": "GPT-5.6 Sol OpenAI Compact, un modèle utilitaire système pour le compactage automatique du contexte dans les tâches de longue durée. Il est invoqué automatiquement en cas de besoin et n'est pas destiné à une utilisation directe.",
+      "gpt-audio-1.5": "GPT Audio 1.5, un modèle audio à usage général pour les complétions de chat avec entrée et sortie audio, streaming et appels de fonctions.",
+      "gpt-image-2": "GPT Image 2 prend en charge la génération et la modification d’images via les points de terminaison d’image Azure. La facturation est basée sur l'utilisation réelle, avec un minimum de 0,08 Ɍ par image générée ou modifiée. Si l'utilisation réelle dépasse le minimum, la facturation de l'utilisation réelle s'applique. La facture de la console fait autorité.",
+      "gpt-realtime-2.1": "GPT Realtime 2.1, un modèle de raisonnement en temps réel pour les agents vocaux avancés avec une reconnaissance alphanumérique améliorée, une gestion du silence et du bruit, un comportement d'interruption, un raisonnement configurable et une utilisation des outils.",
+      "gpt-realtime-2.1-mini": "GPT Realtime 2.1 mini, un modèle de raisonnement distillé plus rapide et moins coûteux pour les interactions vocales en temps réel sur WebRTC, WebSocket ou SIP, avec utilisation d'outils.",
+      "gpt-realtime-whisper": "GPT Realtime Whisper est un modèle de transcription vocale en continu à faible latence, avec mises à jour incrémentales et facturation selon la durée.",
+      "grok-4.5": "Grok 4.5, le modèle frontière de SpaceXAI pour le codage, les tâches agentiques et le travail de connaissances. Il prend en charge une fenêtre contextuelle de 500 Ko, la saisie de texte et d'image, le raisonnement configurable, l'appel de fonction, les sorties structurées, la recherche Web, la recherche X et l'exécution de code.",
+      "grok-composer-2.5-fast": "Composer 2.5 Fast, le modèle d'agent de codage frontalier propriétaire de Cursor fourni via Grok Build. La voie rapide fournit la même intelligence avec une latence plus faible, excellant dans les tâches soutenues de longue durée, le suivi d'instructions complexes, l'utilisation d'outils, l'édition de fichiers et le travail sur terminal. Texte uniquement ; la saisie d’images n’est pas prise en charge.",
+      "grok-imagine-edit": "Grok Imagine un modèle de compatibilité d'édition d'images synchrone. Utilisez /v1/images/edits avec 1 à 3 images de référence. Ɍ0,08 est facturé pour chaque image renvoyée.",
+      "grok-imagine-image-quality": "Grok Imaginez la génération et l'édition d'images synchrones en 1K ou 2K. Utilisez /v1/images/generations ou /v1/images/edits ; l'édition prend en charge jusqu'à 3 images de référence. Ɍ0,08 est facturé pour chaque image renvoyée.",
+      "grok-imagine-video": "Grok Imagine Video prend en charge cinq modes asynchrones via RelayBases /v1/videos : texte vers vidéo, image unique vers vidéo, référence vers vidéo avec 1 à 7 images, montage vidéo avec un MP4 jusqu'à 8,7 secondes et extension vidéo de 2 à 10 secondes à partir d'un MP4 de 2 à 15 secondes. La génération prend en charge 1 à 15 secondes, sept formats d'image API et 480p/720p ; le montage et l'extension héritent du rapport source et de la résolution jusqu'à 720p. La facturation est de Ɍ0,08 par seconde sans multiplicateur asynchrone x4 ; l'édition utilise les secondes sources vérifiées et l'extension utilise uniquement la durée ajoutée.",
+      "grok-imagine-video-1.5": "Grok Imagine Video 1.5 prend en charge la génération d'une seule image en vidéo en tant que tâche asynchrone uniquement. Utilisez /v1/videos avec exactement une image, 1 à 15 secondes et une sortie 480p, 720p ou 1080p. La facturation est de 0,16 Ɍ par seconde générée, sans multiplicateur asynchrone x4.",
+      "nana-banana-2": "Génération et édition d'images asynchrones. Prend en charge jusqu'à 9 images de référence ; soumettre une tâche et un sondage pour obtenir les résultats. Les appels asynchrones coûtent x4.",
+      "nana-banana-2_sync": "Génération et édition d'images synchrones Nana Banana 2. Utilisez /v1/images/generations et recevez l'image finale dans une réponse compatible OpenAI.",
+      "nana-banana-pro": "Génération et édition d'images asynchrones. Prend en charge jusqu'à 9 images de référence ; soumettre une tâche et un sondage pour obtenir les résultats. Les appels asynchrones coûtent x4.",
+      "nana-banana-pro_sync": "Génération et édition d'images synchrones Nana Banana Pro. Utilisez /v1/images/generations et recevez l'image finale dans une réponse compatible OpenAI.",
+      "veo-3-1": "Génération vidéo d’une durée fixe de 8 secondes. Prend en charge le texte vers vidéo, les première et dernière images et jusqu’à 9 images de référence. Les appels asynchrones coûtent x4.",
+      "veo-omni-flash": "Génération vidéo d’une durée fixe de 10 secondes avec première et dernière images ainsi que plusieurs images de référence. Jusqu’à 9 images de référence. Les appels asynchrones coûtent x4.",
+      "veo-omni-flash-video-edit": "Montage vidéo avec une vidéo de référence et plusieurs images de référence. La sortie peut durer jusqu'à 10 secondes et est limitée par la vidéo de référence. Les appels asynchrones coûtent x4.",
+      "video-fast-480p": "4 à 15 secondes sélectionnables ; facturé comme la durée multipliée par le prix unitaire de base. Les appels asynchrones coûtent x4. Prend en charge les références image, vidéo et audio.",
+      "video-fast-720p": "4 à 15 secondes sélectionnables ; facturé comme la durée multipliée par le prix unitaire de base. Les appels asynchrones coûtent x4. Prend en charge les références image, vidéo et audio.",
+      "video-pro-480p": "4 à 15 secondes sélectionnables ; facturé comme la durée multipliée par le prix unitaire de base. Les appels asynchrones coûtent x4. Prend en charge les références image, vidéo et audio.",
+      "video-pro-720p": "4 à 15 secondes sélectionnables ; facturé comme la durée multipliée par le prix unitaire de base. Les appels asynchrones coûtent x4. Prend en charge les références image, vidéo et audio.",
+      "video-pro-1080p": "4 à 15 secondes sélectionnables ; facturé comme la durée multipliée par le prix unitaire de base. Les appels asynchrones coûtent x4. Prend en charge les références image, vidéo et audio.",
+      "video-standard-720p": "Durée fixe de 15 secondes, facturée selon la durée multipliée par le prix unitaire de base. Les appels asynchrones coûtent x4. Accepte des références image, vidéo et audio.",
+      "glm-5.1": "GLM-5.1, le modèle de texte phare de Z.AI pour le codage à long horizon, les agents complexes et le raisonnement structuré.",
+      "glm-5.2": "GLM-5.2, le modèle phare de Z.AI pour les tâches à long terme, avec un contexte utilisable de 1 million et une sortie maximale de 128 000 pour les agents de codage, l'ingénierie à l'échelle d'un projet et le débogage complexe.",
+      "kimi-k2.6": "Kimi K2.6, le modèle à contexte long de Moonshot pour le codage, les agents et les tâches de documents complexes.",
+      "kimi-k2.7-code": "Kimi K2.7 Code, le modèle axé sur le codage de Moonshot pour le code au niveau du référentiel, la programmation agent et le développement à contexte long.",
+      "kimi-k3": "Kimi K3, le modèle de contexte 1M phare de Moonshot pour la programmation à long terme et le travail de connaissances de bout en bout, raisonnant toujours avec des appels d'outils, une sortie structurée et une mise en cache automatique du contexte.",
+      "minimax-m3": "MiniMax M3, un modèle de contexte 1M pour le codage à long terme, les agents et le raisonnement textuel.",
+      "tts-1-hd": "TTS-1 HD, un modèle de synthèse vocale de haute qualité pour la génération naturelle de la parole via le point de terminaison Audio API Speech."
+    }
+  }
+}

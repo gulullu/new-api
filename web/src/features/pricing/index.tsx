@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
 import { PageTransition } from '@/components/page-transition'
+import { RelayBasesPricingCreditNote } from '@/features/relaybases/pricing'
 
 import {
   LoadingSkeleton,
@@ -191,6 +192,7 @@ export function Pricing() {
                 'Discover curated AI models, compare pricing and capabilities, and choose the right model for every scenario.'
               )}
             </p>
+            <RelayBasesPricingCreditNote />
             <SearchBar
               value={searchInput}
               onChange={setSearchInput}

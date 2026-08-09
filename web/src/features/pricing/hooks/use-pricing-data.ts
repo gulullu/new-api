@@ -18,13 +18,17 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 
+import { RELAYBASES_I18N_NAMESPACE } from '@/features/relaybases/i18n/manifest'
+import { adaptRelayBasesPricingData } from '@/features/relaybases/pricing'
 import { useStatus } from '@/hooks/use-status'
 
 import { getPricing } from '../api'
 
 export function usePricingData() {
   const { status } = useStatus()
+  const { i18n } = useTranslation(RELAYBASES_I18N_NAMESPACE)
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['pricing'],
@@ -42,12 +46,23 @@ export function usePricingData() {
     [status?.usd_exchange_rate, priceRate]
   )
 
+  const pricingData = useMemo(
+    () =>
+      data
+        ? adaptRelayBasesPricingData(
+            data,
+            i18n.resolvedLanguage || i18n.language
+          )
+        : undefined,
+    [data, i18n.language, i18n.resolvedLanguage]
+  )
+
   const models = useMemo(() => {
-    if (!data?.data || !data?.vendors) return []
+    if (!pricingData?.data || !pricingData?.vendors) return []
 
-    const vendorMap = new Map(data.vendors.map((v) => [v.id, v]))
+    const vendorMap = new Map(pricingData.vendors.map((v) => [v.id, v]))
 
-    return data.data.map((model) => {
+    return pricingData.data.map((model) => {
       const vendor = model.vendor_id
         ? vendorMap.get(model.vendor_id)
         : undefined
@@ -57,18 +72,18 @@ export function usePricingData() {
         vendor_name: vendor?.name,
         vendor_icon: vendor?.icon,
         vendor_description: vendor?.description,
-        group_ratio: data.group_ratio,
+        group_ratio: pricingData.group_ratio,
       }
     })
-  }, [data])
+  }, [pricingData])
 
   return {
     models,
-    vendors: data?.vendors ?? [],
-    groupRatio: data?.group_ratio ?? {},
-    usableGroup: data?.usable_group ?? {},
-    endpointMap: data?.supported_endpoint ?? {},
-    autoGroups: data?.auto_groups ?? [],
+    vendors: pricingData?.vendors ?? [],
+    groupRatio: pricingData?.group_ratio ?? {},
+    usableGroup: pricingData?.usable_group ?? {},
+    endpointMap: pricingData?.supported_endpoint ?? {},
+    autoGroups: pricingData?.auto_groups ?? [],
     isLoading,
     error,
     refetch,

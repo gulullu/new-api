@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useRelayBasesNavigation } from '@/features/relaybases/navigation/use-relaybases-navigation'
 import { useStatus } from '@/hooks/use-status'
 import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 import { useAuthStore } from '@/stores/auth-store'
@@ -47,6 +48,7 @@ export function useTopNavLinks(): TopNavLink[] {
   const { t } = useTranslation()
   const { status } = useStatus()
   const { auth } = useAuthStore()
+  const relayBasesNavigation = useRelayBasesNavigation()
 
   // Parse HeaderNavModules
   const modules = useMemo(() => {
@@ -72,6 +74,8 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('Console'), href: '/dashboard' })
   }
 
+  links.push(...relayBasesNavigation.topNavLinks)
+
   // Pricing
   const pricing = modules?.pricing
   if (pricing && typeof pricing === 'object' && pricing.enabled) {
@@ -89,7 +93,11 @@ export function useTopNavLinks(): TopNavLink[] {
   // Docs (supports external links)
   if (modules?.docs !== false) {
     if (docsLink) {
-      links.push({ title: t('Docs'), href: docsLink, external: true })
+      links.push({
+        title: t('Docs'),
+        href: relayBasesNavigation.withDocumentPreferences(docsLink),
+        external: true,
+      })
     } else {
       links.push({ title: t('Docs'), href: '/docs' })
     }

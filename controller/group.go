@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/QuantumNous/new-api/model"
+	contenti18n "github.com/QuantumNous/new-api/relaybases/contenti18n"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
@@ -24,6 +25,7 @@ func GetGroups(c *gin.Context) {
 }
 
 func GetUserGroups(c *gin.Context) {
+	locale := contenti18n.ResolveLocale(c)
 	usableGroups := make(map[string]map[string]interface{})
 	userGroup := ""
 	userId := c.GetInt("id")
@@ -44,9 +46,10 @@ func GetUserGroups(c *gin.Context) {
 			"desc":  setting.GetUsableGroupDescription("auto"),
 		}
 	}
+	contenti18n.SetLocalizedResponseHeaders(c, locale)
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
-		"data":    usableGroups,
+		"data":    contenti18n.LocalizeUserGroups(usableGroups, locale),
 	})
 }

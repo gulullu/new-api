@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { RelayBasesSignupOffer } from '@/features/relaybases/auth/signup-offer'
 import { useStatus } from '@/hooks/use-status'
 
 import { AuthLayout } from '../auth-layout'
@@ -32,6 +33,7 @@ export function SignUp() {
   return (
     <AuthLayout>
       <div className='w-full space-y-8'>
+        <RelayBasesSignupOffer />
         <div className='space-y-2'>
           <h2 className='text-center text-2xl font-semibold tracking-tight sm:text-left'>
             {t('Create an account')}

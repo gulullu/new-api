@@ -16,12 +16,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import { getRelayBasesTopupLanguageTier } from '@/features/relaybases/wallet/policy'
 import { useStatus } from '@/hooks/use-status'
-import { useSystemConfig } from '@/hooks/use-system-config'
 import { getSelf } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -66,7 +66,10 @@ interface WalletProps {
 
 export function Wallet(props: WalletProps) {
   const { t } = useTranslation()
-  const authenticatedUserGroup = useAuthStore((state) => state.auth.user?.group)
+  const authenticatedUser = useAuthStore((state) => state.auth.user)
+  const authenticatedUserGroup = authenticatedUser?.group
+  const persistedLanguage = authenticatedUser?.language
+  const topupLanguageTier = getRelayBasesTopupLanguageTier(persistedLanguage)
   const [user, setUser] = useState<UserWalletData | null>(null)
   const [userLoading, setUserLoading] = useState(true)
   const [topupAmount, setTopupAmount] = useState(0)
@@ -87,21 +90,18 @@ export function Wallet(props: WalletProps) {
   const [showSubscriptionPanel, setShowSubscriptionPanel] = useState(true)
 
   const { status } = useStatus()
-  const { currency } = useSystemConfig()
-  const { topupInfo, presetAmounts, loading: topupLoading } = useTopupInfo()
-
-  // Calculate effective exchange rate - when display type is USD, use rate of 1
-  const effectiveUsdExchangeRate = useMemo(() => {
-    return currency?.quotaDisplayType === 'USD'
-      ? 1
-      : currency?.usdExchangeRate || 1
-  }, [currency?.quotaDisplayType, currency?.usdExchangeRate])
+  const {
+    topupInfo,
+    presetAmounts,
+    loading: topupLoading,
+  } = useTopupInfo(topupLanguageTier)
   const {
     amount: paymentAmount,
     calculating,
     processing,
     calculatePaymentAmount,
     processPayment,
+    cancelPaymentAmountCalculation,
   } = usePayment()
   const {
     affiliateLink,
@@ -142,19 +142,33 @@ export function Wallet(props: WalletProps) {
     }
   }, [props.initialShowHistory])
 
-  // Initialize topup amount when topup info is loaded
-  const topupAmountInitializedRef = useRef(false)
+  const previousTopupLanguageTierRef = useRef(topupLanguageTier)
   useEffect(() => {
-    if (topupInfo && !topupAmountInitializedRef.current) {
-      topupAmountInitializedRef.current = true
-      const minTopup = getMinTopupAmount(topupInfo)
-      setTopupAmount(minTopup)
+    if (previousTopupLanguageTierRef.current === topupLanguageTier) return
+    previousTopupLanguageTierRef.current = topupLanguageTier
+    setConfirmDialogOpen(false)
+    cancelPaymentAmountCalculation()
+    setPaymentLoading(null)
+  }, [cancelPaymentAmountCalculation, topupLanguageTier])
 
-      // Calculate initial payment amount with default payment type
-      const defaultPaymentType = getDefaultPaymentType(topupInfo)
-      calculatePaymentAmount(minTopup, defaultPaymentType)
-    }
-  }, [topupInfo, calculatePaymentAmount])
+  // Initialize topup amount when topup info is loaded
+  const previousMinimumTopupRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!topupInfo) return
+    const minTopup = getMinTopupAmount(topupInfo)
+    if (previousMinimumTopupRef.current === minTopup) return
+
+    previousMinimumTopupRef.current = minTopup
+    setTopupAmount(minTopup)
+    setSelectedPreset(null)
+    setConfirmDialogOpen(false)
+
+    // Recalculate whenever the server-confirmed language tier changes the
+    // minimum. Switching between languages in the same tier keeps user input.
+    const defaultPaymentType =
+      selectedPaymentMethod?.type || getDefaultPaymentType(topupInfo)
+    calculatePaymentAmount(minTopup, defaultPaymentType)
+  }, [topupInfo, selectedPaymentMethod, calculatePaymentAmount])
 
   // Get current payment type (selected or default)
   const getCurrentPaymentType = useCallback(() => {
@@ -189,8 +203,13 @@ export function Wallet(props: WalletProps) {
       }
 
       // Calculate payment amount and show confirmation dialog
-      await calculatePaymentAmount(topupAmount, method.type)
-      setConfirmDialogOpen(true)
+      const quotedAmount = await calculatePaymentAmount(
+        topupAmount,
+        method.type
+      )
+      if (Number.isFinite(quotedAmount) && quotedAmount > 0) {
+        setConfirmDialogOpen(true)
+      }
     } finally {
       setPaymentLoading(null)
     }
@@ -269,8 +288,13 @@ export function Wallet(props: WalletProps) {
     setPaymentLoading(loadingKey)
 
     try {
-      await calculatePaymentAmount(topupAmount, PAYMENT_TYPES.WAFFO)
-      setConfirmDialogOpen(true)
+      const quotedAmount = await calculatePaymentAmount(
+        topupAmount,
+        PAYMENT_TYPES.WAFFO
+      )
+      if (Number.isFinite(quotedAmount) && quotedAmount > 0) {
+        setConfirmDialogOpen(true)
+      }
     } finally {
       setPaymentLoading(null)
     }
@@ -322,7 +346,6 @@ export function Wallet(props: WalletProps) {
                   topupLink={topupInfo?.topup_link}
                   loading={topupLoading}
                   priceRatio={(status?.price as number) || 1}
-                  usdExchangeRate={effectiveUsdExchangeRate}
                   onOpenBilling={() => setBillingDialogOpen(true)}
                   creemProducts={topupInfo?.creem_products}
                   enableCreemTopup={topupInfo?.enable_creem_topup}
@@ -361,7 +384,7 @@ export function Wallet(props: WalletProps) {
       </SectionPageLayout>
 
       <PaymentConfirmDialog
-        open={confirmDialogOpen}
+        open={confirmDialogOpen && !topupLoading && topupInfo !== null}
         onOpenChange={setConfirmDialogOpen}
         onConfirm={handlePaymentConfirm}
         topupAmount={topupAmount}
@@ -370,7 +393,6 @@ export function Wallet(props: WalletProps) {
         calculating={calculating}
         processing={processing || waffoProcessing || pancakeProcessing}
         discountRate={getDiscountRate()}
-        usdExchangeRate={effectiveUsdExchangeRate}
         showRelayBasesVipPaymentWarning={shouldShowRelayBasesVipPaymentWarning(
           resolveRelayBasesVipPaymentUserGroup(
             user?.group,

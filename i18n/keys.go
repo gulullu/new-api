@@ -168,6 +168,7 @@ const (
 	MsgTopupOrderStatus    = "topup.order_status"
 	MsgTopupFailed         = "topup.failed"
 	MsgTopupInvalidQuota   = "topup.invalid_quota"
+	MsgTopupMinimum        = "topup.minimum"
 )
 
 // Channel related messages

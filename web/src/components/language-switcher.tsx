@@ -37,20 +37,23 @@ import { useAuthStore } from '@/stores/auth-store'
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation()
-  const user = useAuthStore((s) => s.auth.user)
+  const { user, setUser } = useAuthStore((s) => s.auth)
   const currentLanguage = normalizeInterfaceLanguage(i18n.language)
   const handleChangeLanguage = useCallback(
     async (code: string) => {
       await i18n.changeLanguage(code)
       if (user) {
         try {
-          await api.put('/api/user/self', { language: code })
+          const response = await api.put('/api/user/self', { language: code })
+          if (response.data?.success) {
+            setUser({ ...user, language: code })
+          }
         } catch {
           // Best-effort persistence; don't block the UI on failure
         }
       }
     },
-    [i18n, user]
+    [i18n, setUser, user]
   )
 
   return (

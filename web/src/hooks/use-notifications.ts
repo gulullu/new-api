@@ -18,7 +18,12 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 
+import {
+  relayBasesContentQueryKey,
+  toRelayBasesContentLocale,
+} from '@/features/relaybases/content/locale'
 import { useStatus } from '@/hooks/use-status'
 import { getNotice } from '@/lib/api'
 import { useNotificationStore } from '@/stores/notification-store'
@@ -63,6 +68,10 @@ function getAnnouncementKey(item: Record<string, unknown>): string {
  * Provides unread counts and read status management
  */
 export function useNotifications() {
+  const { i18n } = useTranslation()
+  const locale = toRelayBasesContentLocale(
+    i18n.resolvedLanguage || i18n.language
+  )
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'notice' | 'announcements'>(
     'notice'
@@ -74,18 +83,25 @@ export function useNotifications() {
     isLoading: noticeLoading,
     refetch: refetchNotice,
   } = useQuery({
-    queryKey: ['notice'],
-    queryFn: getNotice,
+    queryKey: relayBasesContentQueryKey('notice', locale),
+    queryFn: () => getNotice(locale),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
   // Fetch Announcements from status
   const { status, loading: statusLoading } = useStatus()
   const announcementsEnabled = status?.announcements_enabled ?? false
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const announcements: Record<string, unknown>[] = announcementsEnabled
-    ? ((status?.announcements || []) as Record<string, unknown>[]).slice(0, 20)
-    : []
+  const statusAnnouncements = status?.announcements
+  const announcements = useMemo<Record<string, unknown>[]>(
+    () =>
+      announcementsEnabled
+        ? ((statusAnnouncements || []) as Record<string, unknown>[]).slice(
+            0,
+            20
+          )
+        : [],
+    [announcementsEnabled, statusAnnouncements]
+  )
 
   // Notification store
   const {

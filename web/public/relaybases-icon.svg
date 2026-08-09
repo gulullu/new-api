@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="relaybases-icon-title">
   <title id="relaybases-icon-title">RelayBases</title>
-  <rect width="64" height="64" rx="14" fill="#fff"/>
-  <path d="M13 53V11h22c10 0 17 6 17 15 0 7-4 12-11 14l13 13H39L27 41h-4v12H13Zm10-22h11c5 0 8-2 8-6s-3-6-8-6H23v12Z" fill="#050505"/>
+  <circle cx="32" cy="32" r="30" fill="#fff" stroke="#d1d5db" stroke-width="1.5"/>
+  <path d="M13 53V11h22c10 0 17 6 17 15 0 7-4 12-11 14l13 13H39L27 41h-4v12H13Zm10-22h11c5 0 8-2 8-6s-3-6-8-6H23v12Z" fill="#050505" transform="translate(4 4) scale(.875)"/>
 </svg>

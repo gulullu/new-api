@@ -28,6 +28,8 @@ import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { toast } from 'sonner'
 
+import { currentRelayBasesContentLocale } from '@/features/relaybases/content/locale'
+import { RelayBasesPreferenceLinkBridge } from '@/features/relaybases/navigation/preference-link-bridge'
 import { getStatus } from '@/lib/api'
 import { installBuildMetadata } from '@/lib/build-metadata'
 import { applyFaviconToDom } from '@/lib/dom-utils'
@@ -44,6 +46,7 @@ import { routeTree } from './routeTree.gen'
 
 // Styles
 import './styles/index.css'
+import './features/relaybases/supporting-copy.css'
 
 // Ensure VChart theme is initialized before any chart mounts (prevents white default theme flash)
 // VChart theme is driven by our ThemeProvider (html.light/html.dark) via per-chart `theme` prop.
@@ -136,7 +139,7 @@ if (!rootElement) {
       /* empty */
     }
     // Background refresh
-    getStatus()
+    getStatus(currentRelayBasesContentLocale())
       .then((s) => {
         if (s?.system_name) {
           apply(s.system_name as string)
@@ -161,6 +164,7 @@ if (!rootElement.innerHTML) {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
+          <RelayBasesPreferenceLinkBridge />
           <FontProvider>
             <DirectionProvider>
               <RouterProvider router={router} />

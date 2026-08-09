@@ -20,12 +20,27 @@ import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
 import { PAYMENT_TYPES } from '../constants'
+import type { TopupInfo } from '../types'
 import {
   dispatchSelectedPayment,
+  getMinTopupAmount,
   isStripePayment,
   isWaffoPayment,
   isWaffoPancakePayment,
 } from './payment'
+
+function topupInfoWithMinimums(overrides: Partial<TopupInfo> = {}): TopupInfo {
+  return {
+    enable_online_topup: false,
+    enable_stripe_topup: false,
+    pay_methods: [],
+    min_topup: 1,
+    stripe_min_topup: 1,
+    amount_options: [],
+    discount: {},
+    ...overrides,
+  }
+}
 
 describe('payment type classification', () => {
   test('keeps Waffo and Waffo Pancake on their dedicated flows', () => {
@@ -34,6 +49,21 @@ describe('payment type classification', () => {
     assert.equal(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO_PANCAKE), true)
     assert.equal(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO), false)
     assert.equal(isStripePayment(PAYMENT_TYPES.STRIPE), true)
+  })
+})
+
+describe('payment minimum', () => {
+  test('uses the lowest effective minimum across all enabled gateways', () => {
+    const topupInfo = topupInfoWithMinimums({
+      enable_online_topup: true,
+      min_topup: 100,
+      enable_stripe_topup: true,
+      stripe_min_topup: 80,
+      enable_waffo_pancake_topup: true,
+      waffo_pancake_min_topup: 120,
+    })
+
+    assert.equal(getMinTopupAmount(topupInfo), 80)
   })
 })
 

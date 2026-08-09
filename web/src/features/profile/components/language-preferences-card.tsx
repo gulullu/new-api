@@ -84,6 +84,7 @@ export function LanguagePreferencesCard(props: LanguagePreferencesCardProps) {
             : (auth.user.setting ?? {})
         auth.setUser({
           ...auth.user,
+          language: nextLanguage,
           setting: JSON.stringify({
             ...existingSetting,
             language: nextLanguage,

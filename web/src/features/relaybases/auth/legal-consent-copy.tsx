@@ -1,0 +1,73 @@
+/*
+Copyright (C) 2023-2026 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+import { Trans } from 'react-i18next'
+
+const agreementLink = (
+  <a
+    href='/user-agreement'
+    target='_blank'
+    rel='noopener noreferrer'
+    className='text-foreground font-semibold underline decoration-1 underline-offset-4'
+  />
+)
+
+const privacyLink = (
+  <a
+    href='/privacy-policy'
+    target='_blank'
+    rel='noopener noreferrer'
+    className='text-foreground font-semibold underline decoration-1 underline-offset-4'
+  />
+)
+
+export function RelayBasesLegalConsentCopy({
+  hasUserAgreement,
+  hasPrivacyPolicy,
+}: {
+  hasUserAgreement: boolean
+  hasPrivacyPolicy: boolean
+}) {
+  if (hasUserAgreement && hasPrivacyPolicy) {
+    return (
+      <Trans
+        ns='relaybases'
+        i18nKey='auth.legal.both'
+        components={{ agreement: agreementLink, privacy: privacyLink }}
+      />
+    )
+  }
+
+  if (hasUserAgreement) {
+    return (
+      <Trans
+        ns='relaybases'
+        i18nKey='auth.legal.agreementOnly'
+        components={{ agreement: agreementLink }}
+      />
+    )
+  }
+
+  return (
+    <Trans
+      ns='relaybases'
+      i18nKey='auth.legal.privacyOnly'
+      components={{ privacy: privacyLink }}
+    />
+  )
+}

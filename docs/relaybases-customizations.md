@@ -9,7 +9,7 @@
 | 项目 | 状态 |
 | --- | --- |
 | 上游基线 | `QuantumNous/new-api` `v1.0.0-rc.24`（共同基线 `5c3abffe`） |
-| RelayBases 集成基线 | `origin/main` `879d189d`；本次支付快照改动尚在功能分支 |
+| RelayBases 集成基线 | `origin/main` `beb451fe`；本次原生展示与七语言迁移在 `codex/native-ui-migration-20260810` |
 | 上游身份 | 必须保留 new-api、QuantumNous、许可证、版权、源码头、模块路径及原有归属信息 |
 | 本文范围 | fork 内的产品差异，以及不在本仓库中的外部 UI/CF Worker 依赖边界 |
 
@@ -56,6 +56,9 @@
 | --- | --- | --- | --- |
 | RelayBases 公网分享元数据 | 在部署入口增加 RelayBases favicon、manifest、Open Graph、Telegram/X 卡片和说明文案。它只定制部署外观；不得删除或改写仓库内 new-api、QuantumNous、AGPL、版权和源码归属。 | [web/index.html](../web/index.html)、[web/public](../web/public) | 官方重构入口模板时仅重新应用部署元数据，不批量替换官方名称。 |
 | VIP 海外渠道支付确认提醒 | 仅当用户分组精确为 `vip` 且选择 Stripe、Waffo 或 Waffo Pancake 时，在付款摘要内提示海外渠道手续费较高、VIP 8 折不会自动应用，并提供前往 RelayBases 官方 Telegram 客服或按当前显示金额继续付款两种选择。当前显示金额可能已包含公开充值优惠；本提示只说明 VIP 优惠，不改变支付、折扣或入账计算。 | [web/src/features/wallet/relaybases-vip-payment-warning-policy.ts](../web/src/features/wallet/relaybases-vip-payment-warning-policy.ts)、[web/src/features/wallet/components/relaybases-vip-payment-warning.tsx](../web/src/features/wallet/components/relaybases-vip-payment-warning.tsx)、[web/src/features/wallet/components/dialogs/payment-confirm-dialog.tsx](../web/src/features/wallet/components/dialogs/payment-confirm-dialog.tsx) | 官方若支持按用户分组与渠道配置确认提醒，迁移到官方能力后删除本地组件和单个布尔接线；保持客服地址与官网 canonical 入口一致。 |
+| 原生 RelayBases 展示层与七语言 | RelayBases 自定义钱包、支付渠道说明、注册权益、法律同意文案、状态/无限画布导航、模型广场补充信息和通用日志导出入口均位于 `web/src/features/relaybases`；上游组件只保留窄接线点。自定义前端文案使用独立 `relaybases` i18next namespace，并且 en、zh-CN、zh-TW、fr、ja、ru、vi 七份资源必须具有完全相同的叶子键。静态文档暂只提供中英文时，其他界面语言明确回退英文。 | [web/src/features/relaybases](../web/src/features/relaybases)、[web/src/i18n/config.ts](../web/src/i18n/config.ts)、[web/index.html](../web/index.html) | 官方新增同等 slot、品牌配置或本地化能力时，优先换成官方入口并删除宿主补丁；每个新自定义键必须在同一 PR 补齐七语言并通过递归覆盖测试。 |
+| 公告与部署内容本地化 | `/api/status` 中当前公告、FAQ、API 地址说明，`/api/notice` 以及用户可用分组说明按请求界面语言返回七语言内容。条目使用稳定 ID 与源内容 UTF-16 FNV 哈希绑定；管理员修改源内容后哈希不匹配即原样返回，旧翻译不得覆盖新公告。归档公告仅由明确 ID 清单过滤。后端业务报错仍使用官方 en/zh-CN/zh-TW bundle，fr/ja/ru/vi 回退英文。 | [relaybases/contenti18n](../relaybases/contenti18n)、[controller/misc.go](../controller/misc.go)、[controller/group.go](../controller/group.go)、[web/src/features/relaybases/content](../web/src/features/relaybases/content) | 新增或修改公告时，必须同步稳定 ID、最新源哈希和七语言正文；不得按正文模糊匹配。管理员临时编辑优先于仓库翻译。 |
+| 按界面语言执行最低充值 | 服务端以登录用户保存的界面语言为准：zh-CN/zh-TW 最低 Ɍ20，en/fr/ja/ru/vi 最低 Ɍ100，并与各支付渠道配置的最低值取更严格者。GetTopUpInfo、预设选项、报价和实际下单入口共用同一策略；浏览器展示值不能绕过服务端。 | [controller/relaybases_topup_policy.go](../controller/relaybases_topup_policy.go)、[controller/topup.go](../controller/topup.go)、[controller/topup_stripe.go](../controller/topup_stripe.go)、[controller/topup_waffo.go](../controller/topup_waffo.go)、[controller/topup_waffo_pancake.go](../controller/topup_waffo_pancake.go) | 官方若提供服务端分层最低充值策略，迁移后删除本地 helper；支付入口、报价入口和展示数据必须始终使用同一结果。 |
 | 自动路由展示 | 自动分组、`auto_groups`、熔断路由和主要 UI 是 `v1.0.0-rc.24` 的官方功能，不是 RelayBases 后端魔改。当前 fork 仅有与官方实际单层动效一致的测试期望调整；可用分组与顺序是运行配置。 | [web/src/features/keys/components/api-key-group-cell.tsx](../web/src/features/keys/components/api-key-group-cell.tsx)、[web/src/features/keys/components/__tests__/api-key-group-cell.test.tsx](../web/src/features/keys/components/__tests__/api-key-group-cell.test.tsx)、[setting/user_usable_group.go](../setting/user_usable_group.go)、[service/group.go](../service/group.go) | 升级时以官方实现为准；若官方测试已修复，删除本地测试差异。外部公告/文档文案不应变成路由实现。 |
 | 移动侧栏 | 仅桌面折叠态包装 tooltip；移动端链接先交给路由处理，再在下一帧关闭侧栏，避免首击被焦点/tooltip 处理吞掉。 | [web/src/components/ui/sidebar.tsx](../web/src/components/ui/sidebar.tsx)、[web/src/components/layout/components/nav-group.tsx](../web/src/components/layout/components/nav-group.tsx)、[web/src/components/ui/__tests__/sidebar-tooltip.test.tsx](../web/src/components/ui/__tests__/sidebar-tooltip.test.tsx) | 官方若修复相同触摸竞态，删除本地 hook 和测试，不叠加两套延迟关闭逻辑。 |
 | 版本与 CI 兼容 | `VERSION` 明确记录当前官方基线；前端 CI 将 Bun 测试按文件串行执行以规避共享 DOM/全局状态互扰。 | [VERSION](../VERSION)、[.github/workflows/ci.yml](../.github/workflows/ci.yml) | 每次升级同步版本；先验证官方测试隔离是否已修复，再决定是否继续串行。 |
@@ -99,14 +102,14 @@
 
 ## 5. CF Worker 与源码边界
 
-本仓库没有 RelayBases 的 CF Worker 源码或部署清单，因此 Worker 只能在这里登记为**外部依赖**，不能把未经版本控制的线上行为写成仓库事实，也不得记录密钥、账户、主机或用户隐私。
+CF Worker 由独立的 [relaybases-site](https://github.com/gulullu/relaybases-site) 仓库管理。本仓库通过 `relaybases-native-features` HTML meta 与 `X-RelayBases-Native-Features` 请求头声明已由原生应用接管的展示能力；Worker 兼容层只在 marker 缺失时恢复旧展示，便于单独回滚 New API。
 
-| 应由本仓库源码负责 | 外部 Worker/UI 补丁可负责 |
+| 应由本仓库源码负责 | Worker 必须继续负责 |
 | --- | --- |
-| 价格和折扣计算、最小充值校验、Checkout 参数、Webhook 验签、额度入账、币种快照、返利发放/撤销、权限和隐私过滤 | 外层布局、非安全性说明文案、支付卡片介绍、静态站点/法律页衔接、暂未下沉到源码的展示性 i18n |
-| API 中真实的金额/币种字段和未知历史记录的明确降级 | 不改变金额含义的视觉格式；不得删除 ISO 币种或把未知币种猜成 USD/CNY |
+| 钱包与支付说明、金额/币种显示、最低充值的服务端策略、七语言自定义文案、公告/FAQ/分组展示、注册和法律文案、导航、模型广场展示、iframe 语言/主题参数、favicon、通用日志导出按钮 | 模型与 endpoint allowlist、Token 分组服务端校验、Canvas Sync/R2、公共媒体上传、通用日志导出的鉴权/限流/签名和源站代理、Upstream Hub SSO、静态及法律站点边缘路由、邀请归因，以及其他访问控制 |
+| Checkout 参数、Webhook 验签、额度入账、币种快照、返利发放/撤销、权限与隐私投影 | 只在原生 marker 缺失时启用的短期展示回退；不得在原生能力存在时重复注入或改写同一页面 |
 
-Worker 不得改写支付 API JSON、伪造回调、计算或赠送额度、决定返利资格、遮蔽服务端错误。发布前应分别检查源站响应和经 Worker 响应，防止展示补丁掩盖源码回归。若某项外部补丁长期存在，应迁入独立、受 Git 管理的 Worker 仓库，并在此处只记录仓库链接与版本，不复制凭据。
+Worker 不得伪造支付回调、计算或赠送额度、决定返利资格、删除 ISO 币种或遮蔽服务端错误。迁移顺序固定为：先发布认识 marker 的 Worker，再发布带 marker 的 New API；回滚 New API 时 marker 消失，兼容 Worker 自动恢复。物理删除旧展示代码后，若还要回滚 New API，必须先恢复兼容 Worker。任何发布都要分别检查直连源站和经 Worker 的响应，防止边缘层掩盖源码回归。
 
 ## 6. 上游合并审计清单
 
@@ -145,6 +148,9 @@ Worker 不得改写支付 API JSON、伪造回调、计算或赠送额度、决�
 | 推荐返利 | 每位受邀用户仅首笔已验签正式付款可获 3%，首笔不合格时资格不顺延；CNY/USD 原币种留账；订单单位价在建单与回调间变化；历史已付费但无返利；并发首单；注册不返；优惠后实付为基数；无邀请人、禁用邀请人、沙盒、重复回调、退款、争议和额度溢出。既有历史返利与余额必须保持不变。 |
 | 统计与隐私 | 用户列表按 `invitee_id` 去重统计 `awarded + withheld`，排除 `reversed`；`aff_count` 不参与；普通用户仅见脱敏身份，管理员页面不泄露支付引用。 |
 | 前端 | 中/英文桌面与移动端；`Ɍ` 额度与 `USD/CNY` 实付不混淆；返利表桌面/移动一致；移动侧栏首击导航有效；VIP 仅在 Stripe/Waffo/Waffo Pancake 确认页看到完整双选项，其他分组和渠道仍使用官方确认流程。 |
+| 七语言与内容 | en、zh-CN、zh-TW、fr、ja、ru、vi 的 RelayBases namespace 叶子键完全一致且均非空；切换语言会重新请求 status/notice/groups；公告按 ID+源哈希本地化，管理员编辑后原样保留；fr/ja/ru/vi 的后端业务报错回退英文。 |
+| 最低充值 | zh-CN/zh-TW 的 GetTopUpInfo、预设、报价、Stripe/Waffo/Waffo Pancake 下单均拒绝低于 Ɍ20；其他五种界面语言同样拒绝低于 Ɍ100；渠道设置更高时不得被语言策略降低；请求不得修改全局 PayMethods。 |
+| Worker 交接 | 无 marker 时兼容展示仍工作；完整 marker 下旧 DOM 注入为 0；定价和分组的安全过滤不因 native header 关闭；直连与代理页面金额、公告和模型集合一致。 |
 | 构建 | 后端相关单测后运行 `go test ./...`；前端使用 Bun 执行 typecheck、测试和 production build；`relaykit` 有改动时额外执行 `cd relaykit && GOWORK=off go build ./...`。 |
 
 ## 8. 维护记录模板
@@ -156,4 +162,5 @@ Worker 不得改写支付 API JSON、伪造回调、计算或赠送额度、决�
 | 2026-08-09 | `v1.0.0-rc.24` / `5c3abffe` | 新增订单实付快照、ISO 币种展示和有效受邀支付投影 | `top_ups.payment_amount`、`top_ups.payment_currency`；User 投影不落库 | 无新增 | 见第 4、7 节；回滚保留新增列 |
 | 2026-08-09 | `v1.0.0-rc.24` / `88786a2b` | 推荐返利改为每位受邀用户仅首笔已验签正式付款可获返利，首笔不合格时不顺延；新增订单单位价快照、去重受邀用户投影、转余额缓存失效和精简的七语言界面 | `top_ups.referral_unit_price`；既有返利账本和用户返利余额不修改；User 投影不落库 | 无新增 | 见第 4、7 节；回滚保留新增列和全部历史返利 |
 | 2026-08-09 | `v1.0.0-rc.24` / `5259a8e0` | 新增 VIP 海外渠道支付确认提醒和七语言双选项；支付与折扣计算不变 | 无 | RelayBases Telegram 客服 `https://t.me/relaybases` | 定向组件/交互/i18n 测试；回滚删除独立组件及确认弹窗的布尔接线 |
+| 2026-08-10 | `v1.0.0-rc.24` / `beb451fe` | 将 Worker 中的 New API 展示迁入低耦合原生 feature；补齐七语言钱包、认证、导航、模型广场、公告/FAQ/notice/分组；按界面语言执行 Ɍ20/Ɍ100 最低充值 | 无 schema 变更；公告翻译仅为代码目录和源哈希映射 | `relaybases-site` Worker 保留安全/边缘服务及 marker 回退 | 七语言递归覆盖、Go/前端全量测试、直连/代理差异和九项 capability marker；回滚先恢复兼容 Worker，再回滚 New API |
 | YYYY-MM-DD | tag + commit | 一句话说明 | 字段/迁移/无 | Worker/支付平台/无 | 测试命令、发布版本、回滚提交 |

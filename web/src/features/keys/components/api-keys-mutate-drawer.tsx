@@ -62,6 +62,7 @@ import {
 } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { toRelayBasesContentLocale } from '@/features/relaybases/content/locale'
 import { useStatus } from '@/hooks/use-status'
 import { getUserModels, getUserGroups } from '@/lib/api'
 import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
@@ -100,7 +101,10 @@ export function ApiKeysMutateDrawer({
   onOpenChange,
   currentRow,
 }: ApiKeyMutateDrawerProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const contentLocale = toRelayBasesContentLocale(
+    i18n.resolvedLanguage || i18n.language
+  )
   const isUpdate = !!currentRow
   const currentRowId = currentRow?.id
   const { triggerRefresh } = useApiKeys()
@@ -126,8 +130,8 @@ export function ApiKeysMutateDrawer({
     isFetched: groupsFetched,
     isFetching: groupsFetching,
   } = useQuery({
-    queryKey: ['user-groups'],
-    queryFn: getUserGroups,
+    queryKey: ['user-groups', contentLocale],
+    queryFn: () => getUserGroups(contentLocale),
     enabled: open,
     staleTime: 0,
   })

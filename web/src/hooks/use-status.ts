@@ -17,18 +17,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 
 import type { SystemStatus } from '@/features/auth/types'
+import {
+  relayBasesContentQueryKey,
+  toRelayBasesContentLocale,
+} from '@/features/relaybases/content/locale'
 import { getStatus } from '@/lib/api'
 import { useSystemConfigStore } from '@/stores/system-config-store'
 
 import { mapStatusDataToConfig } from './use-system-config'
 
 // Get initial cache from localStorage
-function getInitialStatus(): SystemStatus | undefined {
+function getInitialStatus(locale: string): SystemStatus | undefined {
   try {
     if (typeof window !== 'undefined') {
-      const saved = window.localStorage.getItem('status')
+      const saved = window.localStorage.getItem(`status:${locale}`)
       return saved ? (JSON.parse(saved) as SystemStatus) : undefined
     }
   } catch {
@@ -38,10 +43,14 @@ function getInitialStatus(): SystemStatus | undefined {
 }
 
 export function useStatus() {
+  const { i18n } = useTranslation()
+  const locale = toRelayBasesContentLocale(
+    i18n.resolvedLanguage || i18n.language
+  )
   const { data, isLoading, error } = useQuery({
-    queryKey: ['status'],
+    queryKey: relayBasesContentQueryKey('status', locale),
     queryFn: async () => {
-      const status = await getStatus()
+      const status = await getStatus(locale)
       try {
         if (status) {
           const { setConfig } = useSystemConfigStore.getState()
@@ -59,6 +68,10 @@ export function useStatus() {
       // Save to localStorage
       try {
         if (typeof window !== 'undefined' && status) {
+          window.localStorage.setItem(
+            `status:${locale}`,
+            JSON.stringify(status)
+          )
           window.localStorage.setItem('status', JSON.stringify(status))
         }
       } catch {
@@ -67,7 +80,7 @@ export function useStatus() {
       return status as SystemStatus | null
     },
     // Use localStorage data as initial data
-    placeholderData: getInitialStatus(),
+    placeholderData: getInitialStatus(locale),
     // Data becomes stale after 5 minutes
     staleTime: 5 * 60 * 1000,
     // Cache expires after 30 minutes
