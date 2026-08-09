@@ -5248,6 +5248,19 @@
     "Zero retention": "Không lưu dữ liệu",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
+    "Referral": "Giới thiệu",
+    "{{count}} invitee payment": "{{count}} khoản thanh toán của người được mời",
+    "{{count}} invitee payments": "{{count}} khoản thanh toán của người được mời",
+    "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.": "Các khoản thanh toán hợp lệ của những người do người dùng này mời và chưa bị thu hồi do hoàn tiền hoặc tranh chấp.",
+    "Rewards": "Phần thưởng",
+    "Cumulative referral reward credits, net of refunds and disputes.": "Tổng tín dụng thưởng giới thiệu sau khi trừ các khoản hoàn tiền và tranh chấp.",
+    "Inviter #{{id}}": "Người mời #{{id}}",
+    "Invitee payments": "Thanh toán của người được mời",
+    "Top-up credits": "Tín dụng nạp thêm",
+    "Amount paid": "Số tiền đã trả",
+    "Amount due": "Số tiền phải trả",
+    "Checkout amount": "Số tiền thanh toán",
+    "Payment currency unavailable": "Không có thông tin tiền tệ thanh toán",
     "Zoom": "Zoom"
   }
 }

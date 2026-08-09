@@ -5248,6 +5248,19 @@
     "Zero retention": "Aucune rétention",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
+    "Referral": "Parrainage",
+    "{{count}} invitee payment": "{{count}} paiement d’un filleul",
+    "{{count}} invitee payments": "{{count}} paiements de filleuls",
+    "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.": "Paiements éligibles effectués par les filleuls de cet utilisateur et non annulés à la suite d’un remboursement ou d’un litige.",
+    "Rewards": "Récompenses",
+    "Cumulative referral reward credits, net of refunds and disputes.": "Crédits de parrainage cumulés, nets des remboursements et des litiges.",
+    "Inviter #{{id}}": "Parrain n° {{id}}",
+    "Invitee payments": "Paiements des filleuls",
+    "Top-up credits": "Crédits rechargés",
+    "Amount paid": "Montant payé",
+    "Amount due": "Montant dû",
+    "Checkout amount": "Montant du paiement",
+    "Payment currency unavailable": "Devise du paiement indisponible",
     "Zoom": "Zoom"
   }
 }

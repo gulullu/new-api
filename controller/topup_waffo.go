@@ -218,6 +218,7 @@ func RequestWaffoPay(c *gin.Context) {
 	}
 
 	// 创建本地订单
+	currency := getWaffoCurrency()
 	topUp := &model.TopUp{
 		UserId:          id,
 		Amount:          amount,
@@ -225,6 +226,8 @@ func RequestWaffoPay(c *gin.Context) {
 		TradeNo:         merchantOrderId,
 		PaymentMethod:   model.PaymentMethodWaffo,
 		PaymentProvider: model.PaymentProviderWaffo,
+		PaymentAmount:   formatWaffoAmount(payMoney, currency),
+		PaymentCurrency: strings.ToUpper(strings.TrimSpace(currency)),
 		CreateTime:      time.Now().Unix(),
 		Status:          common.TopUpStatusPending,
 	}
@@ -253,7 +256,6 @@ func RequestWaffoPay(c *gin.Context) {
 		returnUrl = setting.WaffoReturnUrl
 	}
 
-	currency := getWaffoCurrency()
 	goodsInfo := buildWaffoTopUpGoodsInfo(req.Amount)
 	createParams := &order.CreateOrderParams{
 		PaymentRequestID: paymentRequestId,

@@ -378,7 +378,7 @@ func GetUser(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	user, err := model.GetUserById(id, false)
+	user, err := model.GetUserByIdWithQualifiedReferralPayments(id, false)
 	if err != nil {
 		common.ApiError(c, err)
 		return

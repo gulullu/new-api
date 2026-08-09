@@ -117,7 +117,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
               ],
               [
                 'qualified-payments',
-                t('Eligible payments'),
+                t('Invitee payments'),
                 String(qualifiedPayments),
               ],
             ].map(([metric, label, value]) => (

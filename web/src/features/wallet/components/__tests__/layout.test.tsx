@@ -164,7 +164,7 @@ describe('affiliate rewards card layout', () => {
     await unmountCard(rendered)
   })
 
-  test('shows eligible payments instead of the legacy registration count', async () => {
+  test('shows invitee payments instead of the legacy registration count', async () => {
     await i18n.changeLanguage('en')
     const rendered = await renderCard({ qualifiedPayments: 2 })
 
@@ -253,8 +253,7 @@ describe('affiliate rewards card layout', () => {
       'Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}',
       "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation.",
       'Only the payment processor-confirmed amount actually paid in a supported fiat currency is used. The top-up face value, pre-discount amount, and unsupported settlement currencies are not used as the reward basis.',
-      'Eligible payments',
-      'Number of eligible referred payments',
+      'Invitee payments',
       'Your Referral Link',
     ]
 

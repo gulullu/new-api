@@ -46,6 +46,10 @@ export const STATUS_CONFIG: Record<TopupStatus, StatusConfig> = {
     variant: 'danger',
     label: 'Expired',
   },
+  failed: {
+    variant: 'danger',
+    label: 'Failed',
+  },
 }
 
 /**
@@ -56,6 +60,18 @@ export function getStatusConfig(status: TopupStatus): StatusConfig {
 }
 
 /**
+ * Successful orders show the settled amount; open or expired orders show the
+ * amount that was due without implying that a payment completed.
+ */
+export function getPaymentAmountLabelKey(
+  status: TopupStatus
+): 'Amount paid' | 'Amount due' | 'Checkout amount' {
+  if (status === 'success') return 'Amount paid'
+  if (status === 'pending') return 'Amount due'
+  return 'Checkout amount'
+}
+
+/**
  * Payment method display names
  */
 export const PAYMENT_METHOD_NAMES: Record<string, string> = {
@@ -63,6 +79,7 @@ export const PAYMENT_METHOD_NAMES: Record<string, string> = {
   alipay: 'Alipay',
   wxpay: 'WeChat Pay',
   waffo: 'Waffo',
+  waffo_pancake: 'Waffo Pancake',
 }
 
 /**

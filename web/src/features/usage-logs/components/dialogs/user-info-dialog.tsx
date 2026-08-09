@@ -34,6 +34,20 @@ interface UserInfoDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+interface InfoItemProps {
+  label: string
+  value: string | number
+}
+
+function InfoItem(props: InfoItemProps) {
+  return (
+    <div className='space-y-1.5'>
+      <Label className='text-muted-foreground text-xs'>{props.label}</Label>
+      <div className='text-sm font-semibold'>{props.value}</div>
+    </div>
+  )
+}
+
 export function UserInfoDialog({
   userId,
   open,
@@ -70,19 +84,6 @@ export function UserInfoDialog({
     }
   }, [open, userId, fetchUserInfo])
 
-  const InfoItem = ({
-    label,
-    value,
-  }: {
-    label: string
-    value: string | number
-  }) => (
-    <div className='space-y-1.5'>
-      <Label className='text-muted-foreground text-xs'>{label}</Label>
-      <div className='text-sm font-semibold'>{value}</div>
-    </div>
-  )
-
   return (
     <Dialog
       open={open}
@@ -95,11 +96,12 @@ export function UserInfoDialog({
       contentHeight='auto'
       bodyClassName='space-y-4'
     >
-      {isLoading ? (
+      {isLoading && (
         <div className='flex items-center justify-center py-8'>
           <Loader2 className='text-muted-foreground size-6 animate-spin' />
         </div>
-      ) : userInfo ? (
+      )}
+      {!isLoading && userInfo && (
         <div className='space-y-4 py-4'>
           {/* Basic Info */}
           <div className='grid grid-cols-2 gap-4'>
@@ -137,7 +139,7 @@ export function UserInfoDialog({
 
           {/* Invitation Info */}
           {(userInfo.aff_code ||
-            userInfo.aff_count !== undefined ||
+            userInfo.qualified_referral_payments !== undefined ||
             (userInfo.aff_quota !== undefined && userInfo.aff_quota > 0)) && (
             <>
               <div className='grid grid-cols-2 gap-4'>
@@ -147,10 +149,12 @@ export function UserInfoDialog({
                     value={userInfo.aff_code}
                   />
                 )}
-                {userInfo.aff_count !== undefined && (
+                {userInfo.qualified_referral_payments !== undefined && (
                   <InfoItem
-                    label={t('Eligible payments')}
-                    value={formatCompactNumber(userInfo.aff_count)}
+                    label={t('Invitee payments')}
+                    value={formatCompactNumber(
+                      userInfo.qualified_referral_payments
+                    )}
                   />
                 )}
               </div>
@@ -176,7 +180,8 @@ export function UserInfoDialog({
             </div>
           )}
         </div>
-      ) : (
+      )}
+      {!isLoading && !userInfo && (
         <div className='text-muted-foreground py-8 text-center text-sm'>
           {t('No user information available')}
         </div>

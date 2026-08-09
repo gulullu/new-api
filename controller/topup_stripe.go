@@ -99,7 +99,7 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	reference := fmt.Sprintf("new-api-ref-%d-%d-%s", user.Id, time.Now().UnixMilli(), randstr.String(4))
 	referenceId := "ref_" + common.Sha1([]byte(reference))
 
-	payLink, err := genStripeLink(referenceId, user.StripeCustomer, user.Email, payMoney, req.SuccessURL, req.CancelURL)
+	checkout, err := genStripeLink(referenceId, user.StripeCustomer, user.Email, payMoney, req.SuccessURL, req.CancelURL)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Stripe 创建 Checkout Session 失败 user_id=%d trade_no=%s amount=%d error=%q", id, referenceId, req.Amount, err.Error()))
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
@@ -113,6 +113,8 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 		TradeNo:         referenceId,
 		PaymentMethod:   model.PaymentMethodStripe,
 		PaymentProvider: model.PaymentProviderStripe,
+		PaymentAmount:   checkout.PaymentAmount,
+		PaymentCurrency: checkout.PaymentCurrency,
 		CreateTime:      time.Now().Unix(),
 		Status:          common.TopUpStatusPending,
 	}
@@ -126,7 +128,7 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
 		"data": gin.H{
-			"pay_link": payLink,
+			"pay_link": checkout.URL,
 		},
 	})
 }
@@ -398,6 +400,13 @@ func sessionExpired(ctx context.Context, event stripe.Event) {
 	logger.LogInfo(ctx, fmt.Sprintf("Stripe 充值订单已过期 trade_no=%s", referenceId))
 }
 
+// stripeCheckoutResult carries the created URL and the exact expected charge.
+type stripeCheckoutResult struct {
+	URL             string
+	PaymentAmount   string
+	PaymentCurrency string
+}
+
 // genStripeLink generates a Stripe Checkout session URL for payment.
 // It creates a new checkout session with the specified parameters and returns the payment URL.
 //
@@ -409,48 +418,54 @@ func sessionExpired(ctx context.Context, event stripe.Event) {
 //   - successURL: custom URL to redirect after successful payment (empty for default)
 //   - cancelURL: custom URL to redirect when payment is canceled (empty for default)
 //
-// Returns the checkout session URL or an error if the session creation fails.
-func genStripeLink(referenceId string, customerId string, email string, payMoney float64, successURL string, cancelURL string) (string, error) {
+// Returns the checkout session URL and the exact amount/currency sent to
+// Stripe, or an error if the session creation fails.
+func genStripeLink(referenceId string, customerId string, email string, payMoney float64, successURL string, cancelURL string) (stripeCheckoutResult, error) {
 	if !strings.HasPrefix(setting.StripeApiSecret, "sk_") && !strings.HasPrefix(setting.StripeApiSecret, "rk_") {
-		return "", fmt.Errorf("无效的Stripe API密钥")
+		return stripeCheckoutResult{}, fmt.Errorf("无效的Stripe API密钥")
 	}
 
 	stripe.Key = setting.StripeApiSecret
 
 	if setting.StripeUnitPrice <= 0 {
-		return "", fmt.Errorf("StripeUnitPrice 必须大于 0")
+		return stripeCheckoutResult{}, fmt.Errorf("StripeUnitPrice 必须大于 0")
 	}
 
 	configuredPrice, err := price.Get(setting.StripePriceId, nil)
 	if err != nil {
-		return "", fmt.Errorf("获取 Stripe Price 失败: %w", err)
+		return stripeCheckoutResult{}, fmt.Errorf("获取 Stripe Price 失败: %w", err)
 	}
 	if !configuredPrice.Active {
-		return "", fmt.Errorf("Stripe Price 未启用")
+		return stripeCheckoutResult{}, fmt.Errorf("Stripe Price 未启用")
 	}
 	if configuredPrice.Type != stripe.PriceTypeOneTime || configuredPrice.BillingScheme != stripe.PriceBillingSchemePerUnit {
-		return "", fmt.Errorf("Stripe Price 必须是一次性按单位计价")
+		return stripeCheckoutResult{}, fmt.Errorf("Stripe Price 必须是一次性按单位计价")
 	}
 	if configuredPrice.CustomUnitAmount != nil || configuredPrice.TransformQuantity != nil {
-		return "", fmt.Errorf("Stripe Price 不支持自定义金额或数量转换")
+		return stripeCheckoutResult{}, fmt.Errorf("Stripe Price 不支持自定义金额或数量转换")
 	}
 	if configuredPrice.Product == nil || configuredPrice.Product.ID == "" || configuredPrice.Currency == "" {
-		return "", fmt.Errorf("Stripe Price 缺少产品或币种信息")
+		return stripeCheckoutResult{}, fmt.Errorf("Stripe Price 缺少产品或币种信息")
 	}
 
 	priceUnitAmount := configuredPrice.UnitAmountDecimal
 	if priceUnitAmount <= 0 {
 		priceUnitAmount = float64(configuredPrice.UnitAmount)
 	}
-	unitAmount := math.Round(payMoney * priceUnitAmount / setting.StripeUnitPrice)
-	if unitAmount < 1 || math.IsNaN(unitAmount) || math.IsInf(unitAmount, 0) || unitAmount >= float64(math.MaxInt64) {
-		return "", fmt.Errorf("Stripe 支付金额无效")
+	unitAmount, expectedPayment, err := stripeCheckoutPaymentSnapshot(
+		payMoney,
+		priceUnitAmount,
+		setting.StripeUnitPrice,
+		string(configuredPrice.Currency),
+	)
+	if err != nil {
+		return stripeCheckoutResult{}, fmt.Errorf("Stripe 支付快照无效: %w", err)
 	}
 
 	priceData := &stripe.CheckoutSessionLineItemPriceDataParams{
 		Currency:   stripe.String(string(configuredPrice.Currency)),
 		Product:    stripe.String(configuredPrice.Product.ID),
-		UnitAmount: stripe.Int64(int64(unitAmount)),
+		UnitAmount: stripe.Int64(unitAmount),
 	}
 	if configuredPrice.TaxBehavior != "" {
 		priceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
@@ -490,10 +505,31 @@ func genStripeLink(referenceId string, customerId string, email string, payMoney
 
 	result, err := session.New(params)
 	if err != nil {
-		return "", err
+		return stripeCheckoutResult{}, err
 	}
 
-	return result.URL, nil
+	return stripeCheckoutResult{
+		URL:             result.URL,
+		PaymentAmount:   expectedPayment.PaidAmountForLog(),
+		PaymentCurrency: expectedPayment.Currency,
+	}, nil
+}
+
+// stripeCheckoutPaymentSnapshot applies the same minor-unit rounding used by
+// the Stripe line item and returns the corresponding major-unit audit value.
+func stripeCheckoutPaymentSnapshot(payMoney float64, priceUnitAmount float64, configuredUnitPrice float64, currency string) (int64, model.VerifiedPayment, error) {
+	if configuredUnitPrice <= 0 {
+		return 0, model.VerifiedPayment{}, errors.New("configured Stripe unit price must be positive")
+	}
+	unitAmount := math.Round(payMoney * priceUnitAmount / configuredUnitPrice)
+	if unitAmount < 1 || math.IsNaN(unitAmount) || math.IsInf(unitAmount, 0) || unitAmount >= float64(math.MaxInt64) {
+		return 0, model.VerifiedPayment{}, errors.New("invalid Stripe payment amount")
+	}
+	payment, err := model.NewVerifiedMinorUnitPayment(int64(unitAmount), currency, "", "", false)
+	if err != nil {
+		return 0, model.VerifiedPayment{}, err
+	}
+	return int64(unitAmount), payment, nil
 }
 
 func GetChargedAmount(count float64, user model.User) float64 {

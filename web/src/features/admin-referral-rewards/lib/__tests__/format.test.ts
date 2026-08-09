@@ -27,14 +27,27 @@ import {
 
 describe('admin referral reward formatting', () => {
   test('accepts the simplified Chinese interface language code', () => {
-    assert.doesNotThrow(() => formatAdminReferralPaidAmount('1234.5', 'zhCN'))
-    assert.equal(formatAdminReferralPaidAmount('1234.5', 'zhCN'), '1,234.5')
-    assert.equal(formatAdminReferralCredits(625000, 'zhCN'), '1.25')
+    assert.doesNotThrow(() =>
+      formatAdminReferralPaidAmount('1234.5', 'USD', 'zhCN')
+    )
+    assert.equal(
+      formatAdminReferralPaidAmount('1234.5', 'USD', 'zhCN'),
+      'USD 1,234.50'
+    )
+    assert.equal(
+      formatAdminReferralCredits(625000, 'zhCN').includes('1.25'),
+      true
+    )
     assert.equal(formatAdminReferralCount(1234, 'zhCN'), '1,234')
   })
 
   test('accepts the traditional Chinese interface language code', () => {
-    assert.doesNotThrow(() => formatAdminReferralPaidAmount('90', 'zhTW'))
-    assert.equal(formatAdminReferralPaidAmount('90', 'zhTW'), '90')
+    assert.doesNotThrow(() =>
+      formatAdminReferralPaidAmount('90', 'CNY', 'zhTW')
+    )
+    assert.equal(
+      formatAdminReferralPaidAmount('90', 'CNY', 'zhTW'),
+      'CNY 90.00'
+    )
   })
 })

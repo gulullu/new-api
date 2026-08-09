@@ -5248,6 +5248,19 @@
     "Zero retention": "データ保持なし",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V 4",
+    "Referral": "紹介",
+    "{{count}} invitee payment": "招待ユーザーの支払い {{count}} 件",
+    "{{count}} invitee payments": "招待ユーザーの支払い {{count}} 件",
+    "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.": "このユーザーが招待した人による、返金または異議申し立てで取り消されていない対象支払いです。",
+    "Rewards": "報酬",
+    "Cumulative referral reward credits, net of refunds and disputes.": "返金および異議申し立て分を差し引いた紹介報酬クレジットの累計です。",
+    "Inviter #{{id}}": "紹介者 #{{id}}",
+    "Invitee payments": "招待ユーザーの支払い",
+    "Top-up credits": "チャージクレジット",
+    "Amount paid": "支払額",
+    "Amount due": "支払予定額",
+    "Checkout amount": "決済金額",
+    "Payment currency unavailable": "支払い通貨を確認できません",
     "Zoom": "ズーム"
   }
 }

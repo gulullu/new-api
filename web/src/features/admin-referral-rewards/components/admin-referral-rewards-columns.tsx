@@ -77,7 +77,11 @@ export function useAdminReferralRewardsColumns(): ColumnDef<AdminReferralReward>
       header: t('Actual Amount'),
       cell: ({ row }) => (
         <span className={`${WRAP_CLASS} font-medium tabular-nums`}>
-          {formatAdminReferralPaidAmount(row.original.paid_amount, locale)}
+          {formatAdminReferralPaidAmount(
+            row.original.paid_amount,
+            row.original.paid_currency,
+            locale
+          )}
         </span>
       ),
       size: 130,

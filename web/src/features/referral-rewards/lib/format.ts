@@ -18,21 +18,16 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import type { TFunction } from 'i18next'
 
+import { formatPaymentAmount } from '@/lib/payment-amount'
+
 import type { ReferralRewardStatus } from '../types'
 
 export function formatReferralPaidAmount(
   amount: string,
+  currency: string,
   locale?: string
 ): string {
-  const numericAmount = Number(amount)
-
-  if (!Number.isFinite(numericAmount)) {
-    return amount.trim() || '-'
-  }
-
-  return new Intl.NumberFormat(locale, {
-    maximumFractionDigits: 8,
-  }).format(numericAmount)
+  return formatPaymentAmount(amount, currency, locale) ?? '-'
 }
 
 export function formatReferralRewardRate(rateBasisPoints: number): string {
