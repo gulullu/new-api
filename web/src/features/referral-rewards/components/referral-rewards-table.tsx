@@ -112,9 +112,7 @@ export function ReferralRewardsTable() {
               data-referral-history-intro
               className='text-muted-foreground mt-1 text-xs leading-relaxed [overflow-wrap:anywhere] break-words whitespace-normal sm:text-sm'
             >
-              {t(
-                "Review rewards earned from referred users' eligible paid top-ups."
-              )}
+              {t('Rewards from invited users.')}
             </p>
           </div>
         </div>
@@ -122,7 +120,7 @@ export function ReferralRewardsTable() {
         <div className='bg-muted/40 text-muted-foreground flex min-w-0 items-start gap-2 rounded-lg px-2.5 py-2 text-xs leading-relaxed lg:max-w-sm'>
           <ShieldCheck className='text-chart-2 mt-0.5 size-4 shrink-0' />
           <p className='[overflow-wrap:anywhere] break-words whitespace-normal'>
-            {t('Invitee identities are masked to protect their privacy.')}
+            {t('Invitee details are masked.')}
           </p>
         </div>
       </header>
@@ -134,9 +132,7 @@ export function ReferralRewardsTable() {
           isLoading={isLoadingData}
           isFetching={isFetching}
           emptyTitle={t('No Referral Rewards Yet')}
-          emptyDescription={t(
-            "Rewards will appear here after a referred user's eligible paid top-up is confirmed."
-          )}
+          emptyDescription={t('Confirmed rewards will appear here.')}
           skeletonKeyPrefix='referral-reward-skeleton'
           applyHeaderSize
           toolbarProps={null}

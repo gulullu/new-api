@@ -56,7 +56,9 @@ type LocaleResource = {
   translation: Record<string, string>
 }
 
-async function loadLocale(locale: 'en' | 'zh' | 'zh-TW') {
+type SupportedLocale = 'en' | 'zh' | 'zh-TW' | 'fr' | 'ja' | 'ru' | 'vi'
+
+async function loadLocale(locale: SupportedLocale) {
   const source = await readFile(
     new URL(`../../../../i18n/locales/${locale}.json`, import.meta.url),
     'utf8'
@@ -64,10 +66,14 @@ async function loadLocale(locale: 'en' | 'zh' | 'zh-TW') {
   return JSON.parse(source) as LocaleResource
 }
 
-const [en, zh, zhTW] = await Promise.all([
+const [en, zh, zhTW, fr, ja, ru, vi] = await Promise.all([
   loadLocale('en'),
   loadLocale('zh'),
   loadLocale('zh-TW'),
+  loadLocale('fr'),
+  loadLocale('ja'),
+  loadLocale('ru'),
+  loadLocale('vi'),
 ])
 const React = await import('react')
 const { act } = React
@@ -81,7 +87,7 @@ const i18n = createInstance()
 await i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  resources: { en, zh, 'zh-TW': zhTW },
+  resources: { en, zh, 'zh-TW': zhTW, fr, ja, ru, vi },
 })
 
 const reactTestGlobals = globalThis as typeof globalThis & {
@@ -164,12 +170,12 @@ describe('affiliate rewards card layout', () => {
     await unmountCard(rendered)
   })
 
-  test('shows invitee payments instead of the legacy registration count', async () => {
+  test('shows distinct eligible invitees instead of the legacy registration count', async () => {
     await i18n.changeLanguage('en')
-    const rendered = await renderCard({ qualifiedPayments: 2 })
+    const rendered = await renderCard({ qualifiedInvitees: 2 })
 
     const rewarded = rendered.container.querySelector(
-      '[data-referral-metric="qualified-payments"]'
+      '[data-referral-metric="eligible-invitees"]'
     )
     assert.ok(rewarded)
     assert.equal(rewarded.textContent?.includes('2'), true)
@@ -210,26 +216,32 @@ describe('affiliate rewards card layout', () => {
     await unmountCard(withRewards)
   })
 
-  test('renders the full Chinese rules without truncation classes', async () => {
+  test('keeps full Chinese rules collapsed and readable', async () => {
     await i18n.changeLanguage('zh')
     const rendered = await renderCard({
       rewardPercent: 3,
-      qualifiedPayments: 1,
+      qualifiedInvitees: 1,
+      showRuleDetails: true,
     })
 
-    const rules = rendered.container.querySelector('[data-referral-rules]')
+    const summary = rendered.container.querySelector('[data-referral-summary]')
+    const transferNote = rendered.container.querySelector(
+      '[data-referral-transfer-note]'
+    )
+    const rules = rendered.container.querySelector(
+      '[data-referral-rules]'
+    ) as HTMLDetailsElement | null
+    assert.ok(summary)
+    assert.ok(transferNote)
     assert.ok(rules)
-    assert.equal(rules.textContent?.includes('订单实付金额 × 3%'), true)
+    assert.equal(rules.open, false)
+    assert.equal(summary.textContent?.includes('优惠后实付金额返利 3%'), true)
+    assert.equal(transferNote.textContent?.includes('确认后可转入余额'), true)
     assert.equal(
-      rules.textContent?.includes('邀请行为本身不产生推荐返利'),
+      rules.textContent?.includes('仅受邀用户首笔已验签实付充值可获返利'),
       true
     )
-    assert.equal(
-      rules.textContent?.includes(
-        '充值面额、优惠前金额及不支持的结算币种均不作为计算基数'
-      ),
-      true
-    )
+    assert.equal(rules.textContent?.includes('不按充值面额或优惠前金额'), true)
 
     const clippedElements = rendered.container.querySelectorAll(
       '[class*="truncate"], [class*="line-clamp"]'
@@ -237,7 +249,7 @@ describe('affiliate rewards card layout', () => {
     assert.equal(clippedElements.length, 0)
 
     for (const paragraph of rendered.container.querySelectorAll(
-      '[data-referral-summary], [data-referral-rules] p'
+      '[data-referral-summary], [data-referral-transfer-note], [data-referral-rules] li'
     )) {
       assert.equal(paragraph.classList.contains('whitespace-normal'), true)
       assert.equal(paragraph.classList.contains('break-words'), true)
@@ -246,23 +258,40 @@ describe('affiliate rewards card layout', () => {
     await unmountCard(rendered)
   })
 
-  test('keeps the referral rules translated in every supported Chinese locale', () => {
+  test('keeps the wallet card compact when rule details are not requested', async () => {
+    await i18n.changeLanguage('en')
+    const rendered = await renderCard()
+
+    assert.equal(
+      rendered.container.querySelector('[data-referral-rules]'),
+      null
+    )
+    assert.ok(rendered.container.querySelector('[data-referral-summary]'))
+    assert.ok(rendered.container.querySelector('[data-referral-transfer-note]'))
+
+    await unmountCard(rendered)
+  })
+
+  test('keeps the referral rules translated in every supported locale', () => {
     const keys = [
-      'Invite friends and earn {{rewardRate}} of the amount they actually pay on every eligible top-up.',
-      'How referral rewards work',
-      'Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}',
-      "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation.",
-      'Only the payment processor-confirmed amount actually paid in a supported fiat currency is used. The top-up face value, pre-discount amount, and unsupported settlement currencies are not used as the reward basis.',
-      'Invitee payments',
+      'First verified paid top-up: {{rewardRate}} of the amount paid after discounts.',
+      'Eligible invitees',
+      'Confirmed rewards can be transferred to your balance.',
+      'Full referral rules',
+      'New users still receive registration credit. Inviting alone earns no reward.',
+      "Only the invitee's first verified paid top-up can earn a reward; later top-ups do not, even if the first was ineligible.",
+      'Rewards use only the processor-confirmed amount paid after discounts in a supported currency, not the top-up value or pre-discount price.',
       'Your Referral Link',
     ]
 
+    const resources = [en, zh, zhTW, fr, ja, ru, vi]
     for (const key of keys) {
-      assert.equal(typeof en.translation[key], 'string')
-      assert.equal(typeof zh.translation[key], 'string')
-      assert.equal(typeof zhTW.translation[key], 'string')
-      assert.notEqual(zh.translation[key], key)
-      assert.notEqual(zhTW.translation[key], key)
+      for (const resource of resources) {
+        assert.equal(typeof resource.translation[key], 'string')
+      }
+      for (const resource of resources.slice(1)) {
+        assert.notEqual(resource.translation[key], key)
+      }
     }
   })
 })

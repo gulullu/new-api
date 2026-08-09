@@ -48,6 +48,8 @@ export const userSchema = z.object({
   group: z.string(),
   aff_code: z.string().optional(),
   aff_count: z.number().optional(),
+  qualified_referral_invitees: z.number().optional(),
+  /** @deprecated Compatibility field for older servers */
   qualified_referral_payments: z.number().optional(),
   aff_quota: z.number().optional(),
   aff_history_quota: z.number().optional(),

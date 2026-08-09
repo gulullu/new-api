@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	); err != nil {
 		panic("failed to migrate: " + err.Error())
 	}
-	if err := MigrateReferralRewardsEveryPayment(); err != nil {
+	if err := MigrateReferralRewardIndexes(); err != nil {
 		panic("failed to migrate referral rewards: " + err.Error())
 	}
 

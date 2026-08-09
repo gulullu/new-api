@@ -89,3 +89,24 @@ func TestGetWaffoPancakePayMoney(t *testing.T) {
 		})
 	}
 }
+
+func TestWaffoPancakePayMoneyUsesCapturedUnitPrice(t *testing.T) {
+	originalUnitPrice := setting.WaffoPancakeUnitPrice
+	originalQuotaDisplayType := operation_setting.GetGeneralSetting().QuotaDisplayType
+	originalDiscounts := operation_setting.GetPaymentSetting().AmountDiscount
+	originalTopupGroupRatio := common.TopupGroupRatio2JSONString()
+	t.Cleanup(func() {
+		setting.WaffoPancakeUnitPrice = originalUnitPrice
+		operation_setting.GetGeneralSetting().QuotaDisplayType = originalQuotaDisplayType
+		operation_setting.GetPaymentSetting().AmountDiscount = originalDiscounts
+		require.NoError(t, common.UpdateTopupGroupRatioByJSONString(originalTopupGroupRatio))
+	})
+
+	operation_setting.GetGeneralSetting().QuotaDisplayType = operation_setting.QuotaDisplayTypeUSD
+	operation_setting.GetPaymentSetting().AmountDiscount = map[int]float64{}
+	require.NoError(t, common.UpdateTopupGroupRatioByJSONString(`{"default":1}`))
+	setting.WaffoPancakeUnitPrice = 9.99
+
+	actual := getWaffoPancakePayMoneyAtUnitPrice(100, "default", 0.1425)
+	require.InDelta(t, 14.25, actual, 0.000001)
+}

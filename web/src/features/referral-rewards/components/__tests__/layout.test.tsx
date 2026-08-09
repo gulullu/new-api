@@ -53,7 +53,9 @@ type LocaleResource = {
   translation: Record<string, string>
 }
 
-async function loadLocale(locale: 'en' | 'zh' | 'zh-TW') {
+type SupportedLocale = 'en' | 'zh' | 'zh-TW' | 'fr' | 'ja' | 'ru' | 'vi'
+
+async function loadLocale(locale: SupportedLocale) {
   const source = await readFile(
     new URL(`../../../../i18n/locales/${locale}.json`, import.meta.url),
     'utf8'
@@ -61,10 +63,14 @@ async function loadLocale(locale: 'en' | 'zh' | 'zh-TW') {
   return JSON.parse(source) as LocaleResource
 }
 
-const [en, zh, zhTW] = await Promise.all([
+const [en, zh, zhTW, fr, ja, ru, vi] = await Promise.all([
   loadLocale('en'),
   loadLocale('zh'),
   loadLocale('zh-TW'),
+  loadLocale('fr'),
+  loadLocale('ja'),
+  loadLocale('ru'),
+  loadLocale('vi'),
 ])
 const React = await import('react')
 const { act } = React
@@ -78,7 +84,7 @@ const i18n = createInstance()
 await i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  resources: { en, zh, 'zh-TW': zhTW },
+  resources: { en, zh, 'zh-TW': zhTW, fr, ja, ru, vi },
 })
 
 const reactTestGlobals = globalThis as typeof globalThis & {
@@ -175,7 +181,7 @@ describe('referral reward details layout', () => {
     await unmountCard(rendered)
   })
 
-  test('keeps referral detail labels translated in both Chinese locales', () => {
+  test('keeps referral detail labels translated in every locale', () => {
     const keys = [
       'Referral Rewards',
       'Reward history',
@@ -190,18 +196,20 @@ describe('referral reward details layout', () => {
       'Withheld',
       'Private invitee',
       'No Referral Rewards Yet',
-      "Rewards will appear here after a referred user's eligible paid top-up is confirmed.",
+      'Confirmed rewards will appear here.',
       'Failed to load referral rewards',
-      "Review rewards earned from referred users' eligible paid top-ups.",
-      'Invitee identities are masked to protect their privacy.',
+      'Rewards from invited users.',
+      'Invitee details are masked.',
     ]
 
+    const resources = [en, zh, zhTW, fr, ja, ru, vi]
     for (const key of keys) {
-      assert.equal(typeof en.translation[key], 'string')
-      assert.equal(typeof zh.translation[key], 'string')
-      assert.equal(typeof zhTW.translation[key], 'string')
-      assert.notEqual(zh.translation[key], key)
-      assert.notEqual(zhTW.translation[key], key)
+      for (const resource of resources) {
+        assert.equal(typeof resource.translation[key], 'string')
+      }
+      for (const resource of resources.slice(1)) {
+        assert.notEqual(resource.translation[key], key)
+      }
     }
   })
 })

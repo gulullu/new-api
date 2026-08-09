@@ -72,28 +72,42 @@ func TestUserAdminQueriesProjectQualifiedPaymentsFromReferralLedger(t *testing.T
 
 	claims := []ReferralRewardClaim{
 		{InviterId: 1, InviteeId: 101, TopUpId: 1001, TradeNo: "qualified-awarded", Status: ReferralRewardStatusAwarded},
+		// Historical per-payment rewards may contain multiple ledger rows for the
+		// same invitee; the admin projection counts that person only once.
+		{InviterId: 1, InviteeId: 101, TopUpId: 1005, TradeNo: "historical-second-award", Status: ReferralRewardStatusAwarded},
 		{InviterId: 1, InviteeId: 102, TopUpId: 1002, TradeNo: "qualified-withheld", Status: ReferralRewardStatusWithheld},
 		{InviterId: 1, InviteeId: 103, TopUpId: 1003, TradeNo: "unqualified-reversed", Status: ReferralRewardStatusReversed},
 		{InviterId: 2, InviteeId: 104, TopUpId: 1004, TradeNo: "second-inviter-awarded", Status: ReferralRewardStatusAwarded},
 	}
 	require.NoError(t, DB.Create(&claims).Error)
+	qualifiedInvitees, err := GetQualifiedReferralInviteeCount(1)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), qualifiedInvitees)
+	legacyAlias, err := GetQualifiedReferralPaymentCount(1)
+	require.NoError(t, err)
+	assert.Equal(t, qualifiedInvitees, legacyAlias)
 
 	users, total, err := GetAllUsers(&common.PageInfo{Page: 1, PageSize: 3}, NewUserSortOptions("id", "asc"))
 	require.NoError(t, err)
 	assert.Equal(t, int64(3), total)
 	require.Len(t, users, 3)
 	assert.Equal(t, 12, users[0].AffCount)
+	assert.Equal(t, int64(2), users[0].QualifiedReferralInvitees)
 	assert.Equal(t, int64(2), users[0].QualifiedReferralPayments)
+	assert.Equal(t, int64(1), users[1].QualifiedReferralInvitees)
 	assert.Equal(t, int64(1), users[1].QualifiedReferralPayments)
+	assert.Zero(t, users[2].QualifiedReferralInvitees)
 	assert.Zero(t, users[2].QualifiedReferralPayments)
 
 	searchResults, total, err := SearchUsers("user01", "", nil, nil, 0, 20, NewUserSortOptions("id", "asc"))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), total)
 	require.Len(t, searchResults, 1)
+	assert.Equal(t, int64(2), searchResults[0].QualifiedReferralInvitees)
 	assert.Equal(t, int64(2), searchResults[0].QualifiedReferralPayments)
 
-	user, err := GetUserByIdWithQualifiedReferralPayments(1, false)
+	user, err := GetUserByIdWithQualifiedReferralInvitees(1, false)
 	require.NoError(t, err)
+	assert.Equal(t, int64(2), user.QualifiedReferralInvitees)
 	assert.Equal(t, int64(2), user.QualifiedReferralPayments)
 }

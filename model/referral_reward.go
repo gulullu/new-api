@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	// ReferralRewardBasisPoints is the percentage of each qualifying payment
-	// made by a referred user that is credited to the inviter. Basis points keep
-	// the calculation exact and make the API's displayed percentage match billing.
+	// ReferralRewardBasisPoints is the percentage that can be credited from a
+	// referred user's first verified production payment when that payment itself
+	// qualifies. Basis points keep the calculation exact and make the API's
+	// displayed percentage match billing.
 	ReferralRewardBasisPoints = 300
 	ReferralRewardPercent     = 3
 
@@ -50,8 +51,9 @@ type ReferralPaymentState struct {
 	UpdatedAt           int64  `json:"-" gorm:"autoUpdateTime"`
 }
 
-// ReferralRewardClaim is the immutable source of truth for per-payment
-// referral rewards. PaymentReferenceDigest, TopUpId, and TradeNo provide
+// ReferralRewardClaim is the immutable source of truth for paid-referral
+// rewards. Historical deployments may contain more than one claim per invitee;
+// those records remain valid. PaymentReferenceDigest, TopUpId, and TradeNo provide
 // independent idempotency barriers when duplicate gateway callbacks arrive
 // concurrently. Reversal fields are kept in the ledger so refunded or disputed
 // payments can be reconciled without rewriting the original award.
@@ -228,15 +230,27 @@ func isReferralRewardCurrency(currency string) bool {
 
 // referralRewardBillingAmount keeps the claim's paid amount/currency untouched
 // for audit purposes while converting USD checkout amounts from gateways with
-// a configurable per-credit unit price back to RelayBases billing units. Other
-// supported gateway/currency combinations already use a one-unit payment basis,
-// so their verified amount is returned unchanged.
+// a configurable per-credit unit price back to RelayBases billing units. New
+// checkouts use the immutable order snapshot. An empty snapshot is accepted
+// only for checkouts created before the column existed; a malformed non-empty
+// value is never silently replaced with the current configuration.
 func referralRewardBillingAmount(topUp *TopUp, payment VerifiedPayment) (decimal.Decimal, bool) {
 	if topUp == nil {
 		return decimal.Zero, false
 	}
 	if !strings.EqualFold(strings.TrimSpace(payment.Currency), "USD") {
 		return payment.Amount, true
+	}
+
+	unitPriceSnapshot := strings.TrimSpace(topUp.ReferralUnitPrice)
+	if unitPriceSnapshot != "" {
+		unitPrice, err := decimal.NewFromString(unitPriceSnapshot)
+		if err != nil || !unitPrice.IsPositive() {
+			common.SysError("skipped referral reward because order unit price snapshot is invalid: provider=" + topUp.PaymentProvider +
+				" topup_id=" + decimal.NewFromInt(int64(topUp.Id)).String())
+			return decimal.Zero, false
+		}
+		return payment.Amount.Div(unitPrice), true
 	}
 
 	unitPriceValue := 0.0
@@ -248,6 +262,8 @@ func referralRewardBillingAmount(topUp *TopUp, payment VerifiedPayment) (decimal
 	default:
 		return payment.Amount, true
 	}
+	common.SysError("using current gateway unit price for legacy referral order without snapshot: provider=" + topUp.PaymentProvider +
+		" topup_id=" + decimal.NewFromInt(int64(topUp.Id)).String())
 
 	unitPrice := decimal.NewFromFloat(unitPriceValue)
 	if !unitPrice.IsPositive() {
@@ -267,10 +283,12 @@ func referralRewardProviders() []string {
 	}
 }
 
-// MigrateReferralRewardsEveryPayment removes the legacy one-reward-per-invitee
-// uniqueness barrier. The replacement lookup index has a distinct name, so
-// this drop is safe and idempotent on SQLite, MySQL, and PostgreSQL.
-func MigrateReferralRewardsEveryPayment() error {
+// MigrateReferralRewardIndexes ensures payment-reference idempotency and removes
+// the obsolete invitee uniqueness barrier when it is still present. The drop
+// preserves databases that accumulated multiple legitimate historical claims
+// while rewards were configured per payment; first-payment eligibility is now
+// enforced transactionally without rewriting that ledger.
+func MigrateReferralRewardIndexes() error {
 	migrator := DB.Migrator()
 	if !migrator.HasIndex(&referralRewardPaymentReferenceIndex{}, referralPaymentReferenceUniqueIndex) {
 		if err := migrator.CreateIndex(&referralRewardPaymentReferenceIndex{}, referralPaymentReferenceUniqueIndex); err != nil {
@@ -410,9 +428,11 @@ func InitializeReferralPaymentVerification() error {
 	return err
 }
 
-// grantPaidReferralRewardTx awards one referral reward for each qualifying
-// signed production payment. It must be called inside the same transaction that
-// marks the TopUp successful and credits the buyer.
+// grantPaidReferralRewardTx can award the inviter only on the invitee's first
+// signed production payment, and only when that payment itself qualifies. An
+// earlier verified payment consumes first-payment eligibility even if its
+// currency or reference makes it ineligible for a reward. It must be called in
+// the same transaction that marks the TopUp successful and credits the buyer.
 func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPayment) (bool, int, int, error) {
 	if tx == nil || topUp == nil {
 		return false, 0, 0, errors.New("missing referral reward transaction context")
@@ -448,6 +468,29 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 		return false, 0, 0, err
 	}
 	if invitee.InviterId <= 0 || invitee.InviterId == invitee.Id {
+		return false, 0, 0, nil
+	}
+
+	// The invitee row lock serializes two different payment callbacks for the
+	// same account. Once the first transaction commits its verified successful
+	// TopUp, the next transaction observes it here and cannot award again. The
+	// check intentionally uses the underlying verified TopUp rather than claim
+	// state: an ineligible, withheld, reversed, or refunded first real payment
+	// does not create a second first-payment entitlement.
+	var previousSuccessfulTopUps int64
+	if err := tx.Model(&TopUp{}).
+		Where("user_id = ? AND id <> ? AND status = ? AND referral_payment_verified = ? AND payment_provider IN ?",
+			topUp.UserId,
+			topUp.Id,
+			common.TopUpStatusSuccess,
+			true,
+			referralRewardProviders(),
+		).
+		Limit(1).
+		Count(&previousSuccessfulTopUps).Error; err != nil {
+		return false, 0, 0, err
+	}
+	if previousSuccessfulTopUps > 0 {
 		return false, 0, 0, nil
 	}
 
@@ -539,12 +582,20 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 	return true, inviter.Id, rewardQuota, nil
 }
 
-func GetQualifiedReferralPaymentCount(inviterId int) (int64, error) {
+func GetQualifiedReferralInviteeCount(inviterId int) (int64, error) {
 	var count int64
 	err := DB.Model(&ReferralRewardClaim{}).
 		Where("inviter_id = ? AND status IN ?", inviterId, []string{ReferralRewardStatusAwarded, ReferralRewardStatusWithheld}).
+		Distinct("invitee_id").
 		Count(&count).Error
 	return count, err
+}
+
+// GetQualifiedReferralPaymentCount is retained as a compatibility alias for
+// older callers. Its value is now the number of distinct paid invitees, not the
+// number of reward ledger rows.
+func GetQualifiedReferralPaymentCount(inviterId int) (int64, error) {
+	return GetQualifiedReferralInviteeCount(inviterId)
 }
 
 func truncateReferralReversalReason(reason string) string {

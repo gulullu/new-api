@@ -90,7 +90,8 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	id := c.GetInt("id")
 	user, _ := model.GetUserById(id, false)
 	chargedMoney := GetChargedAmount(float64(req.Amount), *user)
-	payMoney := getStripePayMoney(float64(req.Amount), user.Group)
+	unitPrice := setting.StripeUnitPrice
+	payMoney := getStripePayMoneyAtUnitPrice(float64(req.Amount), user.Group, unitPrice)
 	if payMoney <= 0.01 || math.IsNaN(payMoney) || math.IsInf(payMoney, 0) {
 		c.JSON(http.StatusOK, gin.H{"message": "充值金额过低", "data": 10})
 		return
@@ -99,7 +100,7 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	reference := fmt.Sprintf("new-api-ref-%d-%d-%s", user.Id, time.Now().UnixMilli(), randstr.String(4))
 	referenceId := "ref_" + common.Sha1([]byte(reference))
 
-	checkout, err := genStripeLink(referenceId, user.StripeCustomer, user.Email, payMoney, req.SuccessURL, req.CancelURL)
+	checkout, err := genStripeLink(referenceId, user.StripeCustomer, user.Email, payMoney, unitPrice, req.SuccessURL, req.CancelURL)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Stripe 创建 Checkout Session 失败 user_id=%d trade_no=%s amount=%d error=%q", id, referenceId, req.Amount, err.Error()))
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
@@ -107,16 +108,17 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	}
 
 	topUp := &model.TopUp{
-		UserId:          id,
-		Amount:          req.Amount,
-		Money:           chargedMoney,
-		TradeNo:         referenceId,
-		PaymentMethod:   model.PaymentMethodStripe,
-		PaymentProvider: model.PaymentProviderStripe,
-		PaymentAmount:   checkout.PaymentAmount,
-		PaymentCurrency: checkout.PaymentCurrency,
-		CreateTime:      time.Now().Unix(),
-		Status:          common.TopUpStatusPending,
+		UserId:            id,
+		Amount:            req.Amount,
+		Money:             chargedMoney,
+		TradeNo:           referenceId,
+		PaymentMethod:     model.PaymentMethodStripe,
+		PaymentProvider:   model.PaymentProviderStripe,
+		PaymentAmount:     checkout.PaymentAmount,
+		PaymentCurrency:   checkout.PaymentCurrency,
+		ReferralUnitPrice: checkout.ReferralUnitPrice,
+		CreateTime:        time.Now().Unix(),
+		Status:            common.TopUpStatusPending,
 	}
 	err = topUp.Insert()
 	if err != nil {
@@ -402,9 +404,10 @@ func sessionExpired(ctx context.Context, event stripe.Event) {
 
 // stripeCheckoutResult carries the created URL and the exact expected charge.
 type stripeCheckoutResult struct {
-	URL             string
-	PaymentAmount   string
-	PaymentCurrency string
+	URL               string
+	PaymentAmount     string
+	PaymentCurrency   string
+	ReferralUnitPrice string
 }
 
 // genStripeLink generates a Stripe Checkout session URL for payment.
@@ -415,19 +418,20 @@ type stripeCheckoutResult struct {
 //   - customerId: existing Stripe customer ID (empty string if new customer)
 //   - email: customer email address for new customer creation
 //   - payMoney: final amount to charge after applying unit price, group ratio, and preset discount
+//   - configuredUnitPrice: the immutable unit price captured by RequestPay for this order
 //   - successURL: custom URL to redirect after successful payment (empty for default)
 //   - cancelURL: custom URL to redirect when payment is canceled (empty for default)
 //
 // Returns the checkout session URL and the exact amount/currency sent to
 // Stripe, or an error if the session creation fails.
-func genStripeLink(referenceId string, customerId string, email string, payMoney float64, successURL string, cancelURL string) (stripeCheckoutResult, error) {
+func genStripeLink(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string) (stripeCheckoutResult, error) {
 	if !strings.HasPrefix(setting.StripeApiSecret, "sk_") && !strings.HasPrefix(setting.StripeApiSecret, "rk_") {
 		return stripeCheckoutResult{}, fmt.Errorf("无效的Stripe API密钥")
 	}
 
 	stripe.Key = setting.StripeApiSecret
 
-	if setting.StripeUnitPrice <= 0 {
+	if configuredUnitPrice <= 0 {
 		return stripeCheckoutResult{}, fmt.Errorf("StripeUnitPrice 必须大于 0")
 	}
 
@@ -455,7 +459,7 @@ func genStripeLink(referenceId string, customerId string, email string, payMoney
 	unitAmount, expectedPayment, err := stripeCheckoutPaymentSnapshot(
 		payMoney,
 		priceUnitAmount,
-		setting.StripeUnitPrice,
+		configuredUnitPrice,
 		string(configuredPrice.Currency),
 	)
 	if err != nil {
@@ -509,9 +513,10 @@ func genStripeLink(referenceId string, customerId string, email string, payMoney
 	}
 
 	return stripeCheckoutResult{
-		URL:             result.URL,
-		PaymentAmount:   expectedPayment.PaidAmountForLog(),
-		PaymentCurrency: expectedPayment.Currency,
+		URL:               result.URL,
+		PaymentAmount:     expectedPayment.PaidAmountForLog(),
+		PaymentCurrency:   expectedPayment.Currency,
+		ReferralUnitPrice: strconv.FormatFloat(configuredUnitPrice, 'f', -1, 64),
 	}, nil
 }
 
@@ -542,6 +547,10 @@ func GetChargedAmount(count float64, user model.User) float64 {
 }
 
 func getStripePayMoney(amount float64, group string) float64 {
+	return getStripePayMoneyAtUnitPrice(amount, group, setting.StripeUnitPrice)
+}
+
+func getStripePayMoneyAtUnitPrice(amount float64, group string, unitPrice float64) float64 {
 	originalAmount := amount
 	if operation_setting.GetQuotaDisplayType() == operation_setting.QuotaDisplayTypeTokens {
 		amount = amount / common.QuotaPerUnit
@@ -558,7 +567,7 @@ func getStripePayMoney(amount float64, group string) float64 {
 			discount = ds
 		}
 	}
-	payMoney := amount * setting.StripeUnitPrice * topupGroupRatio * discount
+	payMoney := amount * unitPrice * topupGroupRatio * discount
 	return payMoney
 }
 

@@ -44,10 +44,10 @@
 | Stripe USD 单位价与折扣 | Checkout 实付金额按 `充值额度 × StripeUnitPrice × 用户充值倍率 × 预设折扣` 计算；从已配置的一次性 Stripe Price 读取产品和币种，并以单行动态金额创建 Checkout。生产目标单位价目前为 `USD 0.1425/Ɍ`，但数值只存在运行配置中，不应硬编码。`TopUp.Money` 仍是入账基数，不能替换为实付 USD。 | [controller/topup_stripe.go](../controller/topup_stripe.go)、[setting/payment_stripe.go](../setting/payment_stripe.go)、[setting/operation_setting/payment_setting.go](../setting/operation_setting/payment_setting.go) | 官方是否已支持折后实付、Price 校验和动态单行金额；Stripe API 的 Price/Checkout 字段是否变化。 |
 | Waffo Pancake | 网关本体、Store/Product 绑定和 USD 单位价配置来自官方实现。RelayBases 仅把其已验签实付数据接入支付快照、推荐返利及退款撤销。曾有的“可配置 CNY”定制已撤回，不得恢复旧补丁；运行配置仍需核对 `WaffoPancakeUnitPrice`、最低充值、Store 和 Product 的绑定。 | [controller/topup_waffo_pancake.go](../controller/topup_waffo_pancake.go)、[service/waffo_pancake.go](../service/waffo_pancake.go)、[setting/payment_waffo_pancake.go](../setting/payment_waffo_pancake.go) | 官方是否已提供等价的实付快照或返利钩子；Webhook 的 `total`、`currency`、`paymentId`、环境和退款事件契约是否变化。 |
 | 支付实付快照 | `top_ups.payment_amount` 与 `top_ups.payment_currency` 只用于展示和审计。此次仅在正在使用的 Epay、Stripe、Waffo、Waffo Pancake 创建订单时保存预期金额/币种，已验签回调在完成充值的同一事务内覆盖为最终值；重复成功回调可安全补齐快照。绝不参与充值入账或返利换算。Creem 和旧订阅保持现状。 | [model/topup.go](../model/topup.go)、[controller/topup.go](../controller/topup.go)、[controller/topup_stripe.go](../controller/topup_stripe.go)、[controller/topup_waffo.go](../controller/topup_waffo.go)、[controller/topup_waffo_pancake.go](../controller/topup_waffo_pancake.go)、[web/src/lib/payment-amount.ts](../web/src/lib/payment-amount.ts)、[web/src/features/wallet/components/dialogs/billing-history-dialog.tsx](../web/src/features/wallet/components/dialogs/billing-history-dialog.tsx) | 官方是否新增实际支付金额/币种字段；若有，迁移数据后删除本地平行字段和格式化层。 |
-| 每笔实付推荐返利 | 仅已验签、生产环境、成功且支持 CNY/USD 的外部支付产生返利；比例为实付计费基数的 3%。每笔合格支付都可产生一条账本记录；注册本身不产生邀请返利，平台注册赠送保持独立。Stripe/Waffo Pancake 的 USD 实付先按各自单位价还原为 RelayBases 计费单位，再计算 3%，账本仍保存原始实付金额和币种。 | [model/referral_reward.go](../model/referral_reward.go)、[model/referral_reward_admin.go](../model/referral_reward_admin.go)、[controller/referral_reward.go](../controller/referral_reward.go)、[controller/referral_reward_admin.go](../controller/referral_reward_admin.go)、[router/api-router.go](../router/api-router.go) | 官方是否支持“每笔已验签实付返利”、不可重复发放、隐私投影和退款撤销；不要退回“注册送邀请奖励”。 |
+| 首笔实付推荐返利 | 仅受邀用户首笔已验签、生产环境、成功且支持 CNY/USD 的外部支付产生返利；比例为优惠后实付计费基数的 3%。注册本身不产生邀请返利，平台注册赠送保持独立。首笔资格由历史已验签成功充值判定；首笔正式实付即使因币种等原因不符合发放条件，资格也不顺延。退款、撤销或暂缓同样不会重新释放资格，既有多笔历史返利不追缴、不改写。Stripe/Waffo Pancake 的 USD 实付按下单时快照的单位价还原为 RelayBases 计费单位，再计算 3%；发布前创建的待支付订单缺少快照时才回退当前配置并记录告警。账本仍保存原始实付金额和币种。返利转入余额提交后清理用户缓存；缓存清理失败只告警，不能把已提交转账返回成失败并诱发重复操作。 | [model/referral_reward.go](../model/referral_reward.go)、[model/referral_reward_admin.go](../model/referral_reward_admin.go)、[model/user.go](../model/user.go)、[controller/referral_reward.go](../controller/referral_reward.go)、[controller/referral_reward_admin.go](../controller/referral_reward_admin.go)、[router/api-router.go](../router/api-router.go) | 官方是否支持“首笔已验签实付返利”、订单级单位价快照、不可重复发放、隐私投影和退款撤销；不要退回“注册送邀请奖励”或“每笔充值返利”。 |
 | 返利退款/争议撤销 | 以支付渠道 + 规范化支付引用的摘要串行化 grant/reversal；Stripe、Creem、Waffo、Waffo Pancake 的可机读退款/争议自动撤销，Epay 可走审计过的管理员兜底。已转入正常余额的返利也会被扣回；无法完全追回时留下运维错误。 | [model/referral_reward.go](../model/referral_reward.go)、[controller/topup_stripe.go](../controller/topup_stripe.go)、[controller/topup_creem.go](../controller/topup_creem.go)、[controller/topup_waffo.go](../controller/topup_waffo.go)、[controller/topup_waffo_pancake.go](../controller/topup_waffo_pancake.go) | Webhook 事件名、幂等 ID 和退款引用字段；回调重试是否仍返回可重试状态。 |
 | 用户及管理员返利账本 | 用户只看脱敏后的受邀人标识；管理员有全站汇总、筛选和脱敏账本，不暴露订单号、支付引用或网关事件 ID。实付显示必须带 ISO 币种，例如 `USD 13.54`、`CNY 90.00`；返利额度继续显示为 `Ɍ`。 | [web/src/features/referral-rewards](../web/src/features/referral-rewards)、[web/src/features/admin-referral-rewards](../web/src/features/admin-referral-rewards)、[web/src/routes/_authenticated/referral-rewards/index.tsx](../web/src/routes/_authenticated/referral-rewards/index.tsx)、[web/src/routes/_authenticated/admin/referral-rewards/index.tsx](../web/src/routes/_authenticated/admin/referral-rewards/index.tsx) | 官方是否出现同名路由/API；合并时避免双菜单、双路由和重复 i18n key。 |
-| 用户列表邀请投影 | `qualified_referral_payments` 是 `referral_reward_claims` 中 `awarded + withheld` 的按邀请人聚合值，`reversed` 不计入。它是 `gorm:"-"` 非持久字段，列表、搜索和用户详情一次分组查询填充，避免 N+1。 | [model/user.go](../model/user.go)、[controller/user.go](../controller/user.go)、[web/src/features/users/components/users-columns.tsx](../web/src/features/users/components/users-columns.tsx)、[web/src/features/usage-logs/components/dialogs/user-info-dialog.tsx](../web/src/features/usage-logs/components/dialogs/user-info-dialog.tsx) | `aff_count` 不得重新作为权威支付笔数；官方若新增返利事件统计，统一到一套语义后再删本投影。 |
+| 用户列表邀请投影 | `qualified_referral_invitees` 是 `referral_reward_claims` 中 `awarded + withheld` 的受邀用户去重数，`reversed` 不计入；旧 `qualified_referral_payments` 仅作兼容别名。它们是 `gorm:"-"` 非持久字段，列表、搜索和用户详情一次分组查询填充，避免 N+1。前端没有邀请人时留空，不显示占位文案。 | [model/user.go](../model/user.go)、[controller/user.go](../controller/user.go)、[web/src/features/users/components/users-columns.tsx](../web/src/features/users/components/users-columns.tsx)、[web/src/features/usage-logs/components/dialogs/user-info-dialog.tsx](../web/src/features/usage-logs/components/dialogs/user-info-dialog.tsx) | `aff_count` 不得重新作为权威统计；官方若新增返利用户统计，统一到一套语义后再删本投影。 |
 | 用户可见管理员额度日志 | 管理员 add/subtract/override 额度时，日志归属受影响用户；管理员身份、来源 IP 等仍放在仅管理员可见的 `admin_info`，普通用户只能看到操作结果。 | [controller/audit.go](../controller/audit.go)、[controller/user.go](../controller/user.go)、[controller/user_manage_test.go](../controller/user_manage_test.go) | 官方审计日志是否已有“目标用户可见、操作者信息隐藏”的投影。 |
 
 ### 3.2 展示、品牌和兼容性定制
@@ -86,14 +86,15 @@
 
 | 表/字段 | 用途 |
 | --- | --- |
-| `referral_reward_claims` | 每笔支付返利的不可变主账本；包含邀请双方 ID、`top_up_id`、渠道、实付金额/币种、奖励额度、状态和撤销信息。面向用户的 API 只返回隐私投影。 |
+| `referral_reward_claims` | 推荐返利的不可变主账本；包含邀请双方 ID、`top_up_id`、渠道、实付金额/币种、奖励额度、状态和撤销信息。切换为首笔规则前已经产生的多笔历史返利原样保留。面向用户的 API 只返回隐私投影。 |
 | `referral_payment_states` | 以规范支付引用摘要实现 grant/refund 并发串行化和幂等，不保存明文网关引用。 |
 | `top_ups.referral_payment_verified` | 标记充值是否来自已验签生产支付；人工补单和沙盒支付不得据此产生正式返利。 |
+| `top_ups.referral_unit_price` | Stripe/Waffo Pancake 下单时的 USD 单位价快照，仅供返利换算；不得参与支付结算或充值入账。历史空值不猜测回填。 |
 | `users.aff_quota` / `users.aff_history` | 可转入返利额度 / 历史返利额度，单位是 `Ɍ`。 |
 | `users.aff_count` | 兼容字段，**不是权威支付笔数**。2026-08-04 前代表邀请注册数，之后曾复用为返利支付计数，历史语义混合；不得迁移覆盖。 |
-| `users.qualified_referral_payments` | 非持久 API 投影；从账本实时聚合有效受邀支付笔数。 |
+| `users.qualified_referral_invitees` | 非持久 API 投影；从账本实时聚合有效受邀用户去重数。旧 `qualified_referral_payments` 为同值兼容别名。 |
 
-`qualified_referral_payments` 的回滚只需移除投影和 UI；不修改 `aff_count`，不删除账本。其值必须只由账本状态推导，不能双写为数据库计数器。
+邀请投影的回滚只需移除投影和 UI；不修改 `aff_count`，不删除账本。其值必须只由账本状态推导，不能双写为数据库计数器。
 
 ## 5. CF Worker 与源码边界
 
@@ -140,8 +141,8 @@ Worker 不得改写支付 API JSON、伪造回调、计算或赠送额度、决�
 | Waffo Pancake | USD 单位价与折扣、正确 Store/Product、order.completed 实付快照、沙盒隔离、refund.succeeded 撤销和重复事件。 |
 | 其他网关 | Epay CNY、Waffo 回调币种均保存真实快照；网关不匹配不得完成订单。Creem 与旧订阅保持现状，不纳入此次功能验收。 |
 | 历史数据 | 旧 CNY/USD 订单字段为空时显示“币种不可用”；不得显示裸 `money` 或按当前配置推断。 |
-| 推荐返利 | 每笔生产实付 3%；CNY/USD 原币种留账；注册不返；优惠后实付为基数；无邀请人、禁用邀请人、沙盒、重复回调、退款、争议和额度溢出。 |
-| 统计与隐私 | 用户列表笔数取 `awarded + withheld`，排除 `reversed`；`aff_count` 不参与；普通用户仅见脱敏身份，管理员页面不泄露支付引用。 |
+| 推荐返利 | 每位受邀用户仅首笔已验签正式付款可获 3%，首笔不合格时资格不顺延；CNY/USD 原币种留账；订单单位价在建单与回调间变化；历史已付费但无返利；并发首单；注册不返；优惠后实付为基数；无邀请人、禁用邀请人、沙盒、重复回调、退款、争议和额度溢出。既有历史返利与余额必须保持不变。 |
+| 统计与隐私 | 用户列表按 `invitee_id` 去重统计 `awarded + withheld`，排除 `reversed`；`aff_count` 不参与；普通用户仅见脱敏身份，管理员页面不泄露支付引用。 |
 | 前端 | 中/英文桌面与移动端；`Ɍ` 额度与 `USD/CNY` 实付不混淆；返利表桌面/移动一致；移动侧栏首击导航有效。 |
 | 构建 | 后端相关单测后运行 `go test ./...`；前端使用 Bun 执行 typecheck、测试和 production build；`relaykit` 有改动时额外执行 `cd relaykit && GOWORK=off go build ./...`。 |
 
@@ -152,4 +153,5 @@ Worker 不得改写支付 API JSON、伪造回调、计算或赠送额度、决�
 | 日期 | 官方基线 | 定制/删除项 | 数据变更 | 外部依赖 | 验证与回滚 |
 | --- | --- | --- | --- | --- | --- |
 | 2026-08-09 | `v1.0.0-rc.24` / `5c3abffe` | 新增订单实付快照、ISO 币种展示和有效受邀支付投影 | `top_ups.payment_amount`、`top_ups.payment_currency`；User 投影不落库 | 无新增 | 见第 4、7 节；回滚保留新增列 |
+| 2026-08-09 | `v1.0.0-rc.24` / `88786a2b` | 推荐返利改为每位受邀用户仅首笔已验签正式付款可获返利，首笔不合格时不顺延；新增订单单位价快照、去重受邀用户投影、转余额缓存失效和精简的七语言界面 | `top_ups.referral_unit_price`；既有返利账本和用户返利余额不修改；User 投影不落库 | 无新增 | 见第 4、7 节；回滚保留新增列和全部历史返利 |
 | YYYY-MM-DD | tag + commit | 一句话说明 | 字段/迁移/无 | Worker/支付平台/无 | 测试命令、发布版本、回滚提交 |

@@ -25,6 +25,11 @@ type TopUp struct {
 	// meanings and must not be derived from these fields.
 	PaymentAmount   string `json:"payment_amount" gorm:"type:varchar(64);not null;default:''"`
 	PaymentCurrency string `json:"payment_currency" gorm:"type:varchar(12);not null;default:''"`
+	// ReferralUnitPrice snapshots the gateway's configured price per RelayBases
+	// credit when the checkout is created. It is intentionally private: the
+	// value only makes an actual-paid referral calculation stable if an operator
+	// changes the live gateway price before the signed callback arrives.
+	ReferralUnitPrice string `json:"-" gorm:"column:referral_unit_price;type:varchar(64);not null;default:''"`
 	// ReferralPaymentVerified is set only by a signed, production payment
 	// callback. It distinguishes verified external payments from manual or
 	// sandbox completions when referral rewards are evaluated.
@@ -622,7 +627,7 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 		if customerEmail != "" {
 			// 先检查用户当前邮箱是否为空
 			var user User
-			err = tx.Where("id = ?", topUp.UserId).First(&user).Error
+			err = lockForUpdate(tx).Where("id = ?", topUp.UserId).First(&user).Error
 			if err != nil {
 				return err
 			}

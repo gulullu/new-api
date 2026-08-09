@@ -298,7 +298,7 @@ func migrateDB() error {
 	if err != nil {
 		return err
 	}
-	if err := MigrateReferralRewardsEveryPayment(); err != nil {
+	if err := MigrateReferralRewardIndexes(); err != nil {
 		return err
 	}
 	if err := InitializeReferralPaymentVerification(); err != nil {
@@ -387,7 +387,7 @@ func migrateDBFast() error {
 			return err
 		}
 	}
-	if err := MigrateReferralRewardsEveryPayment(); err != nil {
+	if err := MigrateReferralRewardIndexes(); err != nil {
 		return err
 	}
 	if err := InitializeReferralPaymentVerification(); err != nil {

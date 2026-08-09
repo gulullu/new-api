@@ -247,6 +247,26 @@ func TestTopUpAutoMigrateAddsEmptyPaymentSnapshotToLegacyRows(t *testing.T) {
 	require.NoError(t, db.AutoMigrate(&TopUp{}))
 	assert.True(t, db.Migrator().HasColumn(&TopUp{}, "payment_amount"))
 	assert.True(t, db.Migrator().HasColumn(&TopUp{}, "payment_currency"))
+	assert.True(t, db.Migrator().HasColumn(&TopUp{}, "referral_unit_price"))
+
+	var columns []struct {
+		Name         string `gorm:"column:name"`
+		NotNull      int    `gorm:"column:notnull"`
+		DefaultValue string `gorm:"column:dflt_value"`
+	}
+	require.NoError(t, db.Raw("PRAGMA table_info(top_ups)").Scan(&columns).Error)
+	foundReferralUnitPrice := false
+	for _, column := range columns {
+		if column.Name != "referral_unit_price" {
+			continue
+		}
+		foundReferralUnitPrice = true
+		assert.Equal(t, 1, column.NotNull)
+		// SQLite accepts both single- and double-quoted empty string literals;
+		// GORM versions differ only in how they render the same DEFAULT ''.
+		assert.Contains(t, []string{"''", `""`}, column.DefaultValue)
+	}
+	assert.True(t, foundReferralUnitPrice)
 
 	var migrated TopUp
 	require.NoError(t, db.First(&migrated, 1).Error)
@@ -254,4 +274,5 @@ func TestTopUpAutoMigrateAddsEmptyPaymentSnapshotToLegacyRows(t *testing.T) {
 	assert.Equal(t, float64(100), migrated.Money)
 	assert.Empty(t, migrated.PaymentAmount)
 	assert.Empty(t, migrated.PaymentCurrency)
+	assert.Empty(t, migrated.ReferralUnitPrice)
 }

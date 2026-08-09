@@ -35,17 +35,17 @@ interface AffiliateRewardsCardProps {
   affiliateLink: string
   onTransfer: () => void
   rewardPercent?: number
-  qualifiedPayments?: number
+  qualifiedInvitees?: number
   complianceConfirmed?: boolean
+  showRuleDetails?: boolean
   loading?: boolean
 }
 
 export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
   const { t } = useTranslation()
-  const rulesHeadingId = useId()
   const referralLinkId = useId()
   const rewardPercent = props.rewardPercent ?? 3
-  const qualifiedPayments = props.qualifiedPayments ?? 0
+  const qualifiedInvitees = props.qualifiedInvitees ?? 0
   const complianceConfirmed = props.complianceConfirmed ?? true
   const rewardRate = `${rewardPercent}%`
 
@@ -96,7 +96,7 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
                 data-referral-summary
               >
                 {t(
-                  'Invite friends and earn {{rewardRate}} of the amount they actually pay on every eligible top-up.',
+                  'First verified paid top-up: {{rewardRate}} of the amount paid after discounts.',
                   { rewardRate }
                 )}
               </p>
@@ -106,19 +106,19 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
           <dl className='grid grid-cols-3 gap-1.5 text-center'>
             {[
               [
-                'pending',
-                t('Pending'),
+                'available-rewards',
+                t('Available Rewards'),
                 formatQuota(props.user?.aff_quota ?? 0),
               ],
               [
-                'total-earned',
-                t('Total Earned'),
+                'total-rewards',
+                t('Total rewards'),
                 formatQuota(props.user?.aff_history_quota ?? 0),
               ],
               [
-                'qualified-payments',
-                t('Invitee payments'),
-                String(qualifiedPayments),
+                'eligible-invitees',
+                t('Eligible invitees'),
+                String(qualifiedInvitees),
               ],
             ].map(([metric, label, value]) => (
               <div
@@ -136,6 +136,13 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
             ))}
           </dl>
         </div>
+
+        <p
+          className='text-muted-foreground text-xs leading-relaxed break-words whitespace-normal'
+          data-referral-transfer-note
+        >
+          {t('Confirmed rewards can be transferred to your balance.')}
+        </p>
 
         <div className='border-border/60 bg-background/45 min-w-0 space-y-2 rounded-lg border p-2.5 sm:p-3'>
           <label
@@ -181,72 +188,39 @@ export function AffiliateRewardsCard(props: AffiliateRewardsCardProps) {
           </p>
         ) : null}
 
-        <section
-          className='border-border/70 min-w-0 space-y-3 border-t pt-4'
-          aria-labelledby={rulesHeadingId}
-          data-referral-rules
-        >
-          <h4 id={rulesHeadingId} className='text-sm font-semibold break-words'>
-            {t('How referral rewards work')}
-          </h4>
-
-          <p className='border-chart-3/30 bg-chart-3/5 rounded-lg border px-3 py-2 text-xs leading-relaxed font-medium break-words whitespace-normal'>
-            {t(
-              'Referral reward = checkout amount actually paid after all discounts × {{rewardRate}}',
-              { rewardRate }
-            )}
-          </p>
-
-          <div className='grid min-w-0 gap-x-6 gap-y-3 lg:grid-cols-2'>
-            {[
-              [
-                t('Who is eligible'),
+        {props.showRuleDetails ? (
+          <details
+            className='border-border/70 group min-w-0 border-t pt-3'
+            data-referral-rules
+          >
+            <summary className='cursor-pointer text-sm font-semibold break-words select-none'>
+              {t('Full referral rules')}
+            </summary>
+            <ul className='text-muted-foreground mt-3 grid min-w-0 list-disc gap-2 pl-5 text-xs leading-relaxed lg:grid-cols-2'>
+              {[
                 t(
-                  "New users receive the platform's registration credit. Inviting someone alone does not create a referral reward; each eligible payment from the invitee earns its corresponding reward after confirmation."
+                  'New users still receive registration credit. Inviting alone earns no reward.'
                 ),
-              ],
-              [
-                t('When the reward is issued'),
                 t(
-                  'Every eligible paid top-up from a referred user earns a reward after the payment is successfully confirmed.'
+                  "Only the invitee's first verified paid top-up can earn a reward; later top-ups do not, even if the first was ineligible."
                 ),
-              ],
-              [
-                t('How the amount is calculated'),
                 t(
-                  'Only the payment processor-confirmed amount actually paid in a supported fiat currency is used. The top-up face value, pre-discount amount, and unsupported settlement currencies are not used as the reward basis.'
+                  'Rewards use only the processor-confirmed amount paid after discounts in a supported currency, not the top-up value or pre-discount price.'
                 ),
-              ],
-              [
-                t('How rewards are delivered'),
                 t(
-                  'After payment confirmation, the reward appears under Pending and can be transferred to your balance.'
+                  'Codes, promotional credits, administrator adjustments, and failed, canceled, duplicate, refunded, or disputed orders are ineligible. Related rewards may be withheld, reversed, or recovered.'
                 ),
-              ],
-              [
-                t('Ineligible transactions'),
                 t(
-                  'Redemption codes, promotional credits, administrator adjustments, and failed, canceled, duplicate, refunded, or disputed orders are ineligible. Related rewards may be withheld, reversed, or deducted.'
+                  'Rewards linked to self-referrals, bulk sign-ups, duplicate accounts, fraud, or other abuse may be withheld, reversed, or recovered. Related accounts may be suspended.'
                 ),
-              ],
-              [
-                t('Fair-use policy'),
-                t(
-                  'Rewards linked to self-referrals, bulk registrations, duplicate accounts, fraud, or other abuse may be withheld, reversed, or deducted. Related accounts may also be suspended.'
-                ),
-              ],
-            ].map(([title, description]) => (
-              <div key={title} className='min-w-0'>
-                <h5 className='text-xs leading-relaxed font-medium break-words whitespace-normal'>
-                  {title}
-                </h5>
-                <p className='text-muted-foreground mt-0.5 text-xs leading-relaxed break-words whitespace-normal'>
-                  {description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+              ].map((rule) => (
+                <li key={rule} className='break-words whitespace-normal'>
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
       </CardContent>
     </Card>
   )
