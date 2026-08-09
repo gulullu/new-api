@@ -109,6 +109,10 @@ type User struct {
 	LastLoginAt      int64                      `json:"last_login_at" gorm:"default:0;column:last_login_at"`
 	AuthVersion      int64                      `json:"-" gorm:"type:bigint;not null;default:1;column:auth_version"`
 	AdminPermissions map[string]map[string]bool `json:"admin_permissions,omitempty" gorm:"-:all"`
+	// QualifiedReferralPayments is derived from the referral ledger for admin
+	// views. AffCount is retained for backward compatibility and is not used for
+	// this projection because historical rows have mixed semantics.
+	QualifiedReferralPayments int64 `json:"qualified_referral_payments" gorm:"-"`
 }
 
 func (user *User) ToBaseUser() *UserBase {
@@ -387,6 +391,10 @@ func GetAllUsers(pageInfo *common.PageInfo, sortOptions ...UserSortOptions) (use
 		tx.Rollback()
 		return nil, 0, err
 	}
+	if err = populateQualifiedReferralPayments(tx, users); err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
 
 	// Commit transaction
 	if err = tx.Commit().Error; err != nil {
@@ -456,6 +464,10 @@ func SearchUsers(keyword string, group string, role *int, status *int, startIdx 
 		tx.Rollback()
 		return nil, 0, err
 	}
+	if err = populateQualifiedReferralPayments(tx, users); err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
 
 	// 提交事务
 	if err = tx.Commit().Error; err != nil {
@@ -477,6 +489,60 @@ func GetUserById(id int, selectAll bool) (*User, error) {
 		err = DB.Omit("password", "access_token").First(&user, "id = ?", id).Error
 	}
 	return &user, err
+}
+
+func GetUserByIdWithQualifiedReferralPayments(id int, selectAll bool) (*User, error) {
+	user, err := GetUserById(id, selectAll)
+	if err != nil {
+		return user, err
+	}
+	if err := populateQualifiedReferralPayments(DB, []*User{user}); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+type qualifiedReferralPaymentCount struct {
+	InviterId                 int   `gorm:"column:inviter_id"`
+	QualifiedReferralPayments int64 `gorm:"column:qualified_referral_payments"`
+}
+
+func populateQualifiedReferralPayments(tx *gorm.DB, users []*User) error {
+	if len(users) == 0 {
+		return nil
+	}
+
+	userIds := make([]int, 0, len(users))
+	for _, user := range users {
+		if user == nil {
+			continue
+		}
+		user.QualifiedReferralPayments = 0
+		userIds = append(userIds, user.Id)
+	}
+	if len(userIds) == 0 {
+		return nil
+	}
+
+	counts := make([]qualifiedReferralPaymentCount, 0, len(userIds))
+	if err := tx.Model(&ReferralRewardClaim{}).
+		Select("inviter_id, COUNT(*) AS qualified_referral_payments").
+		Where("inviter_id IN ? AND status IN ?", userIds, []string{ReferralRewardStatusAwarded, ReferralRewardStatusWithheld}).
+		Group("inviter_id").
+		Scan(&counts).Error; err != nil {
+		return err
+	}
+
+	countsByUserId := make(map[int]int64, len(counts))
+	for _, count := range counts {
+		countsByUserId[count.InviterId] = count.QualifiedReferralPayments
+	}
+	for _, user := range users {
+		if user != nil {
+			user.QualifiedReferralPayments = countsByUserId[user.Id]
+		}
+	}
+	return nil
 }
 
 func GetUserIdByAffCode(affCode string) (int, error) {

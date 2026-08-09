@@ -19,32 +19,25 @@ For commercial licensing, please contact support@quantumnous.com
 import type { TFunction } from 'i18next'
 
 import { toIntlLocale } from '@/i18n/languages'
-import { quotaUnitsToDollars } from '@/lib/format'
+import { formatQuota } from '@/lib/format'
+import { formatPaymentAmount } from '@/lib/payment-amount'
 
 import type { AdminReferralRewardStatus } from '../types'
 
 export function formatAdminReferralPaidAmount(
   amount: string,
+  currency: string,
   locale?: string
 ): string {
-  const numericAmount = Number(amount)
-  if (!Number.isFinite(numericAmount)) return amount.trim() || '-'
-
-  return new Intl.NumberFormat(toIntlLocale(locale), {
-    maximumFractionDigits: 8,
-  }).format(numericAmount)
+  return formatPaymentAmount(amount, currency, locale) ?? '-'
 }
 
 export function formatAdminReferralCredits(
   quota: number,
-  locale?: string
+  _locale?: string
 ): string {
-  const credits = quotaUnitsToDollars(quota)
-  if (!Number.isFinite(credits)) return '-'
-
-  return new Intl.NumberFormat(toIntlLocale(locale), {
-    maximumFractionDigits: 4,
-  }).format(credits)
+  if (!Number.isFinite(quota)) return '-'
+  return formatQuota(quota)
 }
 
 export function formatAdminReferralCount(

@@ -5303,6 +5303,19 @@
     "Zero retention": "Zero retention",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
+    "Referral": "Referral",
+    "{{count}} invitee payment": "{{count}} invitee payment",
+    "{{count}} invitee payments": "{{count}} invitee payments",
+    "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.": "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.",
+    "Rewards": "Rewards",
+    "Cumulative referral reward credits, net of refunds and disputes.": "Cumulative referral reward credits, net of refunds and disputes.",
+    "Inviter #{{id}}": "Inviter #{{id}}",
+    "Invitee payments": "Invitee payments",
+    "Top-up credits": "Top-up credits",
+    "Amount paid": "Amount paid",
+    "Amount due": "Amount due",
+    "Checkout amount": "Checkout amount",
+    "Payment currency unavailable": "Payment currency unavailable",
     "Zoom": "Zoom"
   }
 }

@@ -122,6 +122,7 @@ export function ReferralRewardMobileCard(props: ReferralRewardMobileCardProps) {
           <span className='font-medium tabular-nums'>
             {formatReferralPaidAmount(
               props.reward.paid_amount,
+              props.reward.paid_currency,
               i18n.resolvedLanguage
             )}
           </span>

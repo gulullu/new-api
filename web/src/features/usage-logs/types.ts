@@ -409,6 +409,7 @@ export interface UserInfo {
   group?: string
   aff_code?: string
   aff_count?: number
+  qualified_referral_payments?: number
   aff_quota?: number
   remark?: string
 }

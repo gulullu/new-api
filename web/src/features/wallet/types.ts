@@ -253,7 +253,7 @@ export interface UserWalletData {
 /**
  * Topup record status
  */
-export type TopupStatus = 'success' | 'pending' | 'expired'
+export type TopupStatus = 'success' | 'pending' | 'expired' | 'failed'
 
 /**
  * Topup billing record
@@ -265,8 +265,12 @@ export interface TopupRecord {
   user_id: number
   /** Topup amount (quota) */
   amount: number
-  /** Payment amount (actual money paid) */
+  /** Legacy settlement/billing basis; never use as the displayed payment */
   money: number
+  /** Processor-confirmed amount paid or due */
+  payment_amount?: string
+  /** ISO currency code for the processor-confirmed amount */
+  payment_currency?: string
   /** Trade/order number */
   trade_no: string
   /** Payment method type */

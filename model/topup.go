@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
@@ -19,6 +20,11 @@ type TopUp struct {
 	TradeNo         string  `json:"trade_no" gorm:"unique;type:varchar(255);index"`
 	PaymentMethod   string  `json:"payment_method" gorm:"type:varchar(50)"`
 	PaymentProvider string  `json:"payment_provider" gorm:"type:varchar(50);default:''"`
+	// PaymentAmount and PaymentCurrency are a display/audit snapshot of the
+	// gateway charge. Amount and Money retain their legacy quota-settlement
+	// meanings and must not be derived from these fields.
+	PaymentAmount   string `json:"payment_amount" gorm:"type:varchar(64);not null;default:''"`
+	PaymentCurrency string `json:"payment_currency" gorm:"type:varchar(12);not null;default:''"`
 	// ReferralPaymentVerified is set only by a signed, production payment
 	// callback. It distinguishes verified external payments from manual or
 	// sandbox completions when referral rewards are evaluated.
@@ -26,6 +32,47 @@ type TopUp struct {
 	CreateTime              int64  `json:"create_time"`
 	CompleteTime            int64  `json:"complete_time"`
 	Status                  string `json:"status"`
+}
+
+func (topUp *TopUp) setVerifiedPaymentSnapshot(payment VerifiedPayment) {
+	topUp.PaymentAmount = payment.PaidAmountForLog()
+	topUp.PaymentCurrency = strings.ToUpper(strings.TrimSpace(payment.Currency))
+}
+
+func updateCompletedTopUpPaymentSnapshot(tx *gorm.DB, topUp *TopUp, payment VerifiedPayment) error {
+	storedAmount := strings.TrimSpace(topUp.PaymentAmount)
+	storedCurrency := strings.ToUpper(strings.TrimSpace(topUp.PaymentCurrency))
+	amountMissing := storedAmount == ""
+	currencyMissing := storedCurrency == ""
+
+	if amountMissing && currencyMissing {
+		topUp.setVerifiedPaymentSnapshot(payment)
+		return tx.Model(topUp).Updates(map[string]interface{}{
+			"payment_amount":   topUp.PaymentAmount,
+			"payment_currency": topUp.PaymentCurrency,
+		}).Error
+	}
+	if amountMissing != currencyMissing {
+		return fmt.Errorf("%w: topup_id=%d stored payment snapshot is incomplete", ErrTopUpPaymentSnapshotConflict, topUp.Id)
+	}
+
+	parsedStoredAmount, err := decimal.NewFromString(storedAmount)
+	if err != nil {
+		return fmt.Errorf("%w: topup_id=%d stored payment amount is invalid", ErrTopUpPaymentSnapshotConflict, topUp.Id)
+	}
+	callbackCurrency := strings.ToUpper(strings.TrimSpace(payment.Currency))
+	if !parsedStoredAmount.Equal(payment.Amount) || storedCurrency != callbackCurrency {
+		return fmt.Errorf(
+			"%w: topup_id=%d stored=%s %s callback=%s %s",
+			ErrTopUpPaymentSnapshotConflict,
+			topUp.Id,
+			storedAmount,
+			storedCurrency,
+			payment.PaidAmountForLog(),
+			callbackCurrency,
+		)
+	}
+	return nil
 }
 
 const (
@@ -46,9 +93,10 @@ const (
 )
 
 var (
-	ErrPaymentMethodMismatch = errors.New("payment method mismatch")
-	ErrTopUpNotFound         = errors.New("topup not found")
-	ErrTopUpStatusInvalid    = errors.New("topup status invalid")
+	ErrPaymentMethodMismatch        = errors.New("payment method mismatch")
+	ErrTopUpNotFound                = errors.New("topup not found")
+	ErrTopUpStatusInvalid           = errors.New("topup status invalid")
+	ErrTopUpPaymentSnapshotConflict = errors.New("topup payment snapshot conflict")
 )
 
 func (topUp *TopUp) Insert() error {
@@ -148,12 +196,13 @@ func Recharge(referenceId string, customerId string, callerIp string, payment Ve
 		}
 
 		if topUp.Status == common.TopUpStatusSuccess {
-			return nil
+			return updateCompletedTopUpPaymentSnapshot(tx, topUp, payment)
 		}
 		if topUp.Status != common.TopUpStatusPending {
 			return errors.New("充值订单状态错误")
 		}
 
+		topUp.setVerifiedPaymentSnapshot(payment)
 		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
@@ -179,6 +228,9 @@ func Recharge(referenceId string, customerId string, callerIp string, payment Ve
 
 	if err != nil {
 		common.SysError("topup failed: " + err.Error())
+		if errors.Is(err, ErrTopUpPaymentSnapshotConflict) {
+			return err
+		}
 		return errors.New("充值失败，请稍后重试")
 	}
 	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {
@@ -190,7 +242,7 @@ func Recharge(referenceId string, customerId string, callerIp string, payment Ve
 		return nil
 	}
 
-	RecordTopupLog(topUp.UserId, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%d", logger.FormatQuota(int(quota)), topUp.Amount), callerIp, topUp.PaymentMethod, PaymentMethodStripe)
+	RecordTopupLog(topUp.UserId, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%s %s", logger.FormatQuota(int(quota)), payment.PaidAmountForLog(), payment.Currency), callerIp, topUp.PaymentMethod, PaymentMethodStripe)
 	logReferralRewardGrant(rewardGranted, rewardInviterId, topUp.UserId, topUp.TradeNo, rewardQuota, payment)
 
 	return nil
@@ -223,7 +275,7 @@ func RechargeEpay(referenceId string, actualPaymentMethod string, callerIp strin
 			return ErrPaymentMethodMismatch
 		}
 		if topUp.Status == common.TopUpStatusSuccess {
-			return nil
+			return updateCompletedTopUpPaymentSnapshot(tx, topUp, payment)
 		}
 		if topUp.Status != common.TopUpStatusPending {
 			return ErrTopUpStatusInvalid
@@ -232,6 +284,7 @@ func RechargeEpay(referenceId string, actualPaymentMethod string, callerIp strin
 		if actualPaymentMethod != "" {
 			topUp.PaymentMethod = actualPaymentMethod
 		}
+		topUp.setVerifiedPaymentSnapshot(payment)
 		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
@@ -482,6 +535,11 @@ func ManualCompleteTopUp(tradeNo string, callerIp string) error {
 		}
 
 		// 标记完成
+		// Manual completion has no signed gateway amount. Clear any quote-time
+		// snapshot so it is not presented as an actual payment; a later verified
+		// callback may safely reconcile the empty snapshot without crediting again.
+		topUp.PaymentAmount = ""
+		topUp.PaymentCurrency = ""
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
 		if err := tx.Save(topUp).Error; err != nil {
@@ -635,7 +693,7 @@ func RechargeWaffo(tradeNo string, callerIp string, payment VerifiedPayment) (er
 		}
 
 		if topUp.Status == common.TopUpStatusSuccess {
-			return nil // 幂等：已成功直接返回
+			return updateCompletedTopUpPaymentSnapshot(tx, topUp, payment)
 		}
 
 		if topUp.Status != common.TopUpStatusPending {
@@ -649,6 +707,7 @@ func RechargeWaffo(tradeNo string, callerIp string, payment VerifiedPayment) (er
 			return errors.New("无效的充值额度")
 		}
 
+		topUp.setVerifiedPaymentSnapshot(payment)
 		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
@@ -670,6 +729,9 @@ func RechargeWaffo(tradeNo string, callerIp string, payment VerifiedPayment) (er
 
 	if err != nil {
 		common.SysError("waffo topup failed: " + err.Error())
+		if errors.Is(err, ErrTopUpPaymentSnapshotConflict) {
+			return err
+		}
 		return errors.New("充值失败，请稍后重试")
 	}
 	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {
@@ -712,7 +774,7 @@ func RechargeWaffoPancake(tradeNo string, callerIp string, payment VerifiedPayme
 		}
 
 		if topUp.Status == common.TopUpStatusSuccess {
-			return nil
+			return updateCompletedTopUpPaymentSnapshot(tx, topUp, payment)
 		}
 
 		if topUp.Status != common.TopUpStatusPending {
@@ -724,6 +786,7 @@ func RechargeWaffoPancake(tradeNo string, callerIp string, payment VerifiedPayme
 			return errors.New("无效的充值额度")
 		}
 
+		topUp.setVerifiedPaymentSnapshot(payment)
 		topUp.ReferralPaymentVerified = payment.Production
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
@@ -745,6 +808,9 @@ func RechargeWaffoPancake(tradeNo string, callerIp string, payment VerifiedPayme
 
 	if err != nil {
 		common.SysError("waffo pancake topup failed: " + err.Error())
+		if errors.Is(err, ErrTopUpPaymentSnapshotConflict) {
+			return err
+		}
 		return errors.New("充值失败，请稍后重试")
 	}
 	if err := invalidateTopUpUserCache(topUp.UserId); err != nil {

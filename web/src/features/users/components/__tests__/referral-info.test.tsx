@@ -22,7 +22,7 @@ import { after, describe, test } from 'node:test'
 
 import { Window } from 'happy-dom'
 
-import type { AdminReferralReward } from '../../types'
+import type { User } from '../../types'
 
 const domWindow = new Window()
 const domGlobals = [
@@ -30,6 +30,7 @@ const domGlobals = [
   'document',
   'navigator',
   'HTMLElement',
+  'HTMLButtonElement',
   'SVGElement',
   'Node',
   'Element',
@@ -71,8 +72,8 @@ const { act } = React
 const { createRoot } = await import('react-dom/client')
 const { createInstance } = await import('i18next')
 const { I18nextProvider, initReactI18next } = await import('react-i18next')
-const { AdminReferralRewardMobileCard } =
-  await import('../admin-referral-rewards-mobile-list')
+const { TooltipProvider } = await import('@/components/ui/tooltip')
+const { UserReferralInfoCell } = await import('../user-referral-info-cell')
 
 const i18n = createInstance()
 await i18n.use(initReactI18next).init({
@@ -86,23 +87,23 @@ const reactTestGlobals = globalThis as typeof globalThis & {
 }
 reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 
-const reward: AdminReferralReward = {
-  id: 9,
-  inviter_id: 101,
-  inviter_label: 'l***r-with-an-intentionally-long-masked-name',
-  invitee_id: 202,
-  invitee_label: 'g***u@example.com-with-an-intentionally-long-masked-email',
-  payment_provider: 'waffo_pancake',
-  paid_amount: '90',
-  paid_currency: 'USD',
-  rate_basis_points: 300,
-  reward_quota: 1_350_000,
-  reversed_quota: 0,
-  status: 'awarded',
-  created_at: 1_754_265_600,
+const user: User = {
+  id: 8,
+  username: 'referrer',
+  display_name: 'Referrer',
+  quota: 0,
+  used_quota: 0,
+  request_count: 0,
+  group: 'default',
+  status: 1,
+  role: 1,
+  aff_count: 99,
+  qualified_referral_payments: 2,
+  aff_history_quota: 1_500_000,
+  inviter_id: 7,
 }
 
-async function renderCard(item: AdminReferralReward) {
+async function renderCell(item: User) {
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
@@ -110,7 +111,9 @@ async function renderCard(item: AdminReferralReward) {
   await act(async () => {
     root.render(
       <I18nextProvider i18n={i18n}>
-        <AdminReferralRewardMobileCard reward={item} />
+        <TooltipProvider>
+          <UserReferralInfoCell user={item} />
+        </TooltipProvider>
       </I18nextProvider>
     )
   })
@@ -118,58 +121,63 @@ async function renderCard(item: AdminReferralReward) {
   return { container, root }
 }
 
-async function unmountCard(rendered: Awaited<ReturnType<typeof renderCard>>) {
+async function unmountCell(rendered: Awaited<ReturnType<typeof renderCell>>) {
   await act(async () => rendered.root.unmount())
   rendered.container.remove()
 }
 
-describe('admin referral reward dashboard layout', () => {
+describe('user referral information', () => {
   after(() => {
     domWindow.close()
   })
 
-  test('keeps long masked identities readable and shows the recorded currency', async () => {
-    const rendered = await renderCard(reward)
-    const card = rendered.container.querySelector('[data-admin-referral-card]')
-    const inviter = rendered.container.querySelector(
-      '[data-admin-referral-inviter]'
-    )
-    const invitee = rendered.container.querySelector(
-      '[data-admin-referral-invitee]'
+  test('uses invitee payment claims instead of the legacy registration count', async () => {
+    await i18n.changeLanguage('en')
+    const rendered = await renderCell(user)
+    const referralInfo = rendered.container.querySelector(
+      '[data-user-referral-info]'
     )
 
-    assert.ok(card)
-    assert.ok(inviter)
-    assert.ok(invitee)
-    assert.equal(inviter.textContent, reward.inviter_label)
-    assert.equal(invitee.textContent, reward.invitee_label)
-    assert.equal(inviter.classList.contains('whitespace-normal'), true)
-    assert.equal(invitee.classList.contains('whitespace-normal'), true)
-    assert.equal(card.textContent?.includes('Fiat'), false)
-    assert.equal(card.textContent?.includes('USD 90.00'), true)
-    assert.equal(card.textContent?.includes('CNY'), false)
-    assert.equal(card.textContent?.includes('gateway'), false)
+    assert.ok(referralInfo)
+    assert.equal(referralInfo.textContent?.includes('2 invitee payments'), true)
+    assert.equal(referralInfo.textContent?.includes('99'), false)
+    assert.equal(referralInfo.textContent?.includes('Rewards'), true)
+    assert.equal(referralInfo.textContent?.includes('Revenue'), false)
+    assert.equal(referralInfo.textContent?.includes('Inviter #7'), true)
+    assert.equal(referralInfo.classList.contains('flex-wrap'), true)
 
-    await unmountCard(rendered)
+    await unmountCell(rendered)
   })
 
-  test('provides complete admin dashboard translations in both Chinese locales', () => {
+  test('uses a singular payment label for one invitee payment', async () => {
+    await i18n.changeLanguage('en')
+    const rendered = await renderCell({
+      ...user,
+      qualified_referral_payments: 1,
+    })
+
+    assert.equal(
+      rendered.container.textContent?.includes('1 invitee payment'),
+      true
+    )
+    assert.equal(
+      rendered.container.textContent?.includes('1 invitee payments'),
+      false
+    )
+
+    await unmountCell(rendered)
+  })
+
+  test('keeps compact referral labels translated in both Chinese locales', () => {
     const keys = [
-      'Referral Management',
-      'Reward events',
-      'Active reward credits',
-      'Reversed reward credits',
-      'Referred users',
-      'Site-wide referral summary',
-      'Referral relationship',
-      'Deleted user',
-      'Actual Amount',
-      'Reward credits',
-      'Reversal reason',
-      'No referral records found',
-      'Failed to load referral data',
-      'Site-wide reward ledger',
-      'Search user ID, username, or email...',
+      'Referral',
+      '{{count}} invitee payment',
+      '{{count}} invitee payments',
+      "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.",
+      'Rewards',
+      'Cumulative referral reward credits, net of refunds and disputes.',
+      'Inviter #{{id}}',
+      'Invitee payments',
     ]
 
     for (const key of keys) {

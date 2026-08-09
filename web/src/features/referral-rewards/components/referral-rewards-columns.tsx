@@ -67,6 +67,7 @@ export function useReferralRewardsColumns(): ColumnDef<ReferralReward>[] {
         <span className={`${WRAPPED_VALUE_CLASS} font-medium tabular-nums`}>
           {formatReferralPaidAmount(
             row.original.paid_amount,
+            row.original.paid_currency,
             i18n.resolvedLanguage
           )}
         </span>

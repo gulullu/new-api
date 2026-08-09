@@ -5248,6 +5248,19 @@
     "Zero retention": "Без хранения данных",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
+    "Referral": "Рефералы",
+    "{{count}} invitee payment": "{{count}} платёж приглашённого пользователя",
+    "{{count}} invitee payments": "{{count}} платежей приглашённых пользователей",
+    "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.": "Подходящие платежи приглашённых этим пользователем людей, которые не были отменены из-за возврата или спора.",
+    "Rewards": "Вознаграждения",
+    "Cumulative referral reward credits, net of refunds and disputes.": "Накопленные реферальные кредиты за вычетом возвратов и споров.",
+    "Inviter #{{id}}": "Пригласивший #{{id}}",
+    "Invitee payments": "Платежи приглашённых",
+    "Top-up credits": "Зачисленные кредиты",
+    "Amount paid": "Оплаченная сумма",
+    "Amount due": "Сумма к оплате",
+    "Checkout amount": "Сумма заказа",
+    "Payment currency unavailable": "Валюта платежа недоступна",
     "Zoom": "Zoom"
   }
 }

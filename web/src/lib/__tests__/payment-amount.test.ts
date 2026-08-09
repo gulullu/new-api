@@ -19,15 +19,16 @@ For commercial licensing, please contact support@quantumnous.com
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
-import { formatReferralPaidAmount, formatReferralRewardRate } from '../format'
+import { formatPaymentAmount } from '../payment-amount'
 
-describe('referral reward formatting', () => {
-  test('shows the processor-confirmed paid amount with its currency code', () => {
-    assert.equal(formatReferralPaidAmount('90', 'CNY', 'en'), 'CNY 90.00')
-    assert.equal(formatReferralPaidAmount('13.54', 'USD', 'en'), 'USD 13.54')
+describe('payment amount formatting', () => {
+  test('keeps the recorded ISO currency beside the payment amount', () => {
+    assert.equal(formatPaymentAmount('13.54', 'usd', 'en'), 'USD 13.54')
+    assert.equal(formatPaymentAmount('100', 'CNY', 'zhCN'), 'CNY 100.00')
   })
 
-  test('formats three hundred basis points as three percent', () => {
-    assert.equal(formatReferralRewardRate(300), '3%')
+  test('does not guess a currency when the payment snapshot is incomplete', () => {
+    assert.equal(formatPaymentAmount('13.54', '', 'en'), null)
+    assert.equal(formatPaymentAmount(undefined, 'USD', 'en'), null)
   })
 })

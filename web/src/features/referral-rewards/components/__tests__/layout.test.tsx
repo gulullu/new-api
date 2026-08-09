@@ -137,6 +137,7 @@ describe('referral reward details layout', () => {
     assert.equal(invitee.classList.contains('whitespace-normal'), true)
     assert.equal(invitee.classList.contains('break-words'), true)
     assert.equal(card.textContent?.includes(reward.payment_provider), true)
+    assert.equal(card.textContent?.includes('CNY 90.00'), true)
     assert.equal(
       invitee.querySelectorAll('[class*="truncate"], [class*="line-clamp"]')
         .length,

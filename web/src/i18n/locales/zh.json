@@ -5303,6 +5303,19 @@
     "Zero retention": "零数据保留",
     "Zhipu": "智谱",
     "Zhipu V4": "智谱 V4",
+    "Referral": "邀请",
+    "{{count}} invitee payment": "受邀支付 {{count}} 笔",
+    "{{count}} invitee payments": "受邀支付 {{count}} 笔",
+    "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.": "该用户邀请的人产生、且未因退款或支付争议被撤销的有效支付笔数。",
+    "Rewards": "返利",
+    "Cumulative referral reward credits, net of refunds and disputes.": "累计邀请返利额度，已扣除退款和支付争议撤销的返利。",
+    "Inviter #{{id}}": "邀请人 #{{id}}",
+    "Invitee payments": "受邀支付",
+    "Top-up credits": "充值额度",
+    "Amount paid": "实付金额",
+    "Amount due": "应付金额",
+    "Checkout amount": "结账金额",
+    "Payment currency unavailable": "币种不可用",
     "Zoom": "缩放"
   }
 }
