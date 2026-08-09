@@ -54,10 +54,6 @@ var supportedLocales = [...]Locale{
 	LocaleVietnamese,
 }
 
-// NativeFeatureHeader is sent by the native console so the edge Worker can
-// stop applying the equivalent response rewrite a second time.
-const NativeFeatureHeader = "content"
-
 type localizedLeaf struct {
 	sourceHash string
 	values     map[Locale]string
@@ -389,5 +385,4 @@ func SetLocalizedResponseHeaders(c *gin.Context, locale Locale) {
 	c.Header("Cache-Control", "private, no-store")
 	c.Header("Vary", "Accept-Language, Cookie, X-Language, X-Locale")
 	c.Header("X-RelayBases-Content-Language", string(locale))
-	c.Header("X-RelayBases-Native-Features", NativeFeatureHeader)
 }
