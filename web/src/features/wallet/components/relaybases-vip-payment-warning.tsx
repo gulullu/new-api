@@ -16,11 +16,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { BadgePercent, ExternalLink, Loader2 } from 'lucide-react'
+import { BadgePercent, ExternalLink, Loader2, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import {
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
@@ -58,6 +59,30 @@ export function RelayBasesVipPaymentNotice() {
         </div>
       </div>
     </div>
+  )
+}
+
+interface RelayBasesVipPaymentCloseProps {
+  processing: boolean
+}
+
+export function RelayBasesVipPaymentClose(
+  props: RelayBasesVipPaymentCloseProps
+) {
+  const { t } = useTranslation()
+
+  return (
+    <AlertDialogCancel
+      variant='ghost'
+      size='icon-sm'
+      disabled={props.processing}
+      aria-label={t('Close')}
+      data-relaybases-vip-close
+      className='absolute top-2 right-2'
+    >
+      <X aria-hidden='true' />
+      <span className='sr-only'>{t('Close')}</span>
+    </AlertDialogCancel>
   )
 }
 
