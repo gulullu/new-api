@@ -14,6 +14,7 @@ import (
 	"github.com/QuantumNous/new-api/middleware"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/oauth"
+	contenti18n "github.com/QuantumNous/new-api/relaybases/contenti18n"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/console_setting"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
@@ -42,7 +43,7 @@ func TestStatus(c *gin.Context) {
 }
 
 func GetStatus(c *gin.Context) {
-
+	locale := contenti18n.ResolveLocale(c)
 	cs := console_setting.GetConsoleSetting()
 	common.OptionMapRWMutex.RLock()
 	defer common.OptionMapRWMutex.RUnlock()
@@ -127,13 +128,13 @@ func GetStatus(c *gin.Context) {
 
 	// 根据启用状态注入可选内容
 	if cs.ApiInfoEnabled {
-		data["api_info"] = console_setting.GetApiInfo()
+		data["api_info"] = contenti18n.LocalizeAPIInfo(console_setting.GetApiInfo(), locale)
 	}
 	if cs.AnnouncementsEnabled {
-		data["announcements"] = console_setting.GetAnnouncements()
+		data["announcements"] = contenti18n.LocalizeAnnouncements(console_setting.GetAnnouncements(), locale)
 	}
 	if cs.FAQEnabled {
-		data["faq"] = console_setting.GetFAQ()
+		data["faq"] = contenti18n.LocalizeFAQ(console_setting.GetFAQ(), locale)
 	}
 
 	// Add enabled custom OAuth providers
@@ -164,6 +165,7 @@ func GetStatus(c *gin.Context) {
 		data["custom_oauth_providers"] = providersInfo
 	}
 
+	contenti18n.SetLocalizedResponseHeaders(c, locale)
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -173,12 +175,14 @@ func GetStatus(c *gin.Context) {
 }
 
 func GetNotice(c *gin.Context) {
+	locale := contenti18n.ResolveLocale(c)
 	common.OptionMapRWMutex.RLock()
 	defer common.OptionMapRWMutex.RUnlock()
+	contenti18n.SetLocalizedResponseHeaders(c, locale)
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
-		"data":    common.OptionMap["Notice"],
+		"data":    contenti18n.LocalizeNotice(common.OptionMap["Notice"], locale),
 	})
 	return
 }

@@ -39,6 +39,8 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { toRelayBasesContentLocale } from '@/features/relaybases/content/locale'
+
 import { getUserGroups, getUserModels } from '../api'
 import {
   getGroupFallback,
@@ -66,7 +68,10 @@ export function usePlaygroundOptions({
   setModels,
   updateConfig,
 }: UsePlaygroundOptionsParams) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const contentLocale = toRelayBasesContentLocale(
+    i18n.resolvedLanguage || i18n.language
+  )
 
   const {
     data: modelsData,
@@ -84,8 +89,8 @@ export function usePlaygroundOptions({
     error: groupsError,
     isError: isGroupsError,
   } = useQuery({
-    queryKey: ['playground-groups'],
-    queryFn: getUserGroups,
+    queryKey: ['playground-groups', contentLocale],
+    queryFn: () => getUserGroups(contentLocale),
   })
 
   useEffect(() => {

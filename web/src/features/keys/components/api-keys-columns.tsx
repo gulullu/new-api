@@ -28,6 +28,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { toRelayBasesContentLocale } from '@/features/relaybases/content/locale'
 import { useMediaQuery } from '@/hooks'
 import { toIntlLocale } from '@/i18n/languages'
 import { getUserGroups } from '@/lib/api'
@@ -54,9 +55,13 @@ function getQuotaProgressColor(percentage: number): string {
 }
 
 function useGroupRatios(): Record<string, number | string> {
+  const { i18n } = useTranslation()
+  const contentLocale = toRelayBasesContentLocale(
+    i18n.resolvedLanguage || i18n.language
+  )
   const { data } = useQuery({
-    queryKey: ['user-groups'],
-    queryFn: getUserGroups,
+    queryKey: ['user-groups', contentLocale],
+    queryFn: () => getUserGroups(contentLocale),
     staleTime: 0,
     select: (res) => {
       if (!res.success || !res.data) return {}

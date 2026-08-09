@@ -1,0 +1,145 @@
+{
+  "navigation": {
+    "serviceStatus": "服務狀態",
+    "infiniteCanvas": "無限畫布"
+  },
+  "auth": {
+    "signupOffer": {
+      "ariaLabel": "註冊權益",
+      "status": "就緒",
+      "trial": "註冊即贈體驗額度",
+      "trialDetail": "完成註冊後可用",
+      "models": "主流模型統一接入",
+      "modelsDetail": "以目前模型廣場為準",
+      "credits": "Ɍ1 = 1 API Credit",
+      "creditsDetail": "付款成功後按結帳頁所示數量記入帳戶",
+      "pricing": "訂單以 USD 計價",
+      "pricingDetail": "結帳頁顯示應付金額",
+      "ready": "完成註冊後即可建立 API Key。"
+    },
+    "legal": {
+      "both": "註冊即表示您同意<agreement>使用者協議</agreement>和<privacy>隱私權政策</privacy>。",
+      "agreementOnly": "註冊即表示您同意<agreement>使用者協議</agreement>。",
+      "privacyOnly": "註冊即表示您同意<privacy>隱私權政策</privacy>。"
+    }
+  },
+  "logExport": {
+    "action": "匯出",
+    "ariaLabel": "將通用日誌匯出為 Excel",
+    "submitting": "正在提交…",
+    "exporting": "正在匯出…",
+    "failed": "匯出失敗",
+    "pending": "匯出仍在背景執行，請稍後再試。",
+    "downloadStarted": "下載已開始",
+    "downloadStartedRows": "下載已開始 · {{rows}} 列"
+  },
+  "wallet": {
+    "labels": {
+      "creditsReceived": "到帳 API Credits（Ɍ）",
+      "customCredits": "自訂到帳 API Credits（Ɍ）",
+      "pay": "支付",
+      "save": "節省",
+      "amountToPay": "待支付金額"
+    },
+    "minimum": {
+      "placeholder": "最低 Ɍ{{amount}}",
+      "notice": "最低儲值 Ɍ{{amount}}。支付管道會對每筆成功交易收取固定手續費，並另加按金額計算的費用；小額儲值的手續費可能接近甚至超過支付金額，因此設置此最低限額。感謝理解。",
+      "card": "最低儲值 Ɍ{{amount}}，請調整金額後繼續。"
+    },
+    "payment": {
+      "stripe": "支援銀行卡及多種主流線上支付方式，包括支付寶。",
+      "waffo": "支援銀行卡及多種主流線上支付方式，包括微信支付。",
+      "generic": "將前往所選支付管道確認訂單並完成付款。",
+      "accessibleName": "使用{{name}}支付"
+    },
+    "creditsNotice": {
+      "title": "儲值後獲得 API Credits",
+      "body": "付款後，結帳頁所示的 API Credits 會記入帳戶，並隨 API 使用扣減。Ɍ 表示 Credits 餘額。訂單以 USD 計價，結帳頁顯示應付金額。",
+      "refund": "符合條件的未使用付費 Credits 可依退款政策申請退款；已使用以及免費、贈送、試用、促銷或獎勵 Credits 通常不可退。",
+      "docsLink": "了解 Ɍ 與 API Credits",
+      "refundLink": "查看退款政策"
+    }
+  },
+  "pricing": {
+    "creditNote": {
+      "accessibleName": "RelayBases API Credits 計價說明",
+      "body": "模型價格、餘額和用量均以 RelayBases API Credits（Ɍ）顯示。訂單以 USD 計價，結帳頁顯示應付金額。最終扣費以控制台帳單為準。",
+      "link": "了解 Ɍ 與 API Credits"
+    },
+    "tags": {
+      "imageGeneration": "圖片生成",
+      "imageEditing": "圖片編輯",
+      "videoGeneration": "影片生成",
+      "asyncTask": "非同步任務",
+      "syncEndpoint": "同步介面",
+      "perSecondPricing": "按秒計價"
+    },
+    "vendors": {
+      "alibaba": "阿里巴巴",
+      "zai": "Z.AI"
+    },
+    "modelDescriptions": {
+      "claude-fable-5": "Claude Fable 5，Anthropic 面向廣泛發佈的最高能力模型，適用於長週期代理、複雜推理、編碼和研究場景。",
+      "claude-haiku-4-5-20251001": "Claude Haiku 4.5，低延遲、低成本的輕量模型，適合聊天、批處理和快速編碼任務。",
+      "claude-opus-4-5-20251101": "Claude Opus 4.5，面向複雜編碼、代理任務和企業工作流的高智能模型。",
+      "claude-opus-4-6": "Claude Opus 4.6，面向編碼、代理和企業工作流的旗艦推理模型。",
+      "claude-opus-4-7": "Claude Opus 4.7，在編碼、視覺和複雜多步驟任務上更穩定的旗艦模型。",
+      "claude-opus-4-8": "Claude Opus 4.8，適合複雜推理、長期代理編碼和高自治工作的旗艦模型。",
+      "claude-opus-5": "Claude Opus 5，Anthropic 面向複雜代理編碼和企業級工作的高級模型，支持深度推理和 1M 上下文。",
+      "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5，適合代理、編碼、電腦使用和長時間任務的高性能模型。",
+      "claude-sonnet-4-6": "Claude Sonnet 4.6，兼顧速度和智能，支持 1M 上下文的高性能模型。",
+      "claude-sonnet-5": "Claude Sonnet 5，兼具速度與推理能力，適用於編碼、代理、分析和 1M 上下文任務。",
+      "codex-auto-review": "Codex 自動審查，專為自動化代碼審查和代碼倉庫檢查進行調優，並採用標準上下文與長上下文分檔計價。",
+      "deepseek-v4-flash": "DeepSeek V4 Flash（DeepSeek-V4-Flash）：1M 上下文，最大 384K 輸出；支持非思考與思考模式（默認）；支持 JSON Output、Tool Calls、對話前綴續寫；FIM 補全僅非思考模式支持；併發限制 2500。",
+      "deepseek-v4-pro": "DeepSeek V4 Pro（DeepSeek-V4-Pro）：1M 上下文，最大 384K 輸出；支持非思考與思考模式（默認）；支持 JSON Output、Tool Calls、對話前綴續寫；FIM 補全僅非思考模式支持；併發限制 500。",
+      "gemini-3.1-pro-high": "Gemini 3.1 Pro 高路由，適合複雜代理流程、編碼和多模態推理。",
+      "gemini-3.1-pro-low": "Gemini 3.1 Pro 低路由，適合複雜代理流程、編碼和多模態推理。",
+      "gemini-3.5-flash-high": "Gemini 3.5 Flash 高路由，接近 Pro 智能但更快、更經濟，適合多模態代理任務。",
+      "gemini-3.5-flash-low": "Gemini 3.5 Flash 低路由，接近 Pro 智能但更快、更經濟，適合多模態代理任務。",
+      "gemini-3.6-flash-high": "Gemini 3.6 Flash 高推理路由，適合複雜編程、智能體執行以及多模態與空間推理。",
+      "gemini-3.6-flash-low": "Gemini 3.6 Flash 低推理路由，適合低延遲智能體循環和高頻多模態任務。",
+      "gemini-3.6-flash-medium": "Gemini 3.6 Flash 中推理路由，在速度與智能之間取得平衡，適合通用智能體和多模態任務。",
+      "glm-5.1": "GLM-5.1，Z.AI 面向長程編碼、複雜智能體和結構化推理的旗艦文本模型。",
+      "glm-5.2": "GLM-5.2，Z.AI 面向長任務時代的旗艦模型，支持 1M 無損上下文與 128K 最大輸出，適合長程 Coding Agent、項目級軟件工程、複雜系統工程和深度調試。",
+      "gpt-5.3-codex-spark": "GPT-5.3 Codex Spark，面向快速代碼編輯和重構的低延遲編碼模型。",
+      "gpt-5.4": "GPT-5.4，適合複雜代碼、長上下文和專業工作的前沿通用推理模型。",
+      "gpt-5.4-mini": "GPT-5.4 mini，面向高吞吐任務的高性價比推理模型。",
+      "gpt-5.4-openai-compact": "GPT-5.4 OpenAI Compact，面向長任務自動壓縮上下文的系統輔助模型；系統會在需要時自動調用，無需且不建議主動調用。",
+      "gpt-5.5": "GPT-5.5，適合複雜專業工作、代碼和長上下文的旗艦通用推理模型。",
+      "gpt-5.5-openai-compact": "GPT-5.5 OpenAI Compact，面向長任務自動壓縮上下文的系統輔助模型；系統會在需要時自動調用，無需且不建議主動調用。",
+      "gpt-5.6-luna": "GPT-5.6 Luna，快速經濟型模型，適合高併發、低延遲任務，並採用標準上下文與長上下文分檔計價。",
+      "gpt-5.6-sol": "GPT-5.6 Sol，GPT-5.6 系列旗艦模型，擅長複雜推理、編碼與智能體任務，尤其精於命令行與多步編碼。",
+      "gpt-5.6-sol-openai-compact": "GPT-5.6 Sol OpenAI Compact，面向長任務自動壓縮上下文的系統輔助模型；系統會在需要時自動調用，無需且不建議主動調用。",
+      "gpt-5.6-terra": "GPT-5.6 Terra，均衡型模型，定位於旗艦 Sol 與經濟 Luna 之間，適合日常編碼、推理與智能體任務，並採用標準上下文與長上下文分檔計價。",
+      "gpt-audio-1.5": "GPT Audio 1.5，面向 Chat Completions 的通用音頻模型，支持音頻輸入與輸出、流式響應和函數調用。",
+      "gpt-image-2": "GPT Image 2 圖像生成與編輯，Azure 圖像線路。按實際用量計費，並按每張圖片最低 Ɍ0.08 結算；如實際用量高於最低價，則按實際用量扣費。最終扣費以控制台賬單為準。",
+      "gpt-realtime-2.1": "GPT Realtime 2.1，面向複雜語音智能體的實時推理模型，改進字母數字識別、靜音與噪聲處理及打斷體驗，支持可配置推理和工具調用。",
+      "gpt-realtime-2.1-mini": "GPT Realtime 2.1 mini，更快、更低成本的蒸餾實時語音推理模型，支持 WebRTC、WebSocket、SIP 和工具調用。",
+      "gpt-realtime-whisper": "GPT Realtime Whisper，面向低延遲實時轉錄的流式語音轉文字模型，持續返回轉錄增量，並按音頻時長計費。",
+      "grok-4.5": "Grok 4.5，SpaceXAI 面向編程、智能體任務和知識工作的前沿旗艦模型，支持 500K 上下文、文本與圖片輸入、可配置推理、函數調用、結構化輸出、網頁與 X 搜索及代碼執行。",
+      "grok-composer-2.5-fast": "Composer 2.5 Fast，Cursor 自研的前沿編程智能體模型，經 Grok Build 線路提供。Fast 路由以更低延遲提供與標準版相同的智能水平，擅長持續執行長週期任務、複雜指令遵循、工具調用、文件編輯和終端操作；僅支持文本，不支持圖片輸入。",
+      "grok-imagine-edit": "Grok Imagine 同步圖片編輯兼容模型，僅使用 /v1/images/edits，支持 1-3 張參考圖，按實際返回圖片數每張 Ɍ0.08 計費。",
+      "grok-imagine-image-quality": "Grok Imagine 同步圖片生成與編輯模型，支持 1K/2K；使用 /v1/images/generations 或 /v1/images/edits，編輯最多支持 3 張參考圖，按實際返回圖片數每張 Ɍ0.08 計費。",
+      "grok-imagine-video": "Grok Imagine Video 通過 RelayBases /v1/videos 統一支持五種異步模式：文生視頻、單圖生視頻、1-7 張參考圖生視頻、最長 8.7 秒單 MP4 視頻編輯，以及基於 2-15 秒單 MP4 的 2-10 秒視頻延長。生成類支持 1-15 秒、API 七種比例及 480p/720p；編輯與延長繼承源視頻比例和分辨率且最高 720p。按每秒 Ɍ0.08 計費，異步不做 4 倍加價；編輯按校驗後的源視頻秒數計費，延長僅按新增時長計費。",
+      "grok-imagine-video-1.5": "Grok Imagine Video 1.5 僅支持單圖生視頻異步任務，使用 /v1/videos，必須恰好 1 張圖片，支持 1-15 秒及 480p、720p、1080p。按生成時長每秒 Ɍ0.16 計費，異步不做 4 倍加價。",
+      "kimi-k2.6": "Kimi K2.6，Moonshot 長上下文模型，適合代碼、代理和複雜文檔任務。",
+      "kimi-k2.7-code": "Kimi K2.7 Code，Moonshot 面向倉庫級代碼、代理編程和長上下文開發的模型。",
+      "kimi-k3": "Kimi K3，Moonshot 旗艦模型，面向長程編程與端到端知識工作，支持 1M 上下文、始終推理、工具調用、結構化輸出與自動上下文緩存。",
+      "minimax-m3": "MiniMax M3，1M 上下文模型，適合長程編碼、代理和文本推理。",
+      "nana-banana-2": "異步圖片生成與編輯接口。支持最多 9 張參考圖；提交任務後返回 task_id，再通過查詢接口獲取結果。異步調用按 4 倍扣費。",
+      "nana-banana-2_sync": "Nana Banana 2 同步圖片生成與編輯接口，使用 /v1/images/generations，任務完成後返回 OpenAI 兼容圖片響應。",
+      "nana-banana-pro": "異步圖片生成與編輯接口。支持最多 9 張參考圖；提交任務後返回 task_id，再通過查詢接口獲取結果。異步調用按 4 倍扣費。",
+      "nana-banana-pro_sync": "Nana Banana Pro 同步圖片生成與編輯接口，使用 /v1/images/generations，任務完成後返回 OpenAI 兼容圖片響應。",
+      "tts-1-hd": "TTS-1 HD，高質量文本轉語音模型，通過 Audio API 的 Speech 接口生成自然語音。",
+      "veo-3-1": "固定 8 秒視頻生成。支持文生視頻、首尾幀和多圖參考，最多 9 張參考圖。異步調用按 4 倍扣費。",
+      "veo-omni-flash": "固定 10 秒視頻生成。支持首尾幀和多圖參考，最多 9 張參考圖。異步調用按 4 倍扣費。",
+      "veo-omni-flash-video-edit": "視頻編輯接口。支持 1 段參考視頻和多張參考圖；生成時長最長 10 秒，並受參考視頻時長限制。異步調用按 4 倍扣費。",
+      "video-fast-480p": "4-15 秒可選；計費方式為 duration × 基礎單價；異步調用按 4 倍扣費。支持圖片、視頻、音頻多素材參考。",
+      "video-fast-720p": "4-15 秒可選；計費方式為 duration × 基礎單價；異步調用按 4 倍扣費。支持圖片、視頻、音頻多素材參考。",
+      "video-pro-480p": "4-15 秒可選；計費方式為 duration × 基礎單價；異步調用按 4 倍扣費。支持圖片、視頻、音頻多素材參考。",
+      "video-pro-720p": "4-15 秒可選；計費方式為 duration × 基礎單價；異步調用按 4 倍扣費。支持圖片、視頻、音頻多素材參考。",
+      "video-pro-1080p": "4-15 秒可選；計費方式為 duration × 基礎單價；異步調用按 4 倍扣費。支持圖片、視頻、音頻多素材參考。",
+      "video-standard-720p": "固定 15 秒；計費方式為 duration × 基礎單價；異步調用按 4 倍扣費。支持圖片、視頻、音頻多素材參考。"
+    }
+  }
+}

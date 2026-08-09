@@ -1,0 +1,145 @@
+{
+  "navigation": {
+    "serviceStatus": "服务状态",
+    "infiniteCanvas": "无限画布"
+  },
+  "auth": {
+    "signupOffer": {
+      "ariaLabel": "注册权益",
+      "status": "就绪",
+      "trial": "注册即送体验额度",
+      "trialDetail": "完成注册后可用",
+      "models": "主流模型统一接入",
+      "modelsDetail": "以当前模型广场为准",
+      "credits": "Ɍ1 = 1 API Credit",
+      "creditsDetail": "付款成功后按结账页所示数量记入账户",
+      "pricing": "订单以 USD 计价",
+      "pricingDetail": "结账页显示应付金额",
+      "ready": "完成注册后即可创建 API Key。"
+    },
+    "legal": {
+      "both": "注册即表示您同意<agreement>用户协议</agreement>和<privacy>隐私政策</privacy>。",
+      "agreementOnly": "注册即表示您同意<agreement>用户协议</agreement>。",
+      "privacyOnly": "注册即表示您同意<privacy>隐私政策</privacy>。"
+    }
+  },
+  "logExport": {
+    "action": "导出",
+    "ariaLabel": "导出通用日志 Excel",
+    "submitting": "正在提交…",
+    "exporting": "正在导出…",
+    "failed": "导出失败",
+    "pending": "导出仍在后台进行，请稍后重试。",
+    "downloadStarted": "下载已开始",
+    "downloadStartedRows": "下载已开始 · {{rows}} 行"
+  },
+  "wallet": {
+    "labels": {
+      "creditsReceived": "到账 API Credits（Ɍ）",
+      "customCredits": "自定义到账 API Credits（Ɍ）",
+      "pay": "支付",
+      "save": "节省",
+      "amountToPay": "待支付金额"
+    },
+    "minimum": {
+      "placeholder": "最低 Ɍ{{amount}}",
+      "notice": "最低充值 Ɍ{{amount}}。支付渠道会对每笔成功交易收取固定手续费，并另加按金额计算的费用；小额充值的手续费可能接近甚至超过支付金额，因此设置此最低限额。感谢理解。",
+      "card": "最低充值 Ɍ{{amount}}，请调整金额后继续。"
+    },
+    "payment": {
+      "stripe": "支持银行卡及多种主流在线支付方式，包括支付宝。",
+      "waffo": "支持银行卡及多种主流在线支付方式，包括微信支付。",
+      "generic": "将跳转至所选支付渠道确认订单并完成付款。",
+      "accessibleName": "使用{{name}}支付"
+    },
+    "creditsNotice": {
+      "title": "充值后获得 API Credits",
+      "body": "付款后，结账页所示的 API Credits 会记入账户，并随 API 使用扣减。Ɍ 表示 Credits 余额。订单以 USD 计价，结账页显示应付金额。",
+      "refund": "符合条件的未使用付费 Credits 可按退款政策申请退款；已使用以及免费、赠送、试用、促销或奖励 Credits 通常不可退。",
+      "docsLink": "了解 Ɍ 与 API Credits",
+      "refundLink": "查看退款政策"
+    }
+  },
+  "pricing": {
+    "creditNote": {
+      "accessibleName": "RelayBases API Credits 计价说明",
+      "body": "模型价格、余额和用量均以 RelayBases API Credits（Ɍ）显示。订单以 USD 计价，结账页显示应付金额。最终扣费以控制台账单为准。",
+      "link": "了解 Ɍ 与 API Credits"
+    },
+    "tags": {
+      "imageGeneration": "图片生成",
+      "imageEditing": "图片编辑",
+      "videoGeneration": "视频生成",
+      "asyncTask": "异步任务",
+      "syncEndpoint": "同步接口",
+      "perSecondPricing": "按秒计价"
+    },
+    "vendors": {
+      "alibaba": "阿里巴巴",
+      "zai": "Z.AI"
+    },
+    "modelDescriptions": {
+      "claude-fable-5": "Claude Fable 5，Anthropic 面向广泛发布的最高能力模型，适用于长周期代理、复杂推理、编码和研究场景。",
+      "claude-haiku-4-5-20251001": "Claude Haiku 4.5，低延迟、低成本的轻量模型，适合聊天、批处理和快速编码任务。",
+      "claude-opus-4-5-20251101": "Claude Opus 4.5，面向复杂编码、代理任务和企业工作流的高智能模型。",
+      "claude-opus-4-6": "Claude Opus 4.6，面向编码、代理和企业工作流的旗舰推理模型。",
+      "claude-opus-4-7": "Claude Opus 4.7，在编码、视觉和复杂多步骤任务上更稳定的旗舰模型。",
+      "claude-opus-4-8": "Claude Opus 4.8，适合复杂推理、长期代理编码和高自治工作的旗舰模型。",
+      "claude-opus-5": "Claude Opus 5，Anthropic 面向复杂代理编码和企业级工作的高级模型，支持深度推理和 1M 上下文。",
+      "claude-sonnet-5": "Claude Sonnet 5，兼具速度与推理能力，适用于编码、代理、分析和 1M 上下文任务。",
+      "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5，适合代理、编码、电脑使用和长时间任务的高性能模型。",
+      "claude-sonnet-4-6": "Claude Sonnet 4.6，兼顾速度和智能，支持 1M 上下文的高性能模型。",
+      "codex-auto-review": "Codex 自动审查，专为自动化代码审查和代码仓库检查进行调优，并采用标准上下文与长上下文分档计价。",
+      "deepseek-v4-flash": "DeepSeek V4 Flash（DeepSeek-V4-Flash）：1M 上下文，最大 384K 输出；支持非思考与思考模式（默认）；支持 JSON Output、Tool Calls、对话前缀续写；FIM 补全仅非思考模式支持；并发限制 2500。",
+      "deepseek-v4-pro": "DeepSeek V4 Pro（DeepSeek-V4-Pro）：1M 上下文，最大 384K 输出；支持非思考与思考模式（默认）；支持 JSON Output、Tool Calls、对话前缀续写；FIM 补全仅非思考模式支持；并发限制 500。",
+      "gemini-3.1-pro-high": "Gemini 3.1 Pro 高路由，适合复杂代理流程、编码和多模态推理。",
+      "gemini-3.1-pro-low": "Gemini 3.1 Pro 低路由，适合复杂代理流程、编码和多模态推理。",
+      "gemini-3.5-flash-high": "Gemini 3.5 Flash 高路由，接近 Pro 智能但更快、更经济，适合多模态代理任务。",
+      "gemini-3.5-flash-low": "Gemini 3.5 Flash 低路由，接近 Pro 智能但更快、更经济，适合多模态代理任务。",
+      "gemini-3.6-flash-high": "Gemini 3.6 Flash 高推理路由，适合复杂编程、智能体执行以及多模态与空间推理。",
+      "gemini-3.6-flash-medium": "Gemini 3.6 Flash 中推理路由，在速度与智能之间取得平衡，适合通用智能体和多模态任务。",
+      "gemini-3.6-flash-low": "Gemini 3.6 Flash 低推理路由，适合低延迟智能体循环和高频多模态任务。",
+      "gpt-5.3-codex-spark": "GPT-5.3 Codex Spark，面向快速代码编辑和重构的低延迟编码模型。",
+      "gpt-5.4": "GPT-5.4，适合复杂代码、长上下文和专业工作的前沿通用推理模型。",
+      "gpt-5.4-openai-compact": "GPT-5.4 OpenAI Compact，面向长任务自动压缩上下文的系统辅助模型；系统会在需要时自动调用，无需且不建议主动调用。",
+      "gpt-5.4-mini": "GPT-5.4 mini，面向高吞吐任务的高性价比推理模型。",
+      "gpt-5.5": "GPT-5.5，适合复杂专业工作、代码和长上下文的旗舰通用推理模型。",
+      "gpt-5.5-openai-compact": "GPT-5.5 OpenAI Compact，面向长任务自动压缩上下文的系统辅助模型；系统会在需要时自动调用，无需且不建议主动调用。",
+      "gpt-5.6-luna": "GPT-5.6 Luna，快速经济型模型，适合高并发、低延迟任务，并采用标准上下文与长上下文分档计价。",
+      "gpt-5.6-terra": "GPT-5.6 Terra，均衡型模型，定位于旗舰 Sol 与经济 Luna 之间，适合日常编码、推理与智能体任务，并采用标准上下文与长上下文分档计价。",
+      "gpt-5.6-sol": "GPT-5.6 Sol，GPT-5.6 系列旗舰模型，擅长复杂推理、编码与智能体任务，尤其精于命令行与多步编码。",
+      "gpt-5.6-sol-openai-compact": "GPT-5.6 Sol OpenAI Compact，面向长任务自动压缩上下文的系统辅助模型；系统会在需要时自动调用，无需且不建议主动调用。",
+      "gpt-audio-1.5": "GPT Audio 1.5，面向 Chat Completions 的通用音频模型，支持音频输入与输出、流式响应和函数调用。",
+      "gpt-image-2": "GPT Image 2 图像生成与编辑，Azure 图像线路。按实际用量计费，并按每张图片最低 Ɍ0.08 结算；如实际用量高于最低价，则按实际用量扣费。最终扣费以控制台账单为准。",
+      "gpt-realtime-2.1": "GPT Realtime 2.1，面向复杂语音智能体的实时推理模型，改进字母数字识别、静音与噪声处理及打断体验，支持可配置推理和工具调用。",
+      "gpt-realtime-2.1-mini": "GPT Realtime 2.1 mini，更快、更低成本的蒸馏实时语音推理模型，支持 WebRTC、WebSocket、SIP 和工具调用。",
+      "gpt-realtime-whisper": "GPT Realtime Whisper，面向低延迟实时转录的流式语音转文字模型，持续返回转录增量，并按音频时长计费。",
+      "grok-4.5": "Grok 4.5，SpaceXAI 面向编程、智能体任务和知识工作的前沿旗舰模型，支持 500K 上下文、文本与图片输入、可配置推理、函数调用、结构化输出、网页与 X 搜索及代码执行。",
+      "grok-composer-2.5-fast": "Composer 2.5 Fast，Cursor 自研的前沿编程智能体模型，经 Grok Build 线路提供。Fast 路由以更低延迟提供与标准版相同的智能水平，擅长持续执行长周期任务、复杂指令遵循、工具调用、文件编辑和终端操作；仅支持文本，不支持图片输入。",
+      "grok-imagine-edit": "Grok Imagine 同步图片编辑兼容模型，仅使用 /v1/images/edits，支持 1-3 张参考图，按实际返回图片数每张 Ɍ0.08 计费。",
+      "grok-imagine-image-quality": "Grok Imagine 同步图片生成与编辑模型，支持 1K/2K；使用 /v1/images/generations 或 /v1/images/edits，编辑最多支持 3 张参考图，按实际返回图片数每张 Ɍ0.08 计费。",
+      "grok-imagine-video": "Grok Imagine Video 通过 RelayBases /v1/videos 统一支持五种异步模式：文生视频、单图生视频、1-7 张参考图生视频、最长 8.7 秒单 MP4 视频编辑，以及基于 2-15 秒单 MP4 的 2-10 秒视频延长。生成类支持 1-15 秒、API 七种比例及 480p/720p；编辑与延长继承源视频比例和分辨率且最高 720p。按每秒 Ɍ0.08 计费，异步不做 4 倍加价；编辑按校验后的源视频秒数计费，延长仅按新增时长计费。",
+      "grok-imagine-video-1.5": "Grok Imagine Video 1.5 仅支持单图生视频异步任务，使用 /v1/videos，必须恰好 1 张图片，支持 1-15 秒及 480p、720p、1080p。按生成时长每秒 Ɍ0.16 计费，异步不做 4 倍加价。",
+      "nana-banana-2": "异步图片生成与编辑接口。支持最多 9 张参考图；提交任务后返回 task_id，再通过查询接口获取结果。异步调用按 4 倍扣费。",
+      "nana-banana-2_sync": "Nana Banana 2 同步图片生成与编辑接口，使用 /v1/images/generations，任务完成后返回 OpenAI 兼容图片响应。",
+      "nana-banana-pro": "异步图片生成与编辑接口。支持最多 9 张参考图；提交任务后返回 task_id，再通过查询接口获取结果。异步调用按 4 倍扣费。",
+      "nana-banana-pro_sync": "Nana Banana Pro 同步图片生成与编辑接口，使用 /v1/images/generations，任务完成后返回 OpenAI 兼容图片响应。",
+      "veo-3-1": "固定 8 秒视频生成。支持文生视频、首尾帧和多图参考，最多 9 张参考图。异步调用按 4 倍扣费。",
+      "veo-omni-flash": "固定 10 秒视频生成。支持首尾帧和多图参考，最多 9 张参考图。异步调用按 4 倍扣费。",
+      "veo-omni-flash-video-edit": "视频编辑接口。支持 1 段参考视频和多张参考图；生成时长最长 10 秒，并受参考视频时长限制。异步调用按 4 倍扣费。",
+      "video-fast-480p": "4-15 秒可选；计费方式为 duration × 基础单价；异步调用按 4 倍扣费。支持图片、视频、音频多素材参考。",
+      "video-fast-720p": "4-15 秒可选；计费方式为 duration × 基础单价；异步调用按 4 倍扣费。支持图片、视频、音频多素材参考。",
+      "video-pro-480p": "4-15 秒可选；计费方式为 duration × 基础单价；异步调用按 4 倍扣费。支持图片、视频、音频多素材参考。",
+      "video-pro-720p": "4-15 秒可选；计费方式为 duration × 基础单价；异步调用按 4 倍扣费。支持图片、视频、音频多素材参考。",
+      "video-pro-1080p": "4-15 秒可选；计费方式为 duration × 基础单价；异步调用按 4 倍扣费。支持图片、视频、音频多素材参考。",
+      "video-standard-720p": "固定 15 秒；计费方式为 duration × 基础单价；异步调用按 4 倍扣费。支持图片、视频、音频多素材参考。",
+      "glm-5.2": "GLM-5.2，Z.AI 面向长任务时代的旗舰模型，支持 1M 无损上下文与 128K 最大输出，适合长程 Coding Agent、项目级软件工程、复杂系统工程和深度调试。",
+      "kimi-k2.6": "Kimi K2.6，Moonshot 长上下文模型，适合代码、代理和复杂文档任务。",
+      "kimi-k2.7-code": "Kimi K2.7 Code，Moonshot 面向仓库级代码、代理编程和长上下文开发的模型。",
+      "kimi-k3": "Kimi K3，Moonshot 旗舰模型，面向长程编程与端到端知识工作，支持 1M 上下文、始终推理、工具调用、结构化输出与自动上下文缓存。",
+      "minimax-m3": "MiniMax M3，1M 上下文模型，适合长程编码、代理和文本推理。",
+      "tts-1-hd": "TTS-1 HD，高质量文本转语音模型，通过 Audio API 的 Speech 接口生成自然语音。",
+      "glm-5.1": "GLM-5.1，Z.AI 面向长程编码、复杂智能体和结构化推理的旗舰文本模型。"
+    }
+  }
+}

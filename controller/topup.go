@@ -29,14 +29,32 @@ func GetTopUpInfo(c *gin.Context) {
 		qualifiedInvitees = 0
 	}
 
-	// 获取支付方式
-	payMethods := operation_setting.PayMethods
+	enableEpay := isEpayTopUpEnabled()
+	enableStripe := isStripeTopUpEnabled()
+	enableWaffoPancake := isWaffoPancakeTopUpEnabled()
+	enableWaffo := isWaffoTopUpEnabled()
+	minimumTopup := relayBasesEffectiveTopupMinimum(c, getMinTopup())
+	stripeMinimumTopup := relayBasesEffectiveTopupMinimum(c, getStripeMinTopup())
+	waffoMinimumTopup := relayBasesEffectiveTopupMinimum(c, int64(setting.WaffoMinTopUp))
+	waffoPancakeMinimumTopup := relayBasesEffectiveTopupMinimum(c, int64(setting.WaffoPancakeMinTopUp))
+
+	// 获取支付方式。始终返回请求级副本，避免按用户语言调整最低额时
+	// 修改 operation_setting.PayMethods 的全局共享数据。
+	payMethods := relayBasesTopupPayMethods(
+		operation_setting.PayMethods,
+		map[string]int64{
+			model.PaymentMethodStripe:       stripeMinimumTopup,
+			model.PaymentMethodWaffo:        waffoMinimumTopup,
+			model.PaymentMethodWaffoPancake: waffoPancakeMinimumTopup,
+		},
+		minimumTopup,
+	)
 	if !complianceConfirmed {
 		payMethods = []map[string]string{}
 	}
 
 	// 如果启用了 Stripe 支付，添加到支付方法列表
-	if isStripeTopUpEnabled() {
+	if enableStripe {
 		// 检查是否已经包含 Stripe
 		hasStripe := false
 		for _, method := range payMethods {
@@ -51,14 +69,13 @@ func GetTopUpInfo(c *gin.Context) {
 				"name":      "Stripe",
 				"type":      "stripe",
 				"color":     "#635BFF",
-				"min_topup": strconv.Itoa(setting.StripeMinTopUp),
+				"min_topup": strconv.FormatInt(stripeMinimumTopup, 10),
 			}
 			payMethods = append(payMethods, stripeMethod)
 		}
 	}
 
 	// Waffo Pancake is displayed above the standard Waffo gateway.
-	enableWaffoPancake := isWaffoPancakeTopUpEnabled()
 	if enableWaffoPancake {
 		hasWaffoPancake := false
 		for _, method := range payMethods {
@@ -73,13 +90,12 @@ func GetTopUpInfo(c *gin.Context) {
 				"name":      "Waffo Pancake",
 				"type":      model.PaymentMethodWaffoPancake,
 				"color":     "#F97316",
-				"min_topup": strconv.Itoa(setting.WaffoPancakeMinTopUp),
+				"min_topup": strconv.FormatInt(waffoPancakeMinimumTopup, 10),
 			})
 		}
 	}
 
 	// 如果启用了 Waffo 支付，添加到支付方法列表
-	enableWaffo := isWaffoTopUpEnabled()
 	if enableWaffo {
 		hasWaffo := false
 		for _, method := range payMethods {
@@ -94,15 +110,30 @@ func GetTopUpInfo(c *gin.Context) {
 				"name":      "Waffo (Global Payment)",
 				"type":      model.PaymentMethodWaffo,
 				"color":     "#3B82F6",
-				"min_topup": strconv.Itoa(setting.WaffoMinTopUp),
+				"min_topup": strconv.FormatInt(waffoMinimumTopup, 10),
 			}
 			payMethods = append(payMethods, waffoMethod)
 		}
 	}
 
+	enabledMinimums := make([]int64, 0, 4)
+	if enableEpay {
+		enabledMinimums = append(enabledMinimums, minimumTopup)
+	}
+	if enableStripe {
+		enabledMinimums = append(enabledMinimums, stripeMinimumTopup)
+	}
+	if enableWaffo {
+		enabledMinimums = append(enabledMinimums, waffoMinimumTopup)
+	}
+	if enableWaffoPancake {
+		enabledMinimums = append(enabledMinimums, waffoPancakeMinimumTopup)
+	}
+	amountOptionsMinimum := relayBasesLowestEnabledTopupMinimum(minimumTopup, enabledMinimums...)
+
 	data := gin.H{
-		"enable_online_topup":              isEpayTopUpEnabled(),
-		"enable_stripe_topup":              isStripeTopUpEnabled(),
+		"enable_online_topup":              enableEpay,
+		"enable_stripe_topup":              enableStripe,
 		"enable_creem_topup":               isCreemTopUpEnabled(),
 		"enable_waffo_topup":               enableWaffo,
 		"enable_waffo_pancake_topup":       enableWaffoPancake,
@@ -117,11 +148,11 @@ func GetTopUpInfo(c *gin.Context) {
 		}(),
 		"creem_products":              setting.CreemProducts,
 		"pay_methods":                 payMethods,
-		"min_topup":                   operation_setting.MinTopUp,
-		"stripe_min_topup":            setting.StripeMinTopUp,
-		"waffo_min_topup":             setting.WaffoMinTopUp,
-		"waffo_pancake_min_topup":     setting.WaffoPancakeMinTopUp,
-		"amount_options":              operation_setting.GetPaymentSetting().AmountOptions,
+		"min_topup":                   minimumTopup,
+		"stripe_min_topup":            stripeMinimumTopup,
+		"waffo_min_topup":             waffoMinimumTopup,
+		"waffo_pancake_min_topup":     waffoPancakeMinimumTopup,
+		"amount_options":              relayBasesTopupAmountOptions(operation_setting.GetPaymentSetting().AmountOptions, amountOptionsMinimum),
 		"discount":                    operation_setting.GetPaymentSetting().AmountDiscount,
 		"topup_link":                  common.TopUpLink,
 		"referral_reward_percent":     model.ReferralRewardPercent,
@@ -203,8 +234,9 @@ func RequestEpay(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "参数错误"})
 		return
 	}
-	if req.Amount < getMinTopup() {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("充值数量不能小于 %d", getMinTopup())})
+	minimumTopup := relayBasesEffectiveTopupMinimum(c, getMinTopup())
+	if req.Amount < minimumTopup {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": relayBasesTopupMinimumMessage(c, minimumTopup)})
 		return
 	}
 
@@ -407,8 +439,9 @@ func RequestAmount(c *gin.Context) {
 		return
 	}
 
-	if req.Amount < getMinTopup() {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("充值数量不能小于 %d", getMinTopup())})
+	minimumTopup := relayBasesEffectiveTopupMinimum(c, getMinTopup())
+	if req.Amount < minimumTopup {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": relayBasesTopupMinimumMessage(c, minimumTopup)})
 		return
 	}
 	id := c.GetInt("id")

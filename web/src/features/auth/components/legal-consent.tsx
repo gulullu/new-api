@@ -16,10 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useTranslation } from 'react-i18next'
-
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { RelayBasesLegalConsentCopy } from '@/features/relaybases/auth/legal-consent-copy'
 import { cn } from '@/lib/utils'
 
 import type { SystemStatus } from '../types'
@@ -37,7 +36,6 @@ export function LegalConsent({
   onCheckedChange,
   className,
 }: LegalConsentProps) {
-  const { t } = useTranslation()
   const hasUserAgreement = Boolean(status?.user_agreement_enabled)
   const hasPrivacyPolicy = Boolean(status?.privacy_policy_enabled)
 
@@ -52,9 +50,10 @@ export function LegalConsent({
   return (
     <div
       className={cn(
-        'border-border/60 bg-muted/40 flex items-start gap-3 rounded-md border p-3',
+        'border-border/60 bg-muted/40 hover:border-foreground/25 relative flex items-start gap-3 overflow-hidden rounded-xl border p-3.5 shadow-sm transition-colors before:absolute before:inset-y-2.5 before:left-0 before:w-0.5 before:rounded-r-full before:bg-foreground/80',
         className
       )}
+      data-relaybases-legal-consent
     >
       <Checkbox
         id='legal-consent'
@@ -67,29 +66,10 @@ export function LegalConsent({
         className='text-muted-foreground items-start gap-1 text-left text-xs leading-5 font-normal'
       >
         <span>
-          {t('I have read and agree to the')}{' '}
-          {hasUserAgreement && (
-            <a
-              href='/user-agreement'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('User Agreement')}
-            </a>
-          )}
-          {hasUserAgreement && hasPrivacyPolicy && ' and the '}
-          {hasPrivacyPolicy && (
-            <a
-              href='/privacy-policy'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('Privacy Policy')}
-            </a>
-          )}
-          .
+          <RelayBasesLegalConsentCopy
+            hasUserAgreement={hasUserAgreement}
+            hasPrivacyPolicy={hasPrivacyPolicy}
+          />
         </span>
       </Label>
     </div>

@@ -18,7 +18,10 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import DOMPurify, { type Config } from 'dompurify'
 import { useEffect, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
+import { useTheme } from '@/context/theme-provider'
+import { withRelayBasesDocumentPreferences } from '@/features/relaybases/navigation/document-preferences'
 import { cn } from '@/lib/utils'
 
 export type HtmlContentVariant = 'inline' | 'isolated'
@@ -87,7 +90,11 @@ const isolatedSanitizeOptions = {
   FORCE_BODY: true,
 } satisfies Config
 
-function hardenIsolatedHtml(html: string): string {
+function hardenIsolatedHtml(
+  html: string,
+  language: string,
+  theme: 'light' | 'dark'
+): string {
   if (typeof document === 'undefined') {
     return html
   }
@@ -113,6 +120,14 @@ function hardenIsolatedHtml(html: string): string {
     if (!frame.hasAttribute('loading')) {
       frame.setAttribute('loading', 'lazy')
     }
+
+    const source = frame.getAttribute('src')
+    if (source) {
+      frame.setAttribute(
+        'src',
+        withRelayBasesDocumentPreferences(source, language, theme)
+      )
+    }
   })
 
   return template.innerHTML
@@ -120,12 +135,14 @@ function hardenIsolatedHtml(html: string): string {
 
 function sanitizeHtmlContent(
   content: string,
-  variant: HtmlContentVariant
+  variant: HtmlContentVariant,
+  language: string,
+  theme: 'light' | 'dark'
 ): string {
   if (variant === 'isolated') {
     const html = DOMPurify.sanitize(content, isolatedSanitizeOptions)
 
-    return hardenIsolatedHtml(html)
+    return hardenIsolatedHtml(html, language, theme)
   }
 
   return DOMPurify.sanitize(content)
@@ -184,10 +201,13 @@ function IsolatedHtmlContent(props: {
 }
 
 export function HtmlContent(props: HtmlContentProps) {
+  const { i18n } = useTranslation()
+  const { resolvedTheme } = useTheme()
   const variant = props.variant ?? 'inline'
   const html = useMemo(
-    () => sanitizeHtmlContent(props.content, variant),
-    [props.content, variant]
+    () =>
+      sanitizeHtmlContent(props.content, variant, i18n.language, resolvedTheme),
+    [i18n.language, props.content, resolvedTheme, variant]
   )
 
   if (variant === 'isolated') {

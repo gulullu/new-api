@@ -137,12 +137,23 @@ function useCloseMobileSidebarAfterNavigation() {
  */
 function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
   const closeMobileSidebar = useCloseMobileSidebarAfterNavigation()
+  const link = item.external ? (
+    <a
+      href={item.url}
+      target='_blank'
+      rel='noopener noreferrer'
+      onClick={closeMobileSidebar}
+    />
+  ) : (
+    <Link to={item.url} onClick={closeMobileSidebar} />
+  )
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        isActive={checkIsActive(href, item)}
+        isActive={!item.external && checkIsActive(href, item)}
         tooltip={item.title}
-        render={<Link to={item.url} onClick={closeMobileSidebar} />}
+        render={link}
       >
         {item.icon && <item.icon className='shrink-0' />}
         <span className='min-w-0 flex-1 truncate'>{item.title}</span>

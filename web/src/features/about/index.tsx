@@ -23,6 +23,8 @@ import { useTranslation } from 'react-i18next'
 import { PublicLayout } from '@/components/layout'
 import { RichContent } from '@/components/rich-content'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTheme } from '@/context/theme-provider'
+import { withRelayBasesDocumentPreferences } from '@/features/relaybases/navigation/document-preferences'
 import { isHttpUrl, isLikelyHtml } from '@/lib/content-format'
 
 import { getAboutContent } from './api'
@@ -113,7 +115,8 @@ function EmptyAboutState() {
 }
 
 export function About() {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
+  const { resolvedTheme } = useTheme()
   const { data, isLoading } = useQuery({
     queryKey: ['about-content'],
     queryFn: getAboutContent,
@@ -123,6 +126,13 @@ export function About() {
   const hasContent = rawContent.length > 0
   const isUrl = hasContent && isHttpUrl(rawContent)
   const contentIsHtml = hasContent && isLikelyHtml(rawContent)
+  const preferredContentUrl = isUrl
+    ? withRelayBasesDocumentPreferences(
+        rawContent,
+        i18n.language,
+        resolvedTheme === 'dark' ? 'dark' : 'light'
+      )
+    : rawContent
 
   if (isLoading) {
     return (
@@ -149,7 +159,7 @@ export function About() {
     return (
       <PublicLayout showMainContainer={false}>
         <iframe
-          src={rawContent}
+          src={preferredContentUrl}
           className='h-[calc(100vh-3.5rem)] w-full border-0'
           title={t('About')}
           sandbox='allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts'

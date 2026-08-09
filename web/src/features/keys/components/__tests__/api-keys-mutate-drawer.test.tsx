@@ -59,6 +59,8 @@ const { createInstance } = await import('i18next')
 const { I18nextProvider, initReactI18next } = await import('react-i18next')
 const { QueryClient, QueryClientProvider } =
   await import('@tanstack/react-query')
+const { relayBasesContentQueryKey } =
+  await import('@/features/relaybases/content/locale')
 const { api } = await import('@/lib/api')
 const { ApiKeysProvider } = await import('../api-keys-provider')
 const { ApiKeysMutateDrawer } = await import('../api-keys-mutate-drawer')
@@ -163,7 +165,7 @@ async function renderCreateDrawer(): Promise<void> {
   })
   const freshAt = Date.now() + 60_000
   queryClient.setQueryData(
-    ['status'],
+    relayBasesContentQueryKey('status', 'en'),
     { default_use_auto_group: true },
     { updatedAt: freshAt }
   )
@@ -173,7 +175,7 @@ async function renderCreateDrawer(): Promise<void> {
     { updatedAt: freshAt }
   )
   queryClient.setQueryData(
-    ['user-groups'],
+    ['user-groups', 'en'],
     {
       success: true,
       data: {

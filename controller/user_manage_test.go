@@ -10,6 +10,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/relaykit/dto"
 	"github.com/QuantumNous/new-api/service/authz"
 
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,43 @@ func performManageUserRequest(t *testing.T, body string) *httptest.ResponseRecor
 	c.Set("username", "root-operator")
 	ManageUser(c)
 	return recorder
+}
+
+func TestUpdateUserSettingPreservesLanguageSidebarAndBillingPreference(t *testing.T) {
+	db := setupManageUserTestDB(t)
+	user := model.User{
+		Username: "setting-preservation-user", Password: "password",
+		Role: common.RoleCommonUser, Status: common.UserStatusEnabled, Group: "default",
+	}
+	user.SetSetting(dto.UserSetting{
+		Language:          "fr",
+		SidebarModules:    `{"personal":true}`,
+		BillingPreference: "wallet",
+	})
+	require.NoError(t, db.Create(&user).Error)
+
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+	context.Request = httptest.NewRequest(
+		http.MethodPost,
+		"/api/user/setting",
+		strings.NewReader(`{"notify_type":"email","quota_warning_threshold":10,"notification_email":"person@example.com"}`),
+	)
+	context.Request.Header.Set("Content-Type", "application/json")
+	context.Set("id", user.Id)
+	UpdateUserSetting(context)
+
+	assert.Equal(t, http.StatusOK, recorder.Code)
+	var updated model.User
+	require.NoError(t, db.First(&updated, user.Id).Error)
+	settings := updated.GetSetting()
+	assert.Equal(t, "fr", settings.Language)
+	assert.Equal(t, `{"personal":true}`, settings.SidebarModules)
+	assert.Equal(t, "wallet", settings.BillingPreference)
+	assert.Equal(t, dto.NotifyTypeEmail, settings.NotifyType)
+	assert.Equal(t, "person@example.com", settings.NotificationEmail)
+	assert.Equal(t, "fr", buildSelfUserData(&updated)["language"])
 }
 
 func TestManageUserDisableAdvancesAuthVersionOnceAndRevokesSession(t *testing.T) {

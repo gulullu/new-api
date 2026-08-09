@@ -38,6 +38,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import type { SidebarData } from '@/components/layout/types'
+import { useRelayBasesNavigation } from '@/features/relaybases/navigation/use-relaybases-navigation'
 import { ROLE } from '@/lib/roles'
 
 /**
@@ -48,6 +49,7 @@ import { ROLE } from '@/lib/roles'
  */
 export function useSidebarData(): SidebarData {
   const { t } = useTranslation()
+  const relayBasesNavigation = useRelayBasesNavigation()
 
   return {
     navGroups: [
@@ -55,6 +57,7 @@ export function useSidebarData(): SidebarData {
         id: 'chat',
         title: t('Chat'),
         items: [
+          relayBasesNavigation.sidebarCanvasLink,
           {
             title: t('Playground'),
             url: '/playground',

@@ -155,23 +155,29 @@ export function getMinTopupAmount(topupInfo: TopupInfo | null): number {
     return DEFAULT_MIN_TOPUP
   }
 
+  const enabledMinimums: number[] = []
   if (topupInfo.enable_online_topup) {
-    return topupInfo.min_topup
+    enabledMinimums.push(topupInfo.min_topup)
   }
 
   if (topupInfo.enable_stripe_topup) {
-    return topupInfo.stripe_min_topup
+    enabledMinimums.push(topupInfo.stripe_min_topup)
   }
 
   if (topupInfo.enable_waffo_topup) {
-    return topupInfo.waffo_min_topup || DEFAULT_MIN_TOPUP
+    enabledMinimums.push(topupInfo.waffo_min_topup || DEFAULT_MIN_TOPUP)
   }
 
   if (topupInfo.enable_waffo_pancake_topup) {
-    return topupInfo.waffo_pancake_min_topup || DEFAULT_MIN_TOPUP
+    enabledMinimums.push(topupInfo.waffo_pancake_min_topup || DEFAULT_MIN_TOPUP)
   }
 
-  return DEFAULT_MIN_TOPUP
+  const validMinimums = enabledMinimums.filter(
+    (minimum) => Number.isFinite(minimum) && minimum > 0
+  )
+  return validMinimums.length > 0
+    ? Math.min(...validMinimums)
+    : DEFAULT_MIN_TOPUP
 }
 
 /**

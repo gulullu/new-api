@@ -20,6 +20,12 @@ import i18n from 'i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
 
+import { updateRelayBasesDocumentLanguage } from '@/features/relaybases/i18n/document-language'
+import {
+  RELAYBASES_I18N_NAMESPACE,
+  relayBasesI18nResources,
+} from '@/features/relaybases/i18n/manifest'
+
 import { convertDetectedLanguage } from './languages'
 import en from './locales/en.json'
 import fr from './locales/fr.json'
@@ -30,14 +36,22 @@ import zhTW from './locales/zh-TW.json'
 import zhCN from './locales/zh.json'
 
 export const resources = {
-  en,
-  zhCN,
-  fr,
-  ru,
-  ja,
-  vi,
-  zhTW,
+  en: { ...en, [RELAYBASES_I18N_NAMESPACE]: relayBasesI18nResources.en },
+  zhCN: {
+    ...zhCN,
+    [RELAYBASES_I18N_NAMESPACE]: relayBasesI18nResources.zhCN,
+  },
+  fr: { ...fr, [RELAYBASES_I18N_NAMESPACE]: relayBasesI18nResources.fr },
+  ru: { ...ru, [RELAYBASES_I18N_NAMESPACE]: relayBasesI18nResources.ru },
+  ja: { ...ja, [RELAYBASES_I18N_NAMESPACE]: relayBasesI18nResources.ja },
+  vi: { ...vi, [RELAYBASES_I18N_NAMESPACE]: relayBasesI18nResources.vi },
+  zhTW: {
+    ...zhTW,
+    [RELAYBASES_I18N_NAMESPACE]: relayBasesI18nResources.zhTW,
+  },
 } as const
+
+i18n.on('languageChanged', updateRelayBasesDocumentLanguage)
 
 i18n
   .use(LanguageDetector)

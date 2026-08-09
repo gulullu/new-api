@@ -1,0 +1,145 @@
+{
+  "navigation": {
+    "serviceStatus": "Service Status",
+    "infiniteCanvas": "Infinite Canvas"
+  },
+  "auth": {
+    "signupOffer": {
+      "ariaLabel": "Signup benefits",
+      "status": "ready",
+      "trial": "Trial credit included",
+      "trialDetail": "Available after registration",
+      "models": "Unified access to available models",
+      "modelsDetail": "See the current Model Marketplace",
+      "credits": "Ɍ1 = 1 API Credit",
+      "creditsDetail": "Credited in the amount shown at checkout",
+      "pricing": "Orders priced in USD",
+      "pricingDetail": "Checkout shows the amount due",
+      "ready": "Create an API Key after registration."
+    },
+    "legal": {
+      "both": "By registering, you agree to the <agreement>User Agreement</agreement> and <privacy>Privacy Policy</privacy>.",
+      "agreementOnly": "By registering, you agree to the <agreement>User Agreement</agreement>.",
+      "privacyOnly": "By registering, you agree to the <privacy>Privacy Policy</privacy>."
+    }
+  },
+  "logExport": {
+    "action": "Export",
+    "ariaLabel": "Export common logs to Excel",
+    "submitting": "Submitting…",
+    "exporting": "Exporting…",
+    "failed": "Export failed",
+    "pending": "The export is still running. Please try again later.",
+    "downloadStarted": "Download started",
+    "downloadStartedRows": "Download started · {{rows}} rows"
+  },
+  "wallet": {
+    "labels": {
+      "creditsReceived": "API Credits received (Ɍ)",
+      "customCredits": "Custom API Credits (Ɍ)",
+      "pay": "Pay",
+      "save": "Save",
+      "amountToPay": "Amount to pay"
+    },
+    "minimum": {
+      "placeholder": "Minimum Ɍ{{amount}}",
+      "notice": "Minimum top-up: Ɍ{{amount}}. Payment providers charge a fixed fee on each successful transaction plus a percentage, so fees on very small top-ups can approach or exceed the amount paid. Thank you for understanding.",
+      "card": "Minimum top-up: Ɍ{{amount}}. Increase the amount to continue."
+    },
+    "payment": {
+      "stripe": "Supports cards and popular online payment methods, subject to availability.",
+      "waffo": "Supports cards and popular online payment methods, subject to availability.",
+      "generic": "Continue to the selected payment provider to review and complete your payment.",
+      "accessibleName": "Pay with {{name}}"
+    },
+    "creditsNotice": {
+      "title": "What you receive after payment",
+      "body": "After payment, the API Credits shown at checkout are added to your account and used as you call the APIs. Ɍ represents your Credits balance. Orders are priced in USD; checkout shows the amount due.",
+      "refund": "Eligible unused paid Credits may be refunded under the Refund Policy. Used, free, promotional, trial, bonus, or reward Credits are normally non-refundable.",
+      "docsLink": "Learn about Ɍ and API Credits",
+      "refundLink": "Read the Refund Policy"
+    }
+  },
+  "pricing": {
+    "creditNote": {
+      "accessibleName": "RelayBases API Credits pricing information",
+      "body": "Prices, balances, and usage are shown in RelayBases API Credits (Ɍ). Orders are priced in USD; checkout shows the amount due. Final usage charges follow the console bill.",
+      "link": "How Ɍ and API Credits work"
+    },
+    "tags": {
+      "imageGeneration": "image-generation",
+      "imageEditing": "image-editing",
+      "videoGeneration": "video-generation",
+      "asyncTask": "async-task",
+      "syncEndpoint": "sync-endpoint",
+      "perSecondPricing": "per-second-pricing"
+    },
+    "vendors": {
+      "alibaba": "Alibaba",
+      "zai": "Z.AI"
+    },
+    "modelDescriptions": {
+      "claude-fable-5": "Claude Fable 5, Anthropic's most capable broadly released model for long-running agents, complex reasoning, coding, and research.",
+      "claude-haiku-4-5-20251001": "Claude Haiku 4.5, a fast lightweight model for low-latency chat and batch tasks.",
+      "claude-opus-4-5-20251101": "Claude Opus 4.5, a flagship reasoning model for complex coding and analysis.",
+      "claude-opus-4-6": "Claude Opus 4.6, flagship reasoning and coding for long-context tasks.",
+      "claude-opus-4-7": "Claude Opus 4.7, flagship reasoning for agents, coding, and research.",
+      "claude-opus-4-8": "Claude Opus 4.8, latest Opus flagship for complex reasoning and code.",
+      "claude-opus-5": "Claude Opus 5, an advanced Anthropic model for complex agentic coding and enterprise work, with deep reasoning and a 1M-token context window.",
+      "claude-sonnet-5": "Claude Sonnet 5, a high-speed reasoning model for coding, agents, analysis, and 1M-token long-context workloads.",
+      "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5, balanced high performance for code, analysis, and agents.",
+      "claude-sonnet-4-6": "Claude Sonnet 4.6, high-performance general model for code and long context.",
+      "codex-auto-review": "Codex Auto Review, tuned for automated code review and repository checks, with separate standard and long-context pricing tiers.",
+      "deepseek-v4-flash": "DeepSeek V4 Flash (DeepSeek-V4-Flash): 1M context, up to 384K output; supports non-thinking and thinking modes, with thinking enabled by default; supports JSON Output, Tool Calls, and chat prefix completion; FIM is supported only in non-thinking mode; concurrency limit 2500.",
+      "deepseek-v4-pro": "DeepSeek V4 Pro (DeepSeek-V4-Pro): 1M context, up to 384K output; supports non-thinking and thinking modes, with thinking enabled by default; supports JSON Output, Tool Calls, and chat prefix completion; FIM is supported only in non-thinking mode; concurrency limit 500.",
+      "gemini-3.1-pro-high": "Gemini 3.1 Pro high route for complex reasoning, code, and multimodal work.",
+      "gemini-3.1-pro-low": "Gemini 3.1 Pro low route for complex reasoning, code, and multimodal work.",
+      "gemini-3.5-flash-high": "Gemini 3.5 Flash high route for low-latency multimodal tasks.",
+      "gemini-3.5-flash-low": "Gemini 3.5 Flash low route for low-latency multimodal tasks.",
+      "gemini-3.6-flash-high": "Gemini 3.6 Flash high-thinking route for complex coding, agentic execution, and multimodal and spatial reasoning.",
+      "gemini-3.6-flash-medium": "Gemini 3.6 Flash medium-thinking route, balancing speed and intelligence for general agentic and multimodal tasks.",
+      "gemini-3.6-flash-low": "Gemini 3.6 Flash low-thinking route for low-latency agentic loops and high-volume multimodal tasks.",
+      "gpt-5.3-codex-spark": "GPT-5.3 Codex Spark, low-latency coding for quick edits and refactors.",
+      "gpt-5.4": "GPT-5.4, frontier general reasoning for complex code and long context.",
+      "gpt-5.4-openai-compact": "GPT-5.4 OpenAI Compact, a system utility model for automatic context compaction in long-running tasks. It is invoked automatically when needed and is not intended for direct use.",
+      "gpt-5.4-mini": "GPT-5.4 mini, cost-efficient reasoning for high-throughput tasks.",
+      "gpt-5.5": "GPT-5.5, flagship general reasoning for complex professional work.",
+      "gpt-5.5-openai-compact": "GPT-5.5 OpenAI Compact, a system utility model for automatic context compaction in long-running tasks. It is invoked automatically when needed and is not intended for direct use.",
+      "gpt-5.6-luna": "GPT-5.6 Luna, a fast and cost-efficient model for high-volume, latency-sensitive tasks, with separate standard and long-context pricing tiers.",
+      "gpt-5.6-terra": "GPT-5.6 Terra, a balanced model between the flagship Sol and cost-efficient Luna tiers for everyday coding, reasoning, and agentic tasks, with separate standard and long-context pricing tiers.",
+      "gpt-5.6-sol": "GPT-5.6 Sol, the flagship of the GPT-5.6 series, excelling at complex reasoning, coding, and agentic workflows, especially strong at command-line and multi-step coding.",
+      "gpt-5.6-sol-openai-compact": "GPT-5.6 Sol OpenAI Compact, a system utility model for automatic context compaction in long-running tasks. It is invoked automatically when needed and is not intended for direct use.",
+      "gpt-audio-1.5": "GPT Audio 1.5, a general-purpose audio model for Chat Completions with audio input and output, streaming, and function calling.",
+      "gpt-image-2": "GPT Image 2 supports image generation and editing through Azure image endpoints. Billing is based on actual usage, with a minimum charge of Ɍ0.08 per generated or edited image. If actual usage exceeds the minimum, actual usage billing applies. The console bill is authoritative.",
+      "gpt-realtime-2.1": "GPT Realtime 2.1, a realtime reasoning model for advanced voice agents with improved alphanumeric recognition, silence and noise handling, interruption behavior, configurable reasoning, and tool use.",
+      "gpt-realtime-2.1-mini": "GPT Realtime 2.1 mini, a faster, lower-cost distilled reasoning model for realtime voice interactions over WebRTC, WebSocket, or SIP, with tool use.",
+      "gpt-realtime-whisper": "GPT Realtime Whisper, a streaming speech-to-text model for low-latency realtime transcription with incremental transcript updates and duration-based billing.",
+      "grok-4.5": "Grok 4.5, SpaceXAI's frontier model for coding, agentic tasks, and knowledge work. It supports a 500K context window, text and image input, configurable reasoning, function calling, structured outputs, web search, X search, and code execution.",
+      "grok-composer-2.5-fast": "Composer 2.5 Fast, Cursor's first-party frontier coding-agent model delivered through Grok Build. The Fast route provides the same intelligence at lower latency, excelling at sustained long-running tasks, complex instruction following, tool use, file editing, and terminal work. Text-only; image input is not supported.",
+      "grok-imagine-edit": "Grok Imagine synchronous image editing compatibility model. Use /v1/images/edits with 1-3 reference images. Ɍ0.08 is charged for each returned image.",
+      "grok-imagine-image-quality": "Grok Imagine synchronous image generation and editing at 1K or 2K. Use /v1/images/generations or /v1/images/edits; editing supports up to 3 reference images. Ɍ0.08 is charged for each returned image.",
+      "grok-imagine-video": "Grok Imagine Video supports five asynchronous modes through RelayBases /v1/videos: text-to-video, single-image-to-video, reference-to-video with 1-7 images, video editing with one MP4 up to 8.7 seconds, and 2-10 second video extension from a 2-15 second MP4. Generation supports 1-15 seconds, seven API aspect ratios, and 480p/720p; editing and extension inherit the source ratio and resolution up to 720p. Billing is Ɍ0.08 per second with no async x4 multiplier; editing uses verified source seconds and extension uses only the added duration.",
+      "grok-imagine-video-1.5": "Grok Imagine Video 1.5 supports single-image-to-video generation as an asynchronous task only. Use /v1/videos with exactly one image, 1-15 seconds, and 480p, 720p, or 1080p output. Billing is Ɍ0.16 per generated second, with no async x4 multiplier.",
+      "nana-banana-2": "Async image generation and editing. Supports up to 9 reference images; submit a task and poll for results. Async calls cost x4.",
+      "nana-banana-2_sync": "Nana Banana 2 synchronous image generation and editing. Use /v1/images/generations and receive the final image in an OpenAI-compatible response.",
+      "nana-banana-pro": "Async image generation and editing. Supports up to 9 reference images; submit a task and poll for results. Async calls cost x4.",
+      "nana-banana-pro_sync": "Nana Banana Pro synchronous image generation and editing. Use /v1/images/generations and receive the final image in an OpenAI-compatible response.",
+      "veo-3-1": "Fixed 8-second video generation. Supports text-to-video, first/last frames, and up to 9 reference images. Async calls cost x4.",
+      "veo-omni-flash": "Fixed 10-second video generation with first/last frame and multi-image references. Supports up to 9 reference images. Async calls cost x4.",
+      "veo-omni-flash-video-edit": "Video editing with one reference video and multiple reference images. Output is up to 10 seconds and constrained by the reference video. Async calls cost x4.",
+      "video-fast-480p": "4-15 seconds selectable; billed as duration times base unit price. Async calls cost x4. Supports image, video, and audio references.",
+      "video-fast-720p": "4-15 seconds selectable; billed as duration times base unit price. Async calls cost x4. Supports image, video, and audio references.",
+      "video-pro-480p": "4-15 seconds selectable; billed as duration times base unit price. Async calls cost x4. Supports image, video, and audio references.",
+      "video-pro-720p": "4-15 seconds selectable; billed as duration times base unit price. Async calls cost x4. Supports image, video, and audio references.",
+      "video-pro-1080p": "4-15 seconds selectable; billed as duration times base unit price. Async calls cost x4. Supports image, video, and audio references.",
+      "video-standard-720p": "Fixed 15 seconds; billed as duration times base unit price. Async calls cost x4. Supports image, video, and audio references.",
+      "glm-5.1": "GLM-5.1, Z.AI's flagship text model for long-horizon coding, complex agents, and structured reasoning.",
+      "glm-5.2": "GLM-5.2, Z.AI's flagship model for long-horizon tasks, with usable 1M context and 128K max output for coding agents, project-scale engineering, and complex debugging.",
+      "kimi-k2.6": "Kimi K2.6, Moonshot's long-context model for coding, agents, and complex document tasks.",
+      "kimi-k2.7-code": "Kimi K2.7 Code, Moonshot's coding-focused model for repository-level code, agentic programming, and long-context development.",
+      "kimi-k3": "Kimi K3, Moonshot's flagship 1M-context model for long-horizon programming and end-to-end knowledge work, always reasoning with tool calls, structured output, and automatic context caching.",
+      "minimax-m3": "MiniMax M3, a 1M-context model for long-horizon coding, agents, and text reasoning.",
+      "tts-1-hd": "TTS-1 HD, a high-quality text-to-speech model for natural speech generation through the Audio API Speech endpoint."
+    }
+  }
+}

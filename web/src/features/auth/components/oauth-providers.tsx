@@ -27,6 +27,8 @@ import {
   IconWeChat,
 } from '@/assets/brand-icons'
 import { Button } from '@/components/ui/button'
+import { RelayBasesOidcIcon } from '@/features/relaybases/auth/google-icon'
+import { resolveRelayBasesOidcDisplayName } from '@/features/relaybases/auth/oidc-presentation'
 import { cn } from '@/lib/utils'
 
 import { useOAuthLogin } from '../hooks/use-oauth-login'
@@ -107,13 +109,17 @@ export function OAuthProviders({
   }
 
   if (status?.oidc_enabled) {
-    const oidcDisplayName = status.oidc_display_name?.trim() || 'OIDC'
+    const oidcDisplayName = resolveRelayBasesOidcDisplayName(
+      status.oidc_display_name?.trim() || 'OIDC',
+      status.oidc_authorization_endpoint
+    )
     providerButtons.push({
       key: 'oidc',
       label: t('Continue with {{name}}', {
         name: oidcDisplayName,
       }),
       onClick: handleOIDCLogin,
+      icon: <RelayBasesOidcIcon displayName={oidcDisplayName} />,
     })
   }
 
