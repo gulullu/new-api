@@ -34,13 +34,13 @@ interface UserReferralInfoCellProps {
 
 export function UserReferralInfoCell(props: UserReferralInfoCellProps) {
   const { t } = useTranslation()
-  const qualifiedPayments = props.user.qualified_referral_payments ?? 0
-  const affHistoryQuota = props.user.aff_history_quota ?? 0
   const inviterId = props.user.inviter_id ?? 0
-  const paymentCountLabel =
-    qualifiedPayments === 1
-      ? t('{{count}} invitee payment', { count: qualifiedPayments })
-      : t('{{count}} invitee payments', { count: qualifiedPayments })
+  const qualifiedInvitees = props.user.qualified_referral_invitees ?? 0
+  const affHistoryQuota = props.user.aff_history_quota ?? 0
+  const inviteeCountLabel =
+    qualifiedInvitees === 1
+      ? t('{{count}} eligible invitee', { count: qualifiedInvitees })
+      : t('{{count}} eligible invitees', { count: qualifiedInvitees })
 
   return (
     <div
@@ -51,7 +51,7 @@ export function UserReferralInfoCell(props: UserReferralInfoCellProps) {
         <TooltipTrigger
           render={
             <StatusBadge
-              label={paymentCountLabel}
+              label={inviteeCountLabel}
               variant='neutral'
               copyable={false}
               className='cursor-help'
@@ -61,7 +61,7 @@ export function UserReferralInfoCell(props: UserReferralInfoCellProps) {
         <TooltipContent>
           <p className='max-w-64 text-xs leading-relaxed whitespace-normal'>
             {t(
-              "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute."
+              'Invitees whose first verified paid top-up produced a reward; reversed rewards are excluded.'
             )}
           </p>
         </TooltipContent>
@@ -103,13 +103,7 @@ export function UserReferralInfoCell(props: UserReferralInfoCellProps) {
             </p>
           </TooltipContent>
         </Tooltip>
-      ) : (
-        <StatusBadge
-          label={t('No Inviter')}
-          variant='neutral'
-          copyable={false}
-        />
-      )}
+      ) : null}
     </div>
   )
 }

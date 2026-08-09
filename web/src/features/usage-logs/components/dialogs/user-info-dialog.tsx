@@ -56,6 +56,9 @@ export function UserInfoDialog({
   const { t } = useTranslation()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const qualifiedReferralInvitees =
+    userInfo?.qualified_referral_invitees ??
+    userInfo?.qualified_referral_payments
 
   const fetchUserInfo = useCallback(
     async (id: number) => {
@@ -139,7 +142,7 @@ export function UserInfoDialog({
 
           {/* Invitation Info */}
           {(userInfo.aff_code ||
-            userInfo.qualified_referral_payments !== undefined ||
+            qualifiedReferralInvitees !== undefined ||
             (userInfo.aff_quota !== undefined && userInfo.aff_quota > 0)) && (
             <>
               <div className='grid grid-cols-2 gap-4'>
@@ -149,12 +152,10 @@ export function UserInfoDialog({
                     value={userInfo.aff_code}
                   />
                 )}
-                {userInfo.qualified_referral_payments !== undefined && (
+                {qualifiedReferralInvitees !== undefined && (
                   <InfoItem
-                    label={t('Invitee payments')}
-                    value={formatCompactNumber(
-                      userInfo.qualified_referral_payments
-                    )}
+                    label={t('Eligible invitees')}
+                    value={formatCompactNumber(qualifiedReferralInvitees)}
                   />
                 )}
               </div>

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
@@ -28,12 +29,27 @@ func TestReferralRewardBillingAmountNormalizesConfiguredUSDGateways(t *testing.T
 
 	payment, err := NewVerifiedPayment("2.95", "USD", "event", "payment", true)
 	require.NoError(t, err)
-	expected := decimal.RequireFromString("2.95").Div(decimal.RequireFromString("0.1473"))
+	expectedLegacy := decimal.RequireFromString("2.95").Div(decimal.RequireFromString("0.1473"))
 
 	for _, provider := range []string{PaymentProviderStripe, PaymentProviderWaffoPancake} {
 		amount, ok := referralRewardBillingAmount(&TopUp{PaymentProvider: provider}, payment)
 		require.True(t, ok)
-		assert.True(t, amount.Equal(expected), provider)
+		assert.True(t, amount.Equal(expectedLegacy), provider)
+
+		// An order snapshot remains authoritative after the global gateway price
+		// changes while the customer is completing checkout.
+		snapshotted := &TopUp{PaymentProvider: provider, ReferralUnitPrice: "0.1425"}
+		amount, ok = referralRewardBillingAmount(snapshotted, payment)
+		require.True(t, ok)
+		expectedSnapshot := decimal.RequireFromString("2.95").Div(decimal.RequireFromString("0.1425"))
+		assert.True(t, amount.Equal(expectedSnapshot), provider)
+
+		for _, invalid := range []string{"not-a-price", "0", "-0.1"} {
+			snapshotted.ReferralUnitPrice = invalid
+			amount, ok = referralRewardBillingAmount(snapshotted, payment)
+			assert.False(t, ok, provider+" "+invalid)
+			assert.True(t, amount.IsZero(), provider+" "+invalid)
+		}
 	}
 
 	unchanged, ok := referralRewardBillingAmount(&TopUp{
@@ -333,7 +349,7 @@ func TestMissingCanonicalReferenceSkipsRewardWithoutFailingTopUp(t *testing.T) {
 	assert.Zero(t, claimCount)
 }
 
-func TestReferralRewardUsesVerifiedAmountForEveryPaymentAndIsIdempotent(t *testing.T) {
+func TestReferralRewardUsesFirstVerifiedAmountAndIsIdempotent(t *testing.T) {
 	truncateTables(t)
 	createReferralRewardUsers(t, 5101, 5102)
 	topUp := createReferralTopUp(t, 5102, "reward-first-real-payment", PaymentProviderEpay, common.TopUpStatusPending)
@@ -371,26 +387,23 @@ func TestReferralRewardUsesVerifiedAmountForEveryPaymentAndIsIdempotent(t *testi
 	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5102).Count(&claimCount).Error)
 	assert.Equal(t, int64(1), claimCount)
 
-	// A distinct later payment from the same invitee earns its own reward.
+	// A distinct later payment still credits the buyer but must not create a
+	// second inviter reward.
 	secondTopUp := createReferralTopUp(t, 5102, "reward-second-real-payment", PaymentProviderEpay, common.TopUpStatusPending)
 	secondPayment, err := NewVerifiedPayment("50", "CNY", "epay-event-2", "epay-payment-2", true)
 	require.NoError(t, err)
 	require.NoError(t, RechargeEpay(secondTopUp.TradeNo, "alipay", "127.0.0.1", secondPayment))
 
-	secondReward := expectedReferralRewardQuota(t, "50")
 	require.NoError(t, DB.First(&inviter, 5101).Error)
-	assert.Equal(t, 2, inviter.AffCount)
-	assert.Equal(t, wantReward+secondReward, inviter.AffQuota)
-	assert.Equal(t, wantReward+secondReward, inviter.AffHistoryQuota)
+	assert.Equal(t, 1, inviter.AffCount)
+	assert.Equal(t, wantReward, inviter.AffQuota)
+	assert.Equal(t, wantReward, inviter.AffHistoryQuota)
 	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5102).Count(&claimCount).Error)
-	assert.Equal(t, int64(2), claimCount)
-
-	var secondClaim ReferralRewardClaim
-	require.NoError(t, DB.Where("top_up_id = ?", secondTopUp.Id).First(&secondClaim).Error)
-	assert.Equal(t, "50", secondClaim.PaidAmount)
+	assert.Equal(t, int64(1), claimCount)
+	var secondClaimCount int64
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("top_up_id = ?", secondTopUp.Id).Count(&secondClaimCount).Error)
+	assert.Zero(t, secondClaimCount)
 	require.NotNil(t, claim.PaymentReferenceDigest)
-	require.NotNil(t, secondClaim.PaymentReferenceDigest)
-	assert.NotEqual(t, *claim.PaymentReferenceDigest, *secondClaim.PaymentReferenceDigest)
 
 	// Reusing the same canonical provider payment reference on another local
 	// order must not create another referral reward.
@@ -399,13 +412,78 @@ func TestReferralRewardUsesVerifiedAmountForEveryPaymentAndIsIdempotent(t *testi
 	require.NoError(t, err)
 	require.NoError(t, RechargeEpay(replayedTopUp.TradeNo, "alipay", "127.0.0.1", replayedPayment))
 	require.NoError(t, DB.First(&inviter, 5101).Error)
-	assert.Equal(t, 2, inviter.AffCount)
-	assert.Equal(t, wantReward+secondReward, inviter.AffQuota)
+	assert.Equal(t, 1, inviter.AffCount)
+	assert.Equal(t, wantReward, inviter.AffQuota)
 	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5102).Count(&claimCount).Error)
-	assert.Equal(t, int64(2), claimCount)
+	assert.Equal(t, int64(1), claimCount)
 }
 
-func TestMigrateReferralRewardsEveryPaymentRemovesLegacyInviteeUniqueness(t *testing.T) {
+// The shared SQLite fixture intentionally uses one connection, so this test
+// exercises the two-callback business outcome rather than database lock timing.
+// MySQL and PostgreSQL overlap are covered by the release concurrency smoke test.
+func TestDistinctVerifiedTopUpsAwardOneFirstPaymentReward(t *testing.T) {
+	truncateTables(t)
+	createReferralRewardUsers(t, 5151, 5152)
+	first := createReferralTopUp(t, 5152, "concurrent-first-a", PaymentProviderEpay, common.TopUpStatusPending)
+	second := createReferralTopUp(t, 5152, "concurrent-first-b", PaymentProviderEpay, common.TopUpStatusPending)
+	firstPayment, err := NewVerifiedPayment("90", "CNY", "concurrent-event-a", "concurrent-payment-a", true)
+	require.NoError(t, err)
+	secondPayment, err := NewVerifiedPayment("50", "CNY", "concurrent-event-b", "concurrent-payment-b", true)
+	require.NoError(t, err)
+
+	start := make(chan struct{})
+	errs := make(chan error, 2)
+	var wg sync.WaitGroup
+	for _, callback := range []func() error{
+		func() error { return RechargeEpay(first.TradeNo, "alipay", "127.0.0.1", firstPayment) },
+		func() error { return RechargeEpay(second.TradeNo, "alipay", "127.0.0.1", secondPayment) },
+	} {
+		wg.Add(1)
+		go func(callback func() error) {
+			defer wg.Done()
+			<-start
+			errs <- callback()
+		}(callback)
+	}
+	close(start)
+	wg.Wait()
+	close(errs)
+	for callbackErr := range errs {
+		require.NoError(t, callbackErr)
+	}
+
+	var claimCount int64
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5152).Count(&claimCount).Error)
+	assert.Equal(t, int64(1), claimCount)
+	var inviter User
+	require.NoError(t, DB.First(&inviter, 5151).Error)
+	assert.Equal(t, 1, inviter.AffCount)
+}
+
+func TestCreemCustomerEmailPathPreservesFirstPaymentEligibility(t *testing.T) {
+	truncateTables(t)
+	createReferralRewardUsers(t, 5171, 5172)
+	first := createReferralTopUp(t, 5172, "creem-email-first", PaymentProviderCreem, common.TopUpStatusPending)
+	firstPayment, err := NewVerifiedPayment("90", "CNY", "creem-email-event", "creem-email-payment", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeCreem(first.TradeNo, "buyer@example.com", "Buyer", "127.0.0.1", firstPayment))
+
+	var invitee User
+	require.NoError(t, DB.First(&invitee, 5172).Error)
+	assert.Equal(t, "buyer@example.com", invitee.Email)
+	var claimCount int64
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5172).Count(&claimCount).Error)
+	assert.Equal(t, int64(1), claimCount)
+
+	second := createReferralTopUp(t, 5172, "creem-email-second", PaymentProviderCreem, common.TopUpStatusPending)
+	secondPayment, err := NewVerifiedPayment("50", "CNY", "creem-email-event-2", "creem-email-payment-2", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeCreem(second.TradeNo, "buyer@example.com", "Buyer", "127.0.0.1", secondPayment))
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5172).Count(&claimCount).Error)
+	assert.Equal(t, int64(1), claimCount)
+}
+
+func TestMigrateReferralRewardIndexesPreservesHistoricalDuplicateCompatibility(t *testing.T) {
 	legacyDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, legacyDB.AutoMigrate(&legacyFirstPaymentReferralRewardClaim{}))
@@ -420,14 +498,18 @@ func TestMigrateReferralRewardsEveryPaymentRemovesLegacyInviteeUniqueness(t *tes
 		DB = previousDB
 	})
 
-	require.NoError(t, MigrateReferralRewardsEveryPayment())
+	require.NoError(t, MigrateReferralRewardIndexes())
 	assert.False(t, legacyDB.Migrator().HasIndex(&legacyFirstPaymentReferralRewardClaim{}, legacyReferralInviteeUniqueIndex))
 	assert.True(t, legacyDB.Migrator().HasIndex(&referralRewardPaymentReferenceIndex{}, referralPaymentReferenceUniqueIndex))
 	require.NoError(t, legacyDB.Create(&legacyFirstPaymentReferralRewardClaim{InviteeId: 1, TopUpId: 1, TradeNo: "legacy-one"}).Error)
 	require.NoError(t, legacyDB.Create(&legacyFirstPaymentReferralRewardClaim{InviteeId: 1, TopUpId: 2, TradeNo: "legacy-two"}).Error)
+	require.NoError(t, MigrateReferralRewardIndexes())
+	var historicalCount int64
+	require.NoError(t, legacyDB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 1).Count(&historicalCount).Error)
+	assert.Equal(t, int64(2), historicalCount)
 }
 
-func TestReferralRewardRejectsSandboxButAllowsPaymentsAfterHistoricalTopUp(t *testing.T) {
+func TestReferralRewardRejectsSandboxAndHistoricalVerifiedTopUps(t *testing.T) {
 	t.Run("sandbox callback", func(t *testing.T) {
 		truncateTables(t)
 		createReferralRewardUsers(t, 5201, 5202)
@@ -443,9 +525,16 @@ func TestReferralRewardRejectsSandboxButAllowsPaymentsAfterHistoricalTopUp(t *te
 		var count int64
 		require.NoError(t, DB.Model(&ReferralRewardClaim{}).Count(&count).Error)
 		assert.Zero(t, count)
+
+		verified := createReferralTopUp(t, 5202, "reward-after-sandbox", PaymentProviderEpay, common.TopUpStatusPending)
+		verifiedPayment, err := NewVerifiedPayment("90", "CNY", "verified-event", "verified-payment", true)
+		require.NoError(t, err)
+		require.NoError(t, RechargeEpay(verified.TradeNo, "alipay", "127.0.0.1", verifiedPayment))
+		require.NoError(t, DB.First(&inviter, 5201).Error)
+		assert.Equal(t, 1, inviter.AffCount)
 	})
 
-	t.Run("existing successful topup does not block a new payment", func(t *testing.T) {
+	t.Run("existing verified successful topup blocks a new reward", func(t *testing.T) {
 		truncateTables(t)
 		createReferralRewardUsers(t, 5301, 5302)
 		historical := createReferralTopUp(t, 5302, "reward-historical-payment", PaymentProviderStripe, common.TopUpStatusSuccess)
@@ -457,11 +546,11 @@ func TestReferralRewardRejectsSandboxButAllowsPaymentsAfterHistoricalTopUp(t *te
 
 		var inviter User
 		require.NoError(t, DB.First(&inviter, 5301).Error)
-		assert.Equal(t, 1, inviter.AffCount)
-		assert.Equal(t, expectedReferralRewardQuota(t, "90"), inviter.AffQuota)
+		assert.Zero(t, inviter.AffCount)
+		assert.Zero(t, inviter.AffQuota)
 		var count int64
 		require.NoError(t, DB.Model(&ReferralRewardClaim{}).Count(&count).Error)
-		assert.Equal(t, int64(1), count)
+		assert.Zero(t, count)
 	})
 }
 
@@ -482,6 +571,18 @@ func TestReferralRewardRejectsUnsupportedNominalCurrency(t *testing.T) {
 	assert.Zero(t, inviter.AffCount)
 	assert.Zero(t, inviter.AffQuota)
 	var count int64
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Count(&count).Error)
+	assert.Zero(t, count)
+
+	// The first verified payment still consumes first-payment eligibility. A
+	// later supported-currency payment must not turn into a replacement first.
+	later := createReferralTopUp(t, 5322, "reward-after-unsupported-currency", PaymentProviderEpay, common.TopUpStatusPending)
+	laterPayment, err := NewVerifiedPayment("90", "CNY", "cny-event-after-jpy", "cny-payment-after-jpy", true)
+	require.NoError(t, err)
+	completeReferralTopUp(t, later, laterPayment)
+	require.NoError(t, DB.First(&inviter, 5321).Error)
+	assert.Zero(t, inviter.AffCount)
+	assert.Zero(t, inviter.AffQuota)
 	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Count(&count).Error)
 	assert.Zero(t, count)
 }
@@ -749,6 +850,14 @@ func TestReferralRewardWithholdsOverflowWithoutFailingPayment(t *testing.T) {
 	require.NoError(t, DB.Where("invitee_id = ?", 5702).First(&claim).Error)
 	assert.Equal(t, ReferralRewardStatusWithheld, claim.Status)
 	assert.Equal(t, expectedReferralRewardQuota(t, "90"), claim.RewardQuota)
+
+	second := createReferralTopUp(t, 5702, "reward-after-withheld", PaymentProviderEpay, common.TopUpStatusPending)
+	secondPayment, err := NewVerifiedPayment("50", "CNY", "overflow-event-2", "overflow-payment-2", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeEpay(second.TradeNo, "alipay", "127.0.0.1", secondPayment))
+	var claimCount int64
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5702).Count(&claimCount).Error)
+	assert.Equal(t, int64(1), claimCount)
 }
 
 func TestReferralRewardReversalReclaimsTransferredQuotaAndIsIdempotent(t *testing.T) {
@@ -807,24 +916,50 @@ func TestReferralRewardReversalReclaimsTransferredQuotaAndIsIdempotent(t *testin
 	paymentStates = nil
 	require.NoError(t, DB.Find(&paymentStates).Error)
 	assert.Len(t, paymentStates, 1)
+
+	// A refunded or disputed first payment remains the historical first payment;
+	// a later successful order must not mint a replacement reward.
+	second := createReferralTopUp(t, 5802, "reward-after-reversal", PaymentProviderEpay, common.TopUpStatusPending)
+	secondPayment, err := NewVerifiedPayment("50", "CNY", "reversal-second-event", "reversal-second-payment", true)
+	require.NoError(t, err)
+	require.NoError(t, RechargeEpay(second.TradeNo, "alipay", "127.0.0.1", secondPayment))
+	require.NoError(t, DB.First(&inviter, 5801).Error)
+	assert.Zero(t, inviter.AffQuota)
+	var claimCount int64
+	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5802).Count(&claimCount).Error)
+	assert.Equal(t, int64(1), claimCount)
 }
 
-func TestReferralRewardReversalOnlyReclaimsMatchingPayment(t *testing.T) {
+func TestHistoricalReferralRewardReversalOnlyReclaimsMatchingPayment(t *testing.T) {
 	truncateTables(t)
 	createReferralRewardUsers(t, 5901, 5902)
 
 	firstTopUp := createReferralTopUp(t, 5902, "reward-reversal-first-payment", PaymentProviderEpay, common.TopUpStatusPending)
-	firstPayment, err := NewVerifiedPayment("90", "CNY", "reversal-first-event", "reversal-first-payment", true)
-	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(firstTopUp.TradeNo, "alipay", "127.0.0.1", firstPayment))
-
 	secondTopUp := createReferralTopUp(t, 5902, "reward-reversal-second-payment", PaymentProviderEpay, common.TopUpStatusPending)
-	secondPayment, err := NewVerifiedPayment("50", "CNY", "reversal-second-event", "reversal-second-payment", true)
-	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(secondTopUp.TradeNo, "alipay", "127.0.0.1", secondPayment))
-
 	firstReward := expectedReferralRewardQuota(t, "90")
 	secondReward := expectedReferralRewardQuota(t, "50")
+	require.NoError(t, DB.Model(&TopUp{}).Where("id IN ?", []int{firstTopUp.Id, secondTopUp.Id}).Updates(map[string]interface{}{
+		"status":                    common.TopUpStatusSuccess,
+		"referral_payment_verified": true,
+	}).Error)
+	require.NoError(t, DB.Create(&[]ReferralRewardClaim{
+		{
+			InviteeId: 5902, InviterId: 5901, TopUpId: firstTopUp.Id, TradeNo: firstTopUp.TradeNo,
+			PaymentProvider: PaymentProviderEpay, PaidAmount: "90", PaidCurrency: "CNY",
+			RateBasisPoints: ReferralRewardBasisPoints, RewardQuota: firstReward,
+			Status: ReferralRewardStatusAwarded, GatewayPaymentId: "reversal-first-payment",
+		},
+		{
+			InviteeId: 5902, InviterId: 5901, TopUpId: secondTopUp.Id, TradeNo: secondTopUp.TradeNo,
+			PaymentProvider: PaymentProviderEpay, PaidAmount: "50", PaidCurrency: "CNY",
+			RateBasisPoints: ReferralRewardBasisPoints, RewardQuota: secondReward,
+			Status: ReferralRewardStatusAwarded, GatewayPaymentId: "reversal-second-payment",
+		},
+	}).Error)
+	require.NoError(t, DB.Model(&User{}).Where("id = ?", 5901).Updates(map[string]interface{}{
+		"aff_count": 2, "aff_quota": firstReward + secondReward, "aff_history": firstReward + secondReward,
+	}).Error)
+
 	outcome, err := ReverseReferralRewardByGatewayReference(
 		PaymentProviderEpay,
 		"reversal-first-payment",

@@ -51,6 +51,10 @@ func RequestWaffoPancakeAmount(c *gin.Context) {
 }
 
 func getWaffoPancakePayMoney(amount int64, group string) float64 {
+	return getWaffoPancakePayMoneyAtUnitPrice(amount, group, setting.WaffoPancakeUnitPrice)
+}
+
+func getWaffoPancakePayMoneyAtUnitPrice(amount int64, group string, unitPrice float64) float64 {
 	dAmount := decimal.NewFromInt(amount)
 	if operation_setting.GetQuotaDisplayType() == operation_setting.QuotaDisplayTypeTokens {
 		dAmount = dAmount.Div(decimal.NewFromFloat(common.QuotaPerUnit))
@@ -67,7 +71,7 @@ func getWaffoPancakePayMoney(amount int64, group string) float64 {
 	}
 
 	payMoney := dAmount.
-		Mul(decimal.NewFromFloat(setting.WaffoPancakeUnitPrice)).
+		Mul(decimal.NewFromFloat(unitPrice)).
 		Mul(decimal.NewFromFloat(topupGroupRatio)).
 		Mul(decimal.NewFromFloat(discount))
 
@@ -365,7 +369,8 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		return
 	}
 
-	payMoney := getWaffoPancakePayMoney(req.Amount, group)
+	unitPrice := setting.WaffoPancakeUnitPrice
+	payMoney := getWaffoPancakePayMoneyAtUnitPrice(req.Amount, group, unitPrice)
 	if payMoney < 0.01 {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
 		return
@@ -373,16 +378,17 @@ func RequestWaffoPancakePay(c *gin.Context) {
 
 	tradeNo := fmt.Sprintf("WAFFO_PANCAKE-%d-%d-%s", id, time.Now().UnixMilli(), randstr.String(6))
 	topUp := &model.TopUp{
-		UserId:          id,
-		Amount:          normalizeWaffoPancakeTopUpAmount(req.Amount),
-		Money:           payMoney,
-		TradeNo:         tradeNo,
-		PaymentMethod:   model.PaymentMethodWaffoPancake,
-		PaymentProvider: model.PaymentProviderWaffoPancake,
-		PaymentAmount:   formatWaffoPancakeAmount(payMoney),
-		PaymentCurrency: "USD",
-		CreateTime:      time.Now().Unix(),
-		Status:          common.TopUpStatusPending,
+		UserId:            id,
+		Amount:            normalizeWaffoPancakeTopUpAmount(req.Amount),
+		Money:             payMoney,
+		TradeNo:           tradeNo,
+		PaymentMethod:     model.PaymentMethodWaffoPancake,
+		PaymentProvider:   model.PaymentProviderWaffoPancake,
+		PaymentAmount:     formatWaffoPancakeAmount(payMoney),
+		PaymentCurrency:   "USD",
+		ReferralUnitPrice: decimal.NewFromFloat(unitPrice).String(),
+		CreateTime:        time.Now().Unix(),
+		Status:            common.TopUpStatusPending,
 	}
 	if err := topUp.Insert(); err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 创建充值订单失败 user_id=%d trade_no=%s amount=%d error=%q", id, tradeNo, req.Amount, err.Error()))

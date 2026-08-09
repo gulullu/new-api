@@ -175,7 +175,7 @@ export function AdminReferralRewardsTable() {
               </h2>
               <p className='text-muted-foreground mt-1 text-xs leading-relaxed [overflow-wrap:anywhere] break-words whitespace-normal sm:text-sm'>
                 {t(
-                  'Review referral activity across the site. User identities are masked and payment references are never displayed.'
+                  'All referral rewards. Identities are masked; payment references are hidden.'
                 )}
               </p>
             </div>

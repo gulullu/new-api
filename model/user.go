@@ -109,9 +109,11 @@ type User struct {
 	LastLoginAt      int64                      `json:"last_login_at" gorm:"default:0;column:last_login_at"`
 	AuthVersion      int64                      `json:"-" gorm:"type:bigint;not null;default:1;column:auth_version"`
 	AdminPermissions map[string]map[string]bool `json:"admin_permissions,omitempty" gorm:"-:all"`
-	// QualifiedReferralPayments is derived from the referral ledger for admin
-	// views. AffCount is retained for backward compatibility and is not used for
-	// this projection because historical rows have mixed semantics.
+	// QualifiedReferralInvitees is the distinct number of referred users with an
+	// awarded or withheld paid-referral claim. AffCount is retained for backward
+	// compatibility and is not authoritative because its historical semantics
+	// are mixed. QualifiedReferralPayments is a deprecated API alias.
+	QualifiedReferralInvitees int64 `json:"qualified_referral_invitees" gorm:"-"`
 	QualifiedReferralPayments int64 `json:"qualified_referral_payments" gorm:"-"`
 }
 
@@ -391,7 +393,7 @@ func GetAllUsers(pageInfo *common.PageInfo, sortOptions ...UserSortOptions) (use
 		tx.Rollback()
 		return nil, 0, err
 	}
-	if err = populateQualifiedReferralPayments(tx, users); err != nil {
+	if err = populateQualifiedReferralInvitees(tx, users); err != nil {
 		tx.Rollback()
 		return nil, 0, err
 	}
@@ -464,7 +466,7 @@ func SearchUsers(keyword string, group string, role *int, status *int, startIdx 
 		tx.Rollback()
 		return nil, 0, err
 	}
-	if err = populateQualifiedReferralPayments(tx, users); err != nil {
+	if err = populateQualifiedReferralInvitees(tx, users); err != nil {
 		tx.Rollback()
 		return nil, 0, err
 	}
@@ -491,23 +493,29 @@ func GetUserById(id int, selectAll bool) (*User, error) {
 	return &user, err
 }
 
-func GetUserByIdWithQualifiedReferralPayments(id int, selectAll bool) (*User, error) {
+func GetUserByIdWithQualifiedReferralInvitees(id int, selectAll bool) (*User, error) {
 	user, err := GetUserById(id, selectAll)
 	if err != nil {
 		return user, err
 	}
-	if err := populateQualifiedReferralPayments(DB, []*User{user}); err != nil {
+	if err := populateQualifiedReferralInvitees(DB, []*User{user}); err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-type qualifiedReferralPaymentCount struct {
-	InviterId                 int   `gorm:"column:inviter_id"`
-	QualifiedReferralPayments int64 `gorm:"column:qualified_referral_payments"`
+// GetUserByIdWithQualifiedReferralPayments is retained for older callers.
+// QualifiedReferralInvitees is the authoritative projection.
+func GetUserByIdWithQualifiedReferralPayments(id int, selectAll bool) (*User, error) {
+	return GetUserByIdWithQualifiedReferralInvitees(id, selectAll)
 }
 
-func populateQualifiedReferralPayments(tx *gorm.DB, users []*User) error {
+type qualifiedReferralInviteeCount struct {
+	InviterId                 int   `gorm:"column:inviter_id"`
+	QualifiedReferralInvitees int64 `gorm:"column:qualified_referral_invitees"`
+}
+
+func populateQualifiedReferralInvitees(tx *gorm.DB, users []*User) error {
 	if len(users) == 0 {
 		return nil
 	}
@@ -517,6 +525,7 @@ func populateQualifiedReferralPayments(tx *gorm.DB, users []*User) error {
 		if user == nil {
 			continue
 		}
+		user.QualifiedReferralInvitees = 0
 		user.QualifiedReferralPayments = 0
 		userIds = append(userIds, user.Id)
 	}
@@ -524,9 +533,9 @@ func populateQualifiedReferralPayments(tx *gorm.DB, users []*User) error {
 		return nil
 	}
 
-	counts := make([]qualifiedReferralPaymentCount, 0, len(userIds))
+	counts := make([]qualifiedReferralInviteeCount, 0, len(userIds))
 	if err := tx.Model(&ReferralRewardClaim{}).
-		Select("inviter_id, COUNT(*) AS qualified_referral_payments").
+		Select("inviter_id, COUNT(DISTINCT invitee_id) AS qualified_referral_invitees").
 		Where("inviter_id IN ? AND status IN ?", userIds, []string{ReferralRewardStatusAwarded, ReferralRewardStatusWithheld}).
 		Group("inviter_id").
 		Scan(&counts).Error; err != nil {
@@ -535,11 +544,13 @@ func populateQualifiedReferralPayments(tx *gorm.DB, users []*User) error {
 
 	countsByUserId := make(map[int]int64, len(counts))
 	for _, count := range counts {
-		countsByUserId[count.InviterId] = count.QualifiedReferralPayments
+		countsByUserId[count.InviterId] = count.QualifiedReferralInvitees
 	}
 	for _, user := range users {
 		if user != nil {
-			user.QualifiedReferralPayments = countsByUserId[user.Id]
+			count := countsByUserId[user.Id]
+			user.QualifiedReferralInvitees = count
+			user.QualifiedReferralPayments = count
 		}
 	}
 	return nil
@@ -603,8 +614,16 @@ func (user *User) TransferAffQuotaToQuota(quota int) error {
 		return err
 	}
 
-	// 提交事务
-	return tx.Commit().Error
+	// Only invalidate the cache after the database commit is authoritative. A
+	// cache failure must not make the client retry an already-committed transfer;
+	// log it for operations and let cache expiry repair the view.
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+	if err := InvalidateUserCache(user.Id); err != nil {
+		common.SysError(fmt.Sprintf("failed to invalidate user cache after referral quota transfer: user_id=%d error=%q", user.Id, err.Error()))
+	}
+	return nil
 }
 
 func (user *User) prepareForInsert(tx *gorm.DB) error {

@@ -1,16 +1,71 @@
 package model
 
 import (
+	"context"
 	"errors"
+	"net"
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/relaykit/dto"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
+
+func TestTransferAffQuotaInvalidatesCommittedUserCache(t *testing.T) {
+	truncateTables(t)
+	server := useUserCacheMiniRedis(t)
+	transferQuota := int(common.QuotaPerUnit)
+	user := User{
+		Id: 9001, Username: "aff-transfer-cache", AffCode: "atc1",
+		Status: common.UserStatusEnabled, Quota: 100, AffQuota: transferQuota * 2,
+	}
+	require.NoError(t, DB.Create(&user).Error)
+	require.NoError(t, populateUserCache(user))
+	require.True(t, server.Exists(getUserCacheKey(user.Id)))
+
+	require.NoError(t, user.TransferAffQuotaToQuota(transferQuota))
+	assert.False(t, server.Exists(getUserCacheKey(user.Id)))
+
+	var stored User
+	require.NoError(t, DB.First(&stored, user.Id).Error)
+	assert.Equal(t, 100+transferQuota, stored.Quota)
+	assert.Equal(t, transferQuota, stored.AffQuota)
+}
+
+func TestTransferAffQuotaCacheFailureDoesNotInviteDuplicateRetry(t *testing.T) {
+	truncateTables(t)
+	transferQuota := int(common.QuotaPerUnit)
+	user := User{
+		Id: 9002, Username: "aff-transfer-cache-failure", AffCode: "atc2",
+		Status: common.UserStatusEnabled, Quota: 200, AffQuota: transferQuota * 2,
+	}
+	require.NoError(t, DB.Create(&user).Error)
+
+	oldRedisEnabled, oldRDB := common.RedisEnabled, common.RDB
+	common.RedisEnabled = true
+	common.RDB = redis.NewClient(&redis.Options{
+		Dialer: func(context.Context, string, string) (net.Conn, error) {
+			return nil, errors.New("forced cache delete failure")
+		},
+		MaxRetries: -1,
+	})
+	t.Cleanup(func() {
+		_ = common.RDB.Close()
+		common.RedisEnabled, common.RDB = oldRedisEnabled, oldRDB
+	})
+
+	// The database commit is final. A failed post-commit cache delete is logged,
+	// but returning success prevents the client from repeating the transfer.
+	require.NoError(t, user.TransferAffQuotaToQuota(transferQuota))
+	var stored User
+	require.NoError(t, DB.First(&stored, user.Id).Error)
+	assert.Equal(t, 200+transferQuota, stored.Quota)
+	assert.Equal(t, transferQuota, stored.AffQuota)
+}
 
 func setupUserUpdateTestState(t *testing.T) {
 	t.Helper()

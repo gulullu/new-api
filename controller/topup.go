@@ -23,10 +23,10 @@ import (
 
 func GetTopUpInfo(c *gin.Context) {
 	complianceConfirmed := operation_setting.IsPaymentComplianceConfirmed()
-	qualifiedPayments, err := model.GetQualifiedReferralPaymentCount(c.GetInt("id"))
+	qualifiedInvitees, err := model.GetQualifiedReferralInviteeCount(c.GetInt("id"))
 	if err != nil {
-		logger.LogError(c.Request.Context(), fmt.Sprintf("查询符合条件的推荐支付笔数失败 user_id=%d error=%q", c.GetInt("id"), err.Error()))
-		qualifiedPayments = 0
+		logger.LogError(c.Request.Context(), fmt.Sprintf("查询有效受邀付费用户数失败 user_id=%d error=%q", c.GetInt("id"), err.Error()))
+		qualifiedInvitees = 0
 	}
 
 	// 获取支付方式
@@ -115,19 +115,20 @@ func GetTopUpInfo(c *gin.Context) {
 			}
 			return nil
 		}(),
-		"creem_products":          setting.CreemProducts,
-		"pay_methods":             payMethods,
-		"min_topup":               operation_setting.MinTopUp,
-		"stripe_min_topup":        setting.StripeMinTopUp,
-		"waffo_min_topup":         setting.WaffoMinTopUp,
-		"waffo_pancake_min_topup": setting.WaffoPancakeMinTopUp,
-		"amount_options":          operation_setting.GetPaymentSetting().AmountOptions,
-		"discount":                operation_setting.GetPaymentSetting().AmountDiscount,
-		"topup_link":              common.TopUpLink,
-		"referral_reward_percent": model.ReferralRewardPercent,
-		"qualified_payments":      qualifiedPayments,
-		// Kept for older frontends that used the original first-payment field.
-		"qualified_referrals": qualifiedPayments,
+		"creem_products":              setting.CreemProducts,
+		"pay_methods":                 payMethods,
+		"min_topup":                   operation_setting.MinTopUp,
+		"stripe_min_topup":            setting.StripeMinTopUp,
+		"waffo_min_topup":             setting.WaffoMinTopUp,
+		"waffo_pancake_min_topup":     setting.WaffoPancakeMinTopUp,
+		"amount_options":              operation_setting.GetPaymentSetting().AmountOptions,
+		"discount":                    operation_setting.GetPaymentSetting().AmountDiscount,
+		"topup_link":                  common.TopUpLink,
+		"referral_reward_percent":     model.ReferralRewardPercent,
+		"qualified_referral_invitees": qualifiedInvitees,
+		// Deprecated aliases retained during the frontend rollout.
+		"qualified_payments":  qualifiedInvitees,
+		"qualified_referrals": qualifiedInvitees,
 	}
 	common.ApiSuccess(c, data)
 }

@@ -156,9 +156,11 @@ export interface TopupInfo {
   payment_compliance_confirmed?: boolean
   /** Current compliance terms version */
   payment_compliance_terms_version?: string
-  /** Percentage of each eligible referred payment awarded to the inviter */
+  /** Percentage of an invitee's first verified paid top-up awarded to the inviter */
   referral_reward_percent?: number
-  /** Number of eligible referred payments that earned a reward */
+  /** Distinct invitees whose first verified paid top-up earned a reward */
+  qualified_referral_invitees?: number
+  /** @deprecated Compatibility field for older servers */
   qualified_payments?: number
   /** @deprecated Compatibility field for older servers */
   qualified_referrals?: number

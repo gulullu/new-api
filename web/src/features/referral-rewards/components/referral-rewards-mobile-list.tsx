@@ -173,9 +173,7 @@ export function ReferralRewardsMobileList(
             </EmptyMedia>
             <EmptyTitle>{t('No Referral Rewards Yet')}</EmptyTitle>
             <EmptyDescription className='break-words whitespace-normal'>
-              {t(
-                "Rewards will appear here after a referred user's eligible paid top-up is confirmed."
-              )}
+              {t('Confirmed rewards will appear here.')}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

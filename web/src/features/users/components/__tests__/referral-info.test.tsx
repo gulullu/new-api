@@ -54,7 +54,9 @@ type LocaleResource = {
   translation: Record<string, string>
 }
 
-async function loadLocale(locale: 'en' | 'zh' | 'zh-TW') {
+type SupportedLocale = 'en' | 'zh' | 'zh-TW' | 'fr' | 'ja' | 'ru' | 'vi'
+
+async function loadLocale(locale: SupportedLocale) {
   const source = await readFile(
     new URL(`../../../../i18n/locales/${locale}.json`, import.meta.url),
     'utf8'
@@ -62,10 +64,14 @@ async function loadLocale(locale: 'en' | 'zh' | 'zh-TW') {
   return JSON.parse(source) as LocaleResource
 }
 
-const [en, zh, zhTW] = await Promise.all([
+const [en, zh, zhTW, fr, ja, ru, vi] = await Promise.all([
   loadLocale('en'),
   loadLocale('zh'),
   loadLocale('zh-TW'),
+  loadLocale('fr'),
+  loadLocale('ja'),
+  loadLocale('ru'),
+  loadLocale('vi'),
 ])
 const React = await import('react')
 const { act } = React
@@ -79,7 +85,7 @@ const i18n = createInstance()
 await i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  resources: { en, zh, 'zh-TW': zhTW },
+  resources: { en, zh, 'zh-TW': zhTW, fr, ja, ru, vi },
 })
 
 const reactTestGlobals = globalThis as typeof globalThis & {
@@ -98,7 +104,8 @@ const user: User = {
   status: 1,
   role: 1,
   aff_count: 99,
-  qualified_referral_payments: 2,
+  qualified_referral_invitees: 2,
+  qualified_referral_payments: 88,
   aff_history_quota: 1_500_000,
   inviter_id: 7,
 }
@@ -131,7 +138,7 @@ describe('user referral information', () => {
     domWindow.close()
   })
 
-  test('uses invitee payment claims instead of the legacy registration count', async () => {
+  test('uses distinct eligible invitees instead of legacy counters', async () => {
     await i18n.changeLanguage('en')
     const rendered = await renderCell(user)
     const referralInfo = rendered.container.querySelector(
@@ -139,8 +146,12 @@ describe('user referral information', () => {
     )
 
     assert.ok(referralInfo)
-    assert.equal(referralInfo.textContent?.includes('2 invitee payments'), true)
+    assert.equal(
+      referralInfo.textContent?.includes('2 eligible invitees'),
+      true
+    )
     assert.equal(referralInfo.textContent?.includes('99'), false)
+    assert.equal(referralInfo.textContent?.includes('88'), false)
     assert.equal(referralInfo.textContent?.includes('Rewards'), true)
     assert.equal(referralInfo.textContent?.includes('Revenue'), false)
     assert.equal(referralInfo.textContent?.includes('Inviter #7'), true)
@@ -149,43 +160,58 @@ describe('user referral information', () => {
     await unmountCell(rendered)
   })
 
-  test('uses a singular payment label for one invitee payment', async () => {
+  test('uses a singular label for one eligible invitee', async () => {
     await i18n.changeLanguage('en')
     const rendered = await renderCell({
       ...user,
-      qualified_referral_payments: 1,
+      qualified_referral_invitees: 1,
     })
 
     assert.equal(
-      rendered.container.textContent?.includes('1 invitee payment'),
+      rendered.container.textContent?.includes('1 eligible invitee'),
       true
     )
     assert.equal(
-      rendered.container.textContent?.includes('1 invitee payments'),
+      rendered.container.textContent?.includes('1 eligible invitees'),
       false
     )
 
     await unmountCell(rendered)
   })
 
-  test('keeps compact referral labels translated in both Chinese locales', () => {
+  test('keeps referral metrics but omits the inviter badge when absent', async () => {
+    await i18n.changeLanguage('en')
+    const rendered = await renderCell({ ...user, inviter_id: 0 })
+    const text = rendered.container.textContent ?? ''
+
+    assert.equal(text.includes('2 eligible invitees'), true)
+    assert.equal(text.includes('Rewards'), true)
+    assert.equal(text.includes('Inviter #'), false)
+    assert.equal(text.includes('No Inviter'), false)
+
+    await unmountCell(rendered)
+  })
+
+  test('keeps compact referral labels translated in every locale', () => {
     const keys = [
       'Referral',
-      '{{count}} invitee payment',
-      '{{count}} invitee payments',
-      "Eligible payments made by this user's invitees that have not been reversed for a refund or dispute.",
+      '{{count}} eligible invitee',
+      '{{count}} eligible invitees',
+      'Invitees whose first verified paid top-up produced a reward; reversed rewards are excluded.',
       'Rewards',
       'Cumulative referral reward credits, net of refunds and disputes.',
       'Inviter #{{id}}',
-      'Invitee payments',
+      'Eligible invitees',
     ]
 
+    const resources = [en, zh, zhTW, fr, ja, ru, vi]
     for (const key of keys) {
-      assert.equal(typeof en.translation[key], 'string')
-      assert.equal(typeof zh.translation[key], 'string')
-      assert.equal(typeof zhTW.translation[key], 'string')
-      assert.notEqual(zh.translation[key], key)
-      assert.notEqual(zhTW.translation[key], key)
+      for (const resource of resources) {
+        assert.equal(typeof resource.translation[key], 'string')
+      }
+      for (const resource of resources.slice(1)) {
+        assert.notEqual(resource.translation[key], key)
+      }
     }
   })
 })
