@@ -167,5 +167,5 @@ Worker 不得伪造支付回调、计算或赠送额度、决定返利资格、�
 | 2026-08-10 | `v1.0.0-rc.24` / `f087a738` | 以 feature-owned content/class slot 恢复 Infinite Canvas 顶栏胶囊、侧栏卡片、AI 标识、折叠态与移动端原样式；文档与 Canvas 链接透传七种语言和主题；登录/注册法律提示改为七语言完整句 | 无 | `site.relaybases.com`、`canvas.relaybases.com` | 前端 typecheck、10 项定向回归与 production build；回滚删除独立展示组件和窄 slot，不改导航数据或业务接口 |
 | 2026-08-10 | `v1.0.0-rc.24` / `be1491c1` | 原样保留 Infinite Canvas 导航卡片，对超过 16 个字符的本地化标题仅收紧字距与字号，避免俄语等长标题被省略 | 无 | 无新增 | 七语言标题渲染与实际宽度验收；回滚删除 content-owned 紧凑标签属性与两条限定样式 |
 | 2026-08-10 | `v1.0.0-rc.24` / `c65df902` | 重做钱包 Stripe/Waffo 品牌卡片的默认与选中层次，Waffo 改用仓库内静态品牌资源；明确自定义用户文案必须同提交补齐七语言 | 无 | 无新增 | 组件可访问状态/布局/品牌资源回归、七语言递归完整性、typecheck/lint/build；回滚删除 feature 卡片样式与三个窄选中态 props |
-| 2026-08-10 | `v1.0.0-rc.24` / `de489dbd` | 七种界面语言的 RelayBases 最低充值统一为 Ɍ20；GetTopUpInfo、预设、报价及 Stripe/Waffo Pancake 下单继续以服务端结果为准，渠道配置可设置更严格下限 | 无 | 无新增 | 七语言文案覆盖、USD/TOKENS 入口级最低充值回归；回滚恢复上一版语言分层常量 |
+| 2026-08-10 | `v1.0.0-rc.24` / `73255c82` | 七种界面语言的 RelayBases 最低充值统一为 Ɍ20；GetTopUpInfo、预设、报价及 Stripe/Waffo/Waffo Pancake 下单继续以服务端结果为准，渠道配置可设置更严格下限 | 无 | 无新增 | 七语言文案覆盖、USD/TOKENS 入口级最低充值回归；回滚恢复上一版语言分层常量 |
 | YYYY-MM-DD | tag + commit | 一句话说明 | 字段/迁移/无 | Worker/支付平台/无 | 测试命令、发布版本、回滚提交 |
