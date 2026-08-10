@@ -35,6 +35,8 @@ type InfiniteCanvasNavigationContentProps = {
 export function InfiniteCanvasNavigationContent(
   props: InfiniteCanvasNavigationContentProps
 ) {
+  const usesCompactLabel = Array.from(props.title).length > 16
+
   return (
     <>
       <span
@@ -48,6 +50,7 @@ export function InfiniteCanvasNavigationContent(
       <span
         className='rb-infinite-canvas-text'
         data-rb-infinite-canvas-text='1'
+        data-rb-infinite-canvas-compact={usesCompactLabel ? '1' : undefined}
         title={props.title}
       >
         {props.title}
