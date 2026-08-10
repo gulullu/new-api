@@ -44,6 +44,7 @@ const domGlobals = [
   'document',
   'navigator',
   'HTMLElement',
+  'HTMLButtonElement',
   'Node',
   'Element',
   'Event',
@@ -61,6 +62,7 @@ const { act } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const { createInstance } = await import('i18next')
 const { I18nextProvider, initReactI18next } = await import('react-i18next')
+const { LegalConsent } = await import('../legal-consent')
 const { TermsFooter } = await import('../terms-footer')
 
 const i18n = createInstance()
@@ -110,6 +112,32 @@ async function renderSignInFooter(language: string) {
   return text
 }
 
+async function renderLegalConsent(language: string) {
+  await i18n.changeLanguage(language)
+  const container = document.createElement('div')
+  document.body.append(container)
+  const root = createRoot(container)
+
+  await act(async () => {
+    root.render(
+      <I18nextProvider i18n={i18n}>
+        <LegalConsent
+          status={status}
+          checked={false}
+          onCheckedChange={() => undefined}
+        />
+      </I18nextProvider>
+    )
+  })
+
+  const consent = container.querySelector('[data-relaybases-legal-consent]')
+  const className = consent?.getAttribute('class') ?? ''
+  const text = container.textContent ?? ''
+  await act(async () => root.unmount())
+  container.remove()
+  return { className, text }
+}
+
 describe('authentication terms footer localization', () => {
   after(() => domWindow.close())
 
@@ -139,5 +167,17 @@ describe('authentication terms footer localization', () => {
       const text = await renderSignInFooter(language)
       assert.equal(text, expected)
     }
+  })
+
+  test('keeps the sign-up legal consent block on the upstream system style', async () => {
+    const { className, text } = await renderLegalConsent('zhCN')
+
+    assert.match(text, /注册即表示您同意用户协议和隐私政策。/)
+    assert.match(className, /rounded-md/)
+    assert.match(className, /\bborder\b/)
+    assert.match(className, /\bp-3\b/)
+    assert.doesNotMatch(className, /rounded-xl/)
+    assert.doesNotMatch(className, /shadow-sm/)
+    assert.doesNotMatch(className, /before:/)
   })
 })

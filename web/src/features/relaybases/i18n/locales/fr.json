@@ -53,7 +53,8 @@
       "save": "Économiser",
       "amountToPay": "À payer",
       "originalPrice": "Initial",
-      "discountedPrice": "Réduit"
+      "discountedPrice": "Réduit",
+      "discountPercent": "-{{percent}} %"
     },
     "minimum": {
       "placeholder": "Minimum Ɍ{{amount}}",
@@ -61,8 +62,8 @@
       "card": "Recharge minimale : Ɍ{{amount}}. Augmentez le montant pour continuer."
     },
     "payment": {
-      "stripe": "Cartes · Alipay",
-      "waffo": "Cartes · WeChat Pay",
+      "stripe": "Paiement sécurisé par carte ou moyen local. Vérifiez le montant sur Stripe avant de payer.",
+      "waffo": "Paiement sécurisé par carte ou moyen local. Vérifiez le montant sur Waffo avant de payer.",
       "generic": "Poursuivre le paiement avec ce prestataire.",
       "accessibleName": "Payer avec {{name}}",
       "action": "Payer"

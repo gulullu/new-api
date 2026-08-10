@@ -69,13 +69,13 @@ function RelayBasesPaymentBrandIcon(props: {
     return (
       <>
         <img
-          src='/waffo-logo-dark.svg'
+          src='/waffo-logo-light.svg'
           alt=''
           aria-hidden='true'
           className='block size-8 object-contain dark:hidden'
         />
         <img
-          src='/waffo-logo-light.svg'
+          src='/waffo-logo-dark.svg'
           alt=''
           aria-hidden='true'
           className='hidden size-8 object-contain dark:block'
@@ -135,15 +135,10 @@ export function RelayBasesPaymentMethodCard({
       aria-describedby={descriptionId}
       title={belowMinimum ? description : undefined}
       className={cn(
-        'group relative grid h-auto min-h-[104px] w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center justify-start gap-x-3 gap-y-2 overflow-hidden rounded-lg border px-4 py-4 text-left whitespace-normal shadow-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-muted/20 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed sm:min-h-[86px] sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:py-3.5',
-        brand === 'stripe' &&
-          'border-[#635BFF]/20 bg-background hover:border-[#635BFF]/45 dark:border-[#7A73FF]/30',
-        brand === 'waffo' &&
-          'border-slate-900/15 bg-background hover:border-slate-900/40 dark:border-white/20 dark:hover:border-white/45',
-        brand === 'generic' &&
-          'border-border/80 bg-background hover:border-foreground/30',
-        selectedAvailable && 'border-foreground/30 bg-muted/25',
-        loading && 'border-foreground/45 bg-muted/30 disabled:opacity-100',
+        'group relative grid h-auto min-h-[104px] w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center justify-start gap-x-3 gap-y-2 overflow-hidden rounded-lg border border-border/80 bg-background px-4 py-4 text-left whitespace-normal shadow-sm shadow-black/[0.025] transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:bg-primary/[0.035] hover:shadow-md hover:shadow-black/[0.045] focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed sm:min-h-[86px] sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:py-3.5',
+        selectedAvailable && 'border-primary/45 bg-primary/[0.04]',
+        loading &&
+          'border-primary/55 bg-primary/[0.05] shadow-md shadow-black/[0.04] disabled:opacity-100',
         !loading && paymentBusy && 'disabled:opacity-55',
         belowMinimum &&
           'border-muted bg-muted/35 text-muted-foreground shadow-none ring-0 hover:translate-y-0 hover:border-muted hover:bg-muted/35 hover:shadow-none disabled:opacity-100'
@@ -156,7 +151,7 @@ export function RelayBasesPaymentMethodCard({
           brand === 'stripe' &&
             'border-[#635BFF] bg-[#635BFF] shadow-[0_5px_14px_-8px_rgba(99,91,255,0.95)]',
           brand === 'waffo' &&
-            'border-slate-900/20 bg-slate-950 dark:border-white/20 dark:bg-white',
+            'border-border/80 bg-muted/70 dark:border-white/15 dark:bg-white/10',
           brand === 'generic' && 'bg-background border-border'
         )}
       >
@@ -174,13 +169,13 @@ export function RelayBasesPaymentMethodCard({
           {channelHint === 'alipay' && (
             <SiAlipay
               aria-hidden='true'
-              className='mt-0.5 size-5 shrink-0 text-[#1677FF]'
+              className='mt-0.5 size-[22px] shrink-0 text-[#1677FF]'
             />
           )}
           {channelHint === 'wechat' && (
             <SiWechat
               aria-hidden='true'
-              className='mt-0.5 size-5 shrink-0 text-[#07C160]'
+              className='mt-0.5 size-[22px] shrink-0 text-[#07C160]'
             />
           )}
           <span>{description}</span>
@@ -193,8 +188,8 @@ export function RelayBasesPaymentMethodCard({
           'col-span-2 inline-flex h-8 w-full shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors sm:col-span-1 sm:w-auto',
           belowMinimum
             ? 'bg-muted text-muted-foreground'
-            : 'bg-foreground text-background group-hover:bg-foreground/90',
-          loading && 'bg-foreground text-background'
+            : 'bg-primary text-primary-foreground group-hover:bg-primary/90',
+          loading && 'bg-primary text-primary-foreground'
         )}
       >
         {loading ? (

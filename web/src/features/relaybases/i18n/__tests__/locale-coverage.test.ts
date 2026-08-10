@@ -91,23 +91,50 @@ describe('RelayBases locale coverage', () => {
     }
   })
 
-  test('keeps wallet payment action copy short in every locale', () => {
-    const keys = [
-      'wallet.payment.stripe',
-      'wallet.payment.waffo',
-      'wallet.payment.action',
-    ]
+  test('keeps wallet payment copy reassuring without leaking China-only methods', () => {
+    const paymentKeys = ['wallet.payment.stripe', 'wallet.payment.waffo']
     for (const locale of localeNames) {
-      for (const key of keys) {
+      for (const key of paymentKeys) {
         assert.ok(
-          locales[locale][key].length <= 24,
+          locales[locale][key].length <= 120,
           `${locale}: ${key} is too long for the wallet payment card`
         )
       }
+      assert.ok(
+        locales[locale]['wallet.payment.action'].length <= 10,
+        `${locale}: wallet.payment.action is too long`
+      )
     }
-    assert.equal(locales.zh['wallet.payment.stripe'], '银行卡 · 支付宝')
-    assert.equal(locales.zh['wallet.payment.waffo'], '银行卡 · 微信支付')
+    assert.equal(
+      locales.zh['wallet.payment.stripe'],
+      '支持银行卡和支付宝。跳转 Stripe 安全结账页，可先核对应付金额再付款。'
+    )
+    assert.equal(
+      locales.zh['wallet.payment.waffo'],
+      '支持银行卡和微信支付。跳转 Waffo 安全结账页，可先核对应付金额再付款。'
+    )
     assert.equal(locales.zh['wallet.payment.action'], '去支付')
+
+    for (const locale of ['en', 'fr', 'ja', 'ru', 'vi'] as const) {
+      for (const key of paymentKeys) {
+        assert.doesNotMatch(locales[locale][key], /Alipay|WeChat|支付宝|微信/)
+      }
+    }
+  })
+
+  test('keeps wallet discount badges compact in every locale', () => {
+    for (const locale of localeNames) {
+      const value = locales[locale]['wallet.labels.discountPercent']
+      assert.match(value, /\{\{percent\}\}/)
+      assert.ok(value.replaceAll('{{percent}}', '10').length <= 6)
+    }
+    assert.equal(
+      locales.zh['wallet.labels.discountPercent'].replaceAll(
+        '{{percent}}',
+        '10'
+      ),
+      '省10%'
+    )
   })
 
   test('provides the complete localized pricing catalog', () => {

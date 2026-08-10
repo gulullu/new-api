@@ -249,14 +249,29 @@ export function RechargeFormCard({
                           data-topup-preset-value={preset.value}
                           variant='outline'
                           className={cn(
-                            'flex min-h-[84px] w-full min-w-0 max-w-full flex-col items-start overflow-hidden rounded-lg px-3.5 py-4 text-left whitespace-normal sm:min-h-[88px] sm:p-4',
+                            'relative flex min-h-[84px] w-full min-w-0 max-w-full flex-col items-start overflow-hidden rounded-lg px-3.5 py-4 text-left whitespace-normal sm:min-h-[88px] sm:p-4',
                             selectedPreset === preset.value
                               ? 'border-foreground bg-foreground/5 dark:border-foreground dark:bg-foreground/10'
                               : 'border-muted'
                           )}
                           onClick={() => onSelectPreset(preset)}
                         >
-                          <div className='w-full min-w-0 text-base font-semibold break-words sm:text-lg'>
+                          {hasDiscount && (
+                            <span
+                              data-topup-discount-badge
+                              className='bg-primary/10 text-primary absolute top-2 right-2 rounded-md px-1.5 py-0.5 text-[11px] leading-none font-medium'
+                            >
+                              {tRelayBases('wallet.labels.discountPercent', {
+                                percent: Math.round((1 - discount) * 100),
+                              })}
+                            </span>
+                          )}
+                          <div
+                            className={cn(
+                              'w-full min-w-0 text-base font-semibold break-words sm:text-lg',
+                              hasDiscount && 'pr-14'
+                            )}
+                          >
                             {formatRelayBasesCredits(
                               preset.value,
                               relayBasesLanguage
