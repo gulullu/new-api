@@ -16,16 +16,23 @@ import (
 )
 
 const (
-	// ReferralRewardBasisPoints is the percentage that can be credited from a
-	// referred user's first verified production payment when that payment itself
-	// qualifies. Basis points keep the calculation exact and make the API's
-	// displayed percentage match billing.
+	// ReferralRewardBasisPoints is the standard referral percentage credited from
+	// a referred user's first qualifying production payment. Partner profiles use
+	// their own snapshotted rate on every qualifying payment instead. Basis points
+	// keep both calculations exact and make the displayed percentage match billing.
 	ReferralRewardBasisPoints = 300
 	ReferralRewardPercent     = 3
 
 	ReferralRewardStatusAwarded  = "awarded"
 	ReferralRewardStatusWithheld = "withheld"
 	ReferralRewardStatusReversed = "reversed"
+
+	ReferralRewardProgramStandard = "standard"
+	ReferralRewardProgramPartner  = "partner"
+
+	PartnerCommissionSettlementPending   = "pending"
+	PartnerCommissionSettlementAvailable = "available"
+	PartnerCommissionSettlementReversed  = "reversed"
 
 	referralPaymentReferenceGateway = "gateway"
 	referralPaymentReferenceTrade   = "trade"
@@ -67,8 +74,13 @@ type ReferralRewardClaim struct {
 	PaymentProvider        string  `json:"payment_provider" gorm:"type:varchar(50);index"`
 	PaidAmount             string  `json:"paid_amount" gorm:"type:varchar(64)"`
 	PaidCurrency           string  `json:"paid_currency" gorm:"type:varchar(12)"`
+	Program                string  `json:"program" gorm:"type:varchar(24);not null;default:'standard';index"`
 	RateBasisPoints        int     `json:"rate_basis_points"`
 	RewardQuota            int     `json:"reward_quota"`
+	CommissionUsdMicros    int64   `json:"commission_usd_micros" gorm:"not null;default:0"`
+	PartnerSettlement      string  `json:"partner_settlement" gorm:"type:varchar(24);not null;default:'';index"`
+	PartnerAvailableAt     int64   `json:"partner_available_at" gorm:"not null;default:0;index"`
+	PartnerSettledAt       int64   `json:"partner_settled_at" gorm:"not null;default:0"`
 	ReversedQuota          int     `json:"reversed_quota" gorm:"default:0"`
 	Status                 string  `json:"status" gorm:"type:varchar(24);index"`
 	GatewayEventId         string  `json:"gateway_event_id" gorm:"type:varchar(255);index"`
@@ -96,27 +108,35 @@ func (referralRewardPaymentReferenceIndex) TableName() string {
 // end user. In particular, it intentionally omits invitee IDs, usernames,
 // emails, top-up/order identifiers, trade numbers, and gateway identifiers.
 type ReferralRewardHistoryItem struct {
-	Id              int    `json:"id"`
-	InviteeLabel    string `json:"invitee_label"`
-	PaymentProvider string `json:"payment_provider"`
-	PaidAmount      string `json:"paid_amount"`
-	PaidCurrency    string `json:"paid_currency"`
-	RewardQuota     int    `json:"reward_quota"`
-	RateBasisPoints int    `json:"rate_basis_points"`
-	Status          string `json:"status"`
-	CreatedAt       int64  `json:"created_at"`
+	Id                  int    `json:"id"`
+	InviteeLabel        string `json:"invitee_label"`
+	PaymentProvider     string `json:"payment_provider"`
+	PaidAmount          string `json:"paid_amount"`
+	PaidCurrency        string `json:"paid_currency"`
+	Program             string `json:"program"`
+	RewardQuota         int    `json:"reward_quota"`
+	CommissionUsdMicros int64  `json:"commission_usd_micros"`
+	RateBasisPoints     int    `json:"rate_basis_points"`
+	PartnerSettlement   string `json:"partner_settlement"`
+	PartnerAvailableAt  int64  `json:"partner_available_at"`
+	Status              string `json:"status"`
+	CreatedAt           int64  `json:"created_at"`
 }
 
 type referralRewardHistoryRow struct {
-	Id              int
-	InviteeId       int
-	PaymentProvider string
-	PaidAmount      string
-	PaidCurrency    string
-	RewardQuota     int
-	RateBasisPoints int
-	Status          string
-	CreatedAt       int64
+	Id                  int
+	InviteeId           int
+	PaymentProvider     string
+	PaidAmount          string
+	PaidCurrency        string
+	Program             string
+	RewardQuota         int
+	CommissionUsdMicros int64
+	RateBasisPoints     int
+	PartnerSettlement   string
+	PartnerAvailableAt  int64
+	Status              string
+	CreatedAt           int64
 }
 
 type referralRewardInviteeIdentity struct {
@@ -126,11 +146,13 @@ type referralRewardInviteeIdentity struct {
 }
 
 type ReferralRewardReversalResult struct {
-	Changed          bool
-	ClaimId          int
-	InviterId        int
-	RewardQuota      int
-	UnrecoveredQuota int
+	Changed             bool
+	ClaimId             int
+	InviterId           int
+	Program             string
+	RewardQuota         int
+	CommissionUsdMicros int64
+	UnrecoveredQuota    int
 }
 
 // VerifiedPayment contains only values obtained from a successfully verified
@@ -151,7 +173,7 @@ func (payment VerifiedPayment) PaidAmountForLog() string {
 }
 
 func logReferralRewardGrant(granted bool, inviterId int, inviteeId int, tradeNo string, rewardQuota int, payment VerifiedPayment) {
-	if !granted {
+	if !granted || rewardQuota <= 0 {
 		return
 	}
 	common.SysLog("referral reward awarded: inviter_id=" + decimal.NewFromInt(int64(inviterId)).String() +
@@ -428,11 +450,11 @@ func InitializeReferralPaymentVerification() error {
 	return err
 }
 
-// grantPaidReferralRewardTx can award the inviter only on the invitee's first
-// signed production payment, and only when that payment itself qualifies. An
-// earlier verified payment consumes first-payment eligibility even if its
-// currency or reference makes it ineligible for a reward. It must be called in
-// the same transaction that marks the TopUp successful and credits the buyer.
+// grantPaidReferralRewardTx awards an active Partner on every qualifying signed
+// production payment, or a standard inviter only on the invitee's first one.
+// For standard rewards, an earlier verified payment consumes first-payment
+// eligibility even when its currency or reference makes it ineligible. It must
+// run in the transaction that marks the TopUp successful and credits the buyer.
 func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPayment) (bool, int, int, error) {
 	if tx == nil || topUp == nil {
 		return false, 0, 0, errors.New("missing referral reward transaction context")
@@ -471,12 +493,36 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 		return false, 0, 0, nil
 	}
 
-	// The invitee row lock serializes two different payment callbacks for the
-	// same account. Once the first transaction commits its verified successful
-	// TopUp, the next transaction observes it here and cannot award again. The
-	// check intentionally uses the underlying verified TopUp rather than claim
-	// state: an ineligible, withheld, reversed, or refunded first real payment
-	// does not create a second first-payment entitlement.
+	var inviter User
+	if err := lockForUpdate(tx).
+		Select("id", "status", "aff_count", "aff_quota", "aff_history").
+		Where("id = ?", invitee.InviterId).
+		First(&inviter).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, 0, 0, nil
+		}
+		return false, 0, 0, err
+	}
+	if inviter.Status != common.UserStatusEnabled {
+		return false, 0, 0, nil
+	}
+	partnerProfile, err := getEnabledPartnerProfileTx(tx, inviter.Id, true)
+	if err != nil {
+		return false, 0, 0, err
+	}
+	if partnerProfile != nil {
+		granted, commissionUsdMicros, err := grantPartnerCommissionTx(tx, topUp, payment, paymentState, invitee, &inviter, partnerProfile)
+		if granted {
+			common.SysLog("partner commission awarded: inviter_id=" + decimal.NewFromInt(int64(inviter.Id)).String() +
+				" invitee_id=" + decimal.NewFromInt(int64(invitee.Id)).String() +
+				" topup_id=" + decimal.NewFromInt(int64(topUp.Id)).String() +
+				" commission_usd_micros=" + decimal.NewFromInt(commissionUsdMicros).String())
+		}
+		return granted, inviter.Id, 0, err
+	}
+
+	// Standard referral rewards remain first-payment only. Partner rewards take
+	// the separate branch above and can be earned from every verified payment.
 	var previousSuccessfulTopUps int64
 	if err := tx.Model(&TopUp{}).
 		Where("user_id = ? AND id <> ? AND status = ? AND referral_payment_verified = ? AND payment_provider IN ?",
@@ -491,20 +537,6 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 		return false, 0, 0, err
 	}
 	if previousSuccessfulTopUps > 0 {
-		return false, 0, 0, nil
-	}
-
-	var inviter User
-	if err := lockForUpdate(tx).
-		Select("id", "status", "aff_count", "aff_quota", "aff_history").
-		Where("id = ?", invitee.InviterId).
-		First(&inviter).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, 0, 0, nil
-		}
-		return false, 0, 0, err
-	}
-	if inviter.Status != common.UserStatusEnabled {
 		return false, 0, 0, nil
 	}
 
@@ -544,6 +576,7 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 		PaymentProvider:        topUp.PaymentProvider,
 		PaidAmount:             payment.Amount.String(),
 		PaidCurrency:           payment.Currency,
+		Program:                ReferralRewardProgramStandard,
 		RateBasisPoints:        ReferralRewardBasisPoints,
 		RewardQuota:            rewardQuota,
 		Status:                 rewardStatus,
@@ -585,7 +618,7 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 func GetQualifiedReferralInviteeCount(inviterId int) (int64, error) {
 	var count int64
 	err := DB.Model(&ReferralRewardClaim{}).
-		Where("inviter_id = ? AND status IN ?", inviterId, []string{ReferralRewardStatusAwarded, ReferralRewardStatusWithheld}).
+		Where("inviter_id = ? AND program = ? AND status IN ?", inviterId, ReferralRewardProgramStandard, []string{ReferralRewardStatusAwarded, ReferralRewardStatusWithheld}).
 		Distinct("invitee_id").
 		Count(&count).Error
 	return count, err
@@ -621,12 +654,18 @@ func reverseReferralRewardClaimTx(tx *gorm.DB, where string, args []interface{},
 
 	outcome.ClaimId = claim.Id
 	outcome.InviterId = claim.InviterId
+	outcome.Program = claim.Program
 	outcome.RewardQuota = claim.RewardQuota
+	outcome.CommissionUsdMicros = claim.CommissionUsdMicros
 	if claim.Status == ReferralRewardStatusReversed {
 		return nil
 	}
 
-	if claim.Status == ReferralRewardStatusAwarded {
+	if claim.Program == ReferralRewardProgramPartner {
+		if err := reversePartnerCommissionClaimTx(tx, &claim, outcome); err != nil {
+			return err
+		}
+	} else if claim.Status == ReferralRewardStatusAwarded {
 		var inviter User
 		err = lockForUpdate(tx.Unscoped()).Where("id = ?", claim.InviterId).First(&inviter).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -677,7 +716,7 @@ func reverseReferralRewardClaimTx(tx *gorm.DB, where string, args []interface{},
 	claim.ReversalReason = reason
 	claim.ReversedAt = common.GetTimestamp()
 	claim.UpdatedAt = claim.ReversedAt
-	if err := tx.Model(&claim).Select("status", "reversed_quota", "reversal_event_id", "reversal_reason", "reversed_at", "updated_at").Updates(&claim).Error; err != nil {
+	if err := tx.Model(&claim).Select("status", "reversed_quota", "partner_settlement", "reversal_event_id", "reversal_reason", "reversed_at", "updated_at").Updates(&claim).Error; err != nil {
 		return err
 	}
 
@@ -705,7 +744,11 @@ func finishReferralRewardReversal(outcome ReferralRewardReversalResult, reason s
 		return outcome, nil
 	}
 
-	RecordLog(outcome.InviterId, LogTypeSystem, fmt.Sprintf("邀请返利已撤销，金额: %s，原因: %s", logger.FormatQuota(outcome.RewardQuota), reason))
+	if outcome.Program == ReferralRewardProgramPartner {
+		RecordLog(outcome.InviterId, LogTypeSystem, fmt.Sprintf("Partner commission reversed: USD %s, reason: %s", decimal.NewFromInt(outcome.CommissionUsdMicros).Div(decimal.NewFromInt(1_000_000)).StringFixed(6), reason))
+	} else {
+		RecordLog(outcome.InviterId, LogTypeSystem, fmt.Sprintf("邀请返利已撤销，金额: %s，原因: %s", logger.FormatQuota(outcome.RewardQuota), reason))
+	}
 	if outcome.UnrecoveredQuota > 0 {
 		common.SysError("referral reward reversal left unrecovered quota: claim_id=" +
 			decimal.NewFromInt(int64(outcome.ClaimId)).String() +
@@ -832,6 +875,17 @@ func maskedReferralInviteeLabel(identity referralRewardInviteeIdentity) string {
 // referral ledger projection. Callers must supply the authenticated user ID;
 // no invitee or inviter selector is accepted from request parameters.
 func GetReferralRewardHistory(inviterId int, pageInfo *common.PageInfo) ([]ReferralRewardHistoryItem, int64, error) {
+	return getReferralRewardHistory(inviterId, pageInfo, ReferralRewardProgramStandard)
+}
+
+// GetPartnerCommissionHistory exposes only the authenticated partner's USD
+// commission rows. Keeping the program filter server-side prevents legacy
+// standard rewards from distorting Partner pagination.
+func GetPartnerCommissionHistory(inviterId int, pageInfo *common.PageInfo) ([]ReferralRewardHistoryItem, int64, error) {
+	return getReferralRewardHistory(inviterId, pageInfo, ReferralRewardProgramPartner)
+}
+
+func getReferralRewardHistory(inviterId int, pageInfo *common.PageInfo, program string) ([]ReferralRewardHistoryItem, int64, error) {
 	var total int64
 	var rows []referralRewardHistoryRow
 
@@ -847,13 +901,16 @@ func GetReferralRewardHistory(inviterId int, pageInfo *common.PageInfo) ([]Refer
 	}()
 
 	query := tx.Model(&ReferralRewardClaim{}).Where("inviter_id = ?", inviterId)
+	if program != "" {
+		query = query.Where("program = ?", program)
+	}
 	if err := query.Count(&total).Error; err != nil {
 		tx.Rollback()
 		return nil, 0, err
 	}
 
 	if err := query.
-		Select("id, invitee_id, payment_provider, paid_amount, paid_currency, reward_quota, rate_basis_points, status, created_at").
+		Select("id, invitee_id, payment_provider, paid_amount, paid_currency, program, reward_quota, commission_usd_micros, rate_basis_points, partner_settlement, partner_available_at, status, created_at").
 		Order("id DESC").
 		Limit(pageInfo.GetPageSize()).
 		Offset(pageInfo.GetStartIdx()).
@@ -889,15 +946,19 @@ func GetReferralRewardHistory(inviterId int, pageInfo *common.PageInfo) ([]Refer
 	items := make([]ReferralRewardHistoryItem, 0, len(rows))
 	for _, row := range rows {
 		items = append(items, ReferralRewardHistoryItem{
-			Id:              row.Id,
-			InviteeLabel:    maskedReferralInviteeLabel(identityById[row.InviteeId]),
-			PaymentProvider: row.PaymentProvider,
-			PaidAmount:      row.PaidAmount,
-			PaidCurrency:    row.PaidCurrency,
-			RewardQuota:     row.RewardQuota,
-			RateBasisPoints: row.RateBasisPoints,
-			Status:          row.Status,
-			CreatedAt:       row.CreatedAt,
+			Id:                  row.Id,
+			InviteeLabel:        maskedReferralInviteeLabel(identityById[row.InviteeId]),
+			PaymentProvider:     row.PaymentProvider,
+			PaidAmount:          row.PaidAmount,
+			PaidCurrency:        row.PaidCurrency,
+			Program:             row.Program,
+			RewardQuota:         row.RewardQuota,
+			CommissionUsdMicros: row.CommissionUsdMicros,
+			RateBasisPoints:     row.RateBasisPoints,
+			PartnerSettlement:   row.PartnerSettlement,
+			PartnerAvailableAt:  row.PartnerAvailableAt,
+			Status:              row.Status,
+			CreatedAt:           row.CreatedAt,
 		})
 	}
 

@@ -75,6 +75,44 @@ describe('RelayBases locale coverage', () => {
     }
   })
 
+  test('keeps every Partner rule and withdrawal label localized', () => {
+    const partnerKeys = Object.keys(locales.en).filter((key) =>
+      key.startsWith('partner.')
+    )
+    assert.ok(partnerKeys.length > 70)
+    for (const locale of localeNames) {
+      assert.deepEqual(
+        Object.keys(locales[locale]).filter((key) =>
+          key.startsWith('partner.')
+        ),
+        partnerKeys
+      )
+    }
+  })
+
+  test('localizes every Partner audit action in all seven locales', () => {
+    const auditKeys = [
+      'partner.audit.configure',
+      'partner.audit.balanceTransfer',
+      'partner.audit.withdrawalCreate',
+      'partner.audit.withdrawalReveal',
+      'partner.audit.withdrawalPaid',
+      'partner.audit.withdrawalReject',
+    ]
+    for (const locale of localeNames) {
+      for (const key of auditKeys) {
+        assert.ok(locales[locale][key]?.trim(), `${locale} is missing ${key}`)
+      }
+      assert.match(
+        locales[locale]['partner.audit.configure'],
+        /\{\{commission_rate_percent\}\}/
+      )
+      for (const key of auditKeys.slice(2)) {
+        assert.match(locales[locale][key], /\{\{withdrawal_id\}\}/)
+      }
+    }
+  })
+
   test('renders the unified Ɍ20 minimum in every locale', () => {
     const keys = [
       'wallet.minimum.placeholder',

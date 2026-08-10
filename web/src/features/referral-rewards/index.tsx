@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import { PartnerRewards } from '@/features/partner-rewards'
 import { AffiliateRewardsCard } from '@/features/wallet/components/affiliate-rewards-card'
 import { TransferDialog } from '@/features/wallet/components/dialogs/transfer-dialog'
 import { useAffiliate, useTopupInfo } from '@/features/wallet/hooks'
@@ -30,6 +31,13 @@ import { useAuthStore, type AuthUser } from '@/stores/auth-store'
 import { ReferralRewardsTable } from './components/referral-rewards-table'
 
 export function ReferralRewards() {
+  const partnerEnabled = useAuthStore(
+    (state) => state.auth.user?.partner_enabled === true
+  )
+  return partnerEnabled ? <PartnerRewards /> : <StandardReferralRewards />
+}
+
+function StandardReferralRewards() {
   const { t } = useTranslation()
   const authUser = useAuthStore((state) => state.auth.user)
   const setAuthUser = useAuthStore((state) => state.auth.setUser)

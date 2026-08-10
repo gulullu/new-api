@@ -76,6 +76,125 @@
       "refundLink": "查看退款政策"
     }
   },
+  "partner": {
+    "pageTitle": "合作夥伴計畫",
+    "hero": {
+      "badge": "RelayBases 合作夥伴",
+      "title": "每筆有效推薦儲值，持續獲得佣金",
+      "description": "受邀使用者每筆成功儲值，均按實際支付的 USD 金額返佣 {{rate}}。",
+      "linkLabel": "你的合作夥伴連結",
+      "copyLink": "複製連結",
+      "linkCopied": "合作夥伴連結已複製"
+    },
+    "actions": { "transfer": "轉入餘額", "withdraw": "申請提領" },
+    "metrics": {
+      "available": "可用佣金",
+      "availableDetail": "可轉入餘額或申請提領",
+      "pending": "結算中",
+      "pendingDetail": "7 天結算期結束後可用",
+      "lifetime": "累計佣金",
+      "lifetimeDetail": "啟用合作夥伴後累計獲得",
+      "withdrawn": "已提領",
+      "withdrawnDetail": "已完成付款的提領"
+    },
+    "adjustment": "待調整金額 {{amount}} 將從後續佣金中扣除；結清後即可繼續轉入餘額或提領。",
+    "common": { "amountUsd": "金額（USD）", "available": "可用" },
+    "transfer": {
+      "title": "將佣金轉入餘額",
+      "description": "按 RelayBases 目前價格，將可用 USD 佣金轉換為 API Credits。",
+      "confirm": "確認轉入",
+      "success": "佣金已轉入餘額"
+    },
+    "withdrawal": {
+      "title": "申請提領",
+      "description": "選擇提領方式並提交收款資料，等待人工審核與付款。",
+      "minimum": "最低提領 USD 20；同一時間只能有一筆待處理申請。",
+      "method": "提領方式",
+      "alipay": "支付寶",
+      "bsc": "USDT · BNB Smart Chain（BEP-20）",
+      "alipayAccount": "支付寶帳號",
+      "alipayName": "收款人姓名",
+      "bscAddress": "BSC 位址",
+      "bscWarning": "僅填寫 BNB Smart Chain（BEP-20）上的 USDT 位址；使用其他網路可能造成資產永久遺失。",
+      "submit": "提交申請",
+      "success": "提領申請已提交",
+      "verifyTitle": "確認提領申請",
+      "verifyDescription": "儲存收款資料前，請先驗證身分。",
+      "status": { "pending": "待處理", "paid": "已付款", "rejected": "已駁回" }
+    },
+    "activity": {
+      "title": "合作夥伴明細",
+      "description": "查看每筆佣金的結算狀態與提領進度。",
+      "commissions": "佣金明細",
+      "withdrawals": "提領紀錄",
+      "emptyCommissions": "目前還沒有合作夥伴佣金。",
+      "emptyWithdrawals": "目前還沒有提領申請。",
+      "paidAmount": "實付 {{amount}}",
+      "previous": "上一頁",
+      "next": "下一頁"
+    },
+    "status": {
+      "available": "已可用",
+      "availableOn": "{{date}} 可用",
+      "reversed": "已撤銷"
+    },
+    "rules": {
+      "title": "合作夥伴規則",
+      "items": [
+        "使用者透過你的連結註冊後，其每筆已確認成功的儲值均可產生佣金。",
+        "你的專屬比例以本頁顯示為準；佣金按實際支付的 USD 金額計算，不與一般推薦返利疊加。",
+        "佣金從啟用合作夥伴後開始計算，啟用前的付款不會補算。",
+        "每筆佣金需經過 7 天結算期，結算完成後才可使用。",
+        "可用佣金可轉為 API Credits 或申請提領；最低提領金額為 USD 20。",
+        "提領支援支付寶與 BNB Smart Chain（BEP-20）上的 USDT，提交前請仔細核對收款資料。",
+        "同一時間只能有一筆待處理提領；RelayBases 將人工審核並完成付款。",
+        "退款或爭議付款不產生佣金；相關佣金可能被撤銷，或從後續佣金中扣除。"
+      ]
+    },
+    "admin": {
+      "tab": "合作夥伴",
+      "profiles": "合作夥伴設定",
+      "profilesDescription": "查看已分配給合作夥伴的專屬佣金比例。",
+      "search": "搜尋使用者或電子郵件",
+      "emptyProfiles": "找不到合作夥伴。",
+      "configure": "設定合作夥伴",
+      "configureDescription": "為使用者啟用合夥人資格並設定專屬比例。",
+      "userId": "使用者 ID",
+      "rate": "佣金比例（%）",
+      "save": "儲存設定",
+      "partnerSaved": "合作夥伴設定已儲存",
+      "withdrawals": "提領審核",
+      "withdrawalsDescription": "僅在處理提領時查看受保護的收款資料。",
+      "emptyWithdrawals": "找不到提領申請。",
+      "reveal": "查看收款資料",
+      "markPaid": "確認已付款",
+      "reject": "駁回",
+      "destination": "收款資料",
+      "reviewDescription": "完成審核前，請填寫付款憑證或駁回原因。",
+      "txHash": "BSC 交易雜湊",
+      "payoutReference": "付款憑證",
+      "note": "管理員備註",
+      "confirm": "確認",
+      "actionComplete": "提領審核已完成",
+      "verifyRevealTitle": "查看收款資料",
+      "verifyRevealDescription": "查看受保護的收款資料前，請先驗證身分。",
+      "verifyReviewTitle": "確認提領審核",
+      "verifyReviewDescription": "變更提領狀態前，請先驗證身分。"
+    },
+    "audit": {
+      "configure": "將合作夥伴佣金比例設為 {{commission_rate_percent}}%。",
+      "balanceTransfer": "將合作夥伴佣金轉換為 API Credits。",
+      "withdrawalCreate": "提交了合作夥伴提領 #{{withdrawal_id}}。",
+      "withdrawalReveal": "查看了合作夥伴提領 #{{withdrawal_id}} 的收款資料。",
+      "withdrawalPaid": "確認合作夥伴提領 #{{withdrawal_id}} 已付款。",
+      "withdrawalReject": "駁回了合作夥伴提領 #{{withdrawal_id}}。"
+    },
+    "errors": {
+      "request": "請求失敗",
+      "load": "合作夥伴資料載入失敗。",
+      "retry": "重新載入"
+    }
+  },
   "pricing": {
     "creditNote": {
       "accessibleName": "RelayBases API Credits 計價說明",

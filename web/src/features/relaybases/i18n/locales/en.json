@@ -76,6 +76,135 @@
       "refundLink": "Read the Refund Policy"
     }
   },
+  "partner": {
+    "pageTitle": "Partner Program",
+    "hero": {
+      "badge": "RelayBases Partner",
+      "title": "Grow with every successful referral",
+      "description": "Earn {{rate}} of the actual USD amount paid on every successful top-up made by users you invite.",
+      "linkLabel": "Your partner link",
+      "copyLink": "Copy link",
+      "linkCopied": "Partner link copied"
+    },
+    "actions": {
+      "transfer": "Transfer to balance",
+      "withdraw": "Withdraw"
+    },
+    "metrics": {
+      "available": "Available",
+      "availableDetail": "Ready to transfer or withdraw",
+      "pending": "Settling",
+      "pendingDetail": "Available after the 7-day hold",
+      "lifetime": "Lifetime commission",
+      "lifetimeDetail": "Commission earned since Partner access began",
+      "withdrawn": "Withdrawn",
+      "withdrawnDetail": "Completed cash withdrawals"
+    },
+    "adjustment": "A {{amount}} adjustment will be deducted from future commission. Transfers and withdrawals resume after it is cleared.",
+    "common": {
+      "amountUsd": "Amount (USD)",
+      "available": "Available"
+    },
+    "transfer": {
+      "title": "Transfer commission to balance",
+      "description": "Convert available USD commission to API Credits using the current RelayBases price.",
+      "confirm": "Transfer",
+      "success": "Commission transferred to your balance"
+    },
+    "withdrawal": {
+      "title": "Request a withdrawal",
+      "description": "Choose a payout method and submit your destination for manual review.",
+      "minimum": "Minimum withdrawal: USD 20. Only one request can be pending at a time.",
+      "method": "Payout method",
+      "alipay": "Alipay",
+      "bsc": "USDT on BNB Smart Chain (BEP-20)",
+      "alipayAccount": "Alipay account",
+      "alipayName": "Recipient name",
+      "bscAddress": "BSC address",
+      "bscWarning": "Use only a USDT address on BNB Smart Chain (BEP-20). An address on another network may cause permanent loss.",
+      "submit": "Submit request",
+      "success": "Withdrawal request submitted",
+      "verifyTitle": "Confirm withdrawal request",
+      "verifyDescription": "Verify your identity before saving payout details.",
+      "status": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "rejected": "Rejected"
+      }
+    },
+    "activity": {
+      "title": "Partner activity",
+      "description": "Review commission settlement and withdrawal progress.",
+      "commissions": "Commissions",
+      "withdrawals": "Withdrawals",
+      "emptyCommissions": "No Partner commission yet.",
+      "emptyWithdrawals": "No withdrawal requests yet.",
+      "paidAmount": "Paid {{amount}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "status": {
+      "available": "Available",
+      "availableOn": "Available {{date}}",
+      "reversed": "Reversed"
+    },
+    "rules": {
+      "title": "Partner rules",
+      "items": [
+        "Commission applies to every confirmed successful top-up made by a user who registered through your link.",
+        "Your personal rate is shown on this page. Commission uses the actual USD amount paid and does not stack with the standard referral reward.",
+        "Partner commission starts after Partner access is enabled; earlier payments are not recalculated.",
+        "Each commission is held for 7 days before becoming available.",
+        "Available commission can be transferred to API Credits or withdrawn. The minimum withdrawal is USD 20.",
+        "Withdrawals support Alipay and USDT on BNB Smart Chain (BEP-20). Check payout details carefully before submitting.",
+        "Only one withdrawal request may be pending at a time. RelayBases reviews and processes each request manually.",
+        "Refunded or disputed payments do not earn commission. Related commission may be reversed or deducted from future commission."
+      ]
+    },
+    "admin": {
+      "tab": "Partners",
+      "profiles": "Partner profiles",
+      "profilesDescription": "Personal rates currently assigned to Partner users.",
+      "search": "Search user or email",
+      "emptyProfiles": "No Partner profiles found.",
+      "configure": "Configure Partner",
+      "configureDescription": "Enable Partner access and set a personal commission rate.",
+      "userId": "User ID",
+      "rate": "Commission rate (%)",
+      "save": "Save Partner",
+      "partnerSaved": "Partner configuration saved",
+      "withdrawals": "Withdrawal review",
+      "withdrawalsDescription": "Reveal protected payout details only when processing a request.",
+      "emptyWithdrawals": "No withdrawal requests found.",
+      "reveal": "Reveal",
+      "markPaid": "Confirm paid",
+      "reject": "Reject",
+      "destination": "Payout destination",
+      "reviewDescription": "Record the payout reference or rejection reason before completing this review.",
+      "txHash": "BSC transaction hash",
+      "payoutReference": "Payout reference",
+      "note": "Admin note",
+      "confirm": "Confirm",
+      "actionComplete": "Withdrawal review completed",
+      "verifyRevealTitle": "Reveal payout details",
+      "verifyRevealDescription": "Verify your identity before viewing protected payout information.",
+      "verifyReviewTitle": "Confirm withdrawal review",
+      "verifyReviewDescription": "Verify your identity before changing the withdrawal status."
+    },
+    "audit": {
+      "configure": "Set Partner commission rate to {{commission_rate_percent}}%.",
+      "balanceTransfer": "Converted Partner commission to API Credits.",
+      "withdrawalCreate": "Submitted Partner withdrawal #{{withdrawal_id}}.",
+      "withdrawalReveal": "Viewed payout details for Partner withdrawal #{{withdrawal_id}}.",
+      "withdrawalPaid": "Confirmed Partner withdrawal #{{withdrawal_id}} as paid.",
+      "withdrawalReject": "Rejected Partner withdrawal #{{withdrawal_id}}."
+    },
+    "errors": {
+      "request": "Request failed",
+      "load": "Partner data could not be loaded.",
+      "retry": "Try again"
+    }
+  },
   "pricing": {
     "creditNote": {
       "accessibleName": "RelayBases API Credits pricing information",

@@ -49,6 +49,13 @@ var auditContentTemplates = map[string]string{
 
 	"subscription.plan_reset":      "Reset active subscriptions for plan ${plan_id}",
 	"subscription.user_plan_reset": "Reset active plan ${plan_id} subscriptions for user ${target_user_id}",
+
+	"partner.configure":         "Configured Partner commission rate (${commission_basis_points} basis points)",
+	"partner.balance_transfer":  "Transferred Partner commission to API Credits",
+	"partner.withdrawal_create": "Created Partner withdrawal ${withdrawal_id}",
+	"partner.withdrawal_reveal": "Viewed payout details for Partner withdrawal ${withdrawal_id}",
+	"partner.withdrawal_paid":   "Confirmed Partner withdrawal ${withdrawal_id} as paid",
+	"partner.withdrawal_reject": "Rejected Partner withdrawal ${withdrawal_id}",
 }
 
 // auditContentEN 按 action 模板渲染英文兜底文本；未登记的 action 退回 action 本身。

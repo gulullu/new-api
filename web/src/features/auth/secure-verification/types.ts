@@ -22,6 +22,9 @@ export type SecurityProofScope =
   | 'channel.key.read'
   | 'passkey.register'
   | 'passkey.delete'
+  | 'partner.withdrawal.create'
+  | 'partner.withdrawal.review'
+  | 'partner.withdrawal.reveal'
 
 export interface SecurityProof {
   proof_token: string

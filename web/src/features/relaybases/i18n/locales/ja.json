@@ -76,6 +76,129 @@
       "refundLink": "返金ポリシーを読む"
     }
   },
+  "partner": {
+    "pageTitle": "パートナープログラム",
+    "hero": {
+      "badge": "RelayBases パートナー",
+      "title": "紹介ユーザーの決済ごとに報酬を獲得",
+      "description": "紹介ユーザーがチャージするたびに、実際の USD 支払額の {{rate}} を受け取れます。",
+      "linkLabel": "パートナーリンク",
+      "copyLink": "リンクをコピー",
+      "linkCopied": "パートナーリンクをコピーしました"
+    },
+    "actions": { "transfer": "残高へ移行", "withdraw": "出金" },
+    "metrics": {
+      "available": "利用可能",
+      "availableDetail": "残高への移行または出金が可能",
+      "pending": "精算中",
+      "pendingDetail": "7 日間の保留後に利用可能",
+      "lifetime": "累計報酬",
+      "lifetimeDetail": "パートナー開始後に獲得した報酬",
+      "withdrawn": "出金済み",
+      "withdrawnDetail": "支払いが完了した出金"
+    },
+    "adjustment": "{{amount}} の調整額は今後の報酬から差し引かれます。解消後に移行と出金を再開できます。",
+    "common": { "amountUsd": "金額（USD）", "available": "利用可能" },
+    "transfer": {
+      "title": "報酬を残高へ移行",
+      "description": "利用可能な USD 報酬を現在の RelayBases 価格で API Credits に変換します。",
+      "confirm": "移行する",
+      "success": "報酬を残高へ移行しました"
+    },
+    "withdrawal": {
+      "title": "出金を申請",
+      "description": "受取方法と受取先を送信し、手動確認を待ちます。",
+      "minimum": "最低出金額は 20 USD です。保留中の申請は 1 件までです。",
+      "method": "受取方法",
+      "alipay": "Alipay",
+      "bsc": "BNB Smart Chain（BEP-20）の USDT",
+      "alipayAccount": "Alipay アカウント",
+      "alipayName": "受取人名",
+      "bscAddress": "BSC アドレス",
+      "bscWarning": "BNB Smart Chain（BEP-20）の USDT アドレスのみ使用してください。別のネットワークでは資産を失うおそれがあります。",
+      "submit": "申請を送信",
+      "success": "出金申請を送信しました",
+      "verifyTitle": "出金申請を確認",
+      "verifyDescription": "受取情報を保存する前に本人確認を行ってください。",
+      "status": {
+        "pending": "処理待ち",
+        "paid": "支払済み",
+        "rejected": "却下"
+      }
+    },
+    "activity": {
+      "title": "パートナー履歴",
+      "description": "報酬の精算状況と出金の進捗を確認できます。",
+      "commissions": "報酬明細",
+      "withdrawals": "出金履歴",
+      "emptyCommissions": "パートナー報酬はまだありません。",
+      "emptyWithdrawals": "出金申請はまだありません。",
+      "paidAmount": "支払額 {{amount}}",
+      "previous": "前へ",
+      "next": "次へ"
+    },
+    "status": {
+      "available": "利用可能",
+      "availableOn": "{{date}} に利用可能",
+      "reversed": "取消済み"
+    },
+    "rules": {
+      "title": "パートナールール",
+      "items": [
+        "あなたのリンクから登録したユーザーによる、確認済みのチャージごとに報酬が発生します。",
+        "個別の報酬率はこのページに表示されます。報酬は実際の USD 支払額を基準とし、通常の紹介報酬とは重複しません。",
+        "報酬はパートナー権限の有効化後から計算され、過去の支払いは再計算されません。",
+        "各報酬は 7 日間の精算期間を経て利用可能になります。",
+        "利用可能な報酬は API Credits へ移行するか出金できます。最低出金額は 20 USD です。",
+        "出金は Alipay または BNB Smart Chain（BEP-20）の USDT に対応します。送信前に受取先を十分確認してください。",
+        "保留中の出金申請は 1 件までです。RelayBases が各申請を手動で確認し、処理します。",
+        "返金または異議申立てのある支払いは報酬対象外です。関連報酬は取り消されるか、今後の報酬から差し引かれる場合があります。"
+      ]
+    },
+    "admin": {
+      "tab": "パートナー",
+      "profiles": "パートナー設定",
+      "profilesDescription": "パートナーユーザーに設定された個別報酬率です。",
+      "search": "ユーザーまたはメールを検索",
+      "emptyProfiles": "パートナーが見つかりません。",
+      "configure": "パートナーを設定",
+      "configureDescription": "パートナー資格を有効にして個別報酬率を設定します。",
+      "userId": "ユーザー ID",
+      "rate": "報酬率（%）",
+      "save": "保存",
+      "partnerSaved": "パートナー設定を保存しました",
+      "withdrawals": "出金審査",
+      "withdrawalsDescription": "申請処理時のみ、保護された受取情報を表示してください。",
+      "emptyWithdrawals": "出金申請が見つかりません。",
+      "reveal": "表示",
+      "markPaid": "支払済みにする",
+      "reject": "却下",
+      "destination": "受取先",
+      "reviewDescription": "完了前に支払い参照または却下理由を記録してください。",
+      "txHash": "BSC トランザクションハッシュ",
+      "payoutReference": "支払い参照",
+      "note": "管理者メモ",
+      "confirm": "確認",
+      "actionComplete": "出金審査が完了しました",
+      "verifyRevealTitle": "受取先を表示",
+      "verifyRevealDescription": "保護された受取情報を表示する前に本人確認を行ってください。",
+      "verifyReviewTitle": "出金審査を確認",
+      "verifyReviewDescription": "出金状態を変更する前に本人確認を行ってください。"
+    },
+    "audit": {
+      "configure": "パートナー報酬率を {{commission_rate_percent}}% に設定しました。",
+      "balanceTransfer": "パートナー報酬を API Credits に変換しました。",
+      "withdrawalCreate": "パートナー出金 #{{withdrawal_id}} を申請しました。",
+      "withdrawalReveal": "パートナー出金 #{{withdrawal_id}} の受取情報を表示しました。",
+      "withdrawalPaid": "パートナー出金 #{{withdrawal_id}} の支払い完了を確認しました。",
+      "withdrawalReject": "パートナー出金 #{{withdrawal_id}} を却下しました。"
+    },
+    "errors": {
+      "request": "リクエストに失敗しました",
+      "load": "パートナーデータを読み込めませんでした。",
+      "retry": "再読み込み"
+    }
+  },
   "pricing": {
     "creditNote": {
       "accessibleName": "RelayBases API Credits の料金情報",
