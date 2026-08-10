@@ -21,6 +21,18 @@
       "both": "Khi đăng ký, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement> và <privacy>Chính sách quyền riêng tư</privacy>.",
       "agreementOnly": "Khi đăng ký, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement>.",
       "privacyOnly": "Khi đăng ký, bạn đồng ý với <privacy>Chính sách quyền riêng tư</privacy>."
+    },
+    "termsFooter": {
+      "signIn": {
+        "both": "Khi đăng nhập, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement> và <privacy>Chính sách quyền riêng tư</privacy>.",
+        "agreementOnly": "Khi đăng nhập, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement>.",
+        "privacyOnly": "Khi đăng nhập, bạn đồng ý với <privacy>Chính sách quyền riêng tư</privacy>."
+      },
+      "signUp": {
+        "both": "Khi tạo tài khoản, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement> và <privacy>Chính sách quyền riêng tư</privacy>.",
+        "agreementOnly": "Khi tạo tài khoản, bạn đồng ý với <agreement>Thỏa thuận người dùng</agreement>.",
+        "privacyOnly": "Khi tạo tài khoản, bạn đồng ý với <privacy>Chính sách quyền riêng tư</privacy>."
+      }
     }
   },
   "logExport": {

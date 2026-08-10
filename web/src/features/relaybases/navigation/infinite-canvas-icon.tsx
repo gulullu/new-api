@@ -38,6 +38,20 @@ export function InfiniteCanvasIcon(props: SVGProps<SVGSVGElement>) {
         stroke='rgba(255,255,255,.22)'
         strokeWidth='1.1'
       />
+      <rect
+        x='4'
+        y='4'
+        width='24'
+        height='24'
+        rx='7.8'
+        fill='rgba(47,125,225,.08)'
+      />
+      <path
+        d='M7.8 8.8c3.6-3.1 11.4-3.2 15.6-.3'
+        stroke='rgba(255,255,255,.26)'
+        strokeWidth='1.15'
+        strokeLinecap='round'
+      />
       <path
         d='M7.6 16.25c0-4.78 3.42-8.18 8.2-8.18 4.42 0 7.92 3.12 7.92 7.1 0 4.58-3.42 7.86-8.14 7.86-3.42 0-5.72-1.64-5.72-4.02 0-2.82 2.54-4.14 6.44-4.14 4.02 0 6.56-1.4 6.56-3.52'
         stroke='rgba(255,255,255,.3)'
@@ -70,6 +84,10 @@ export function InfiniteCanvasIcon(props: SVGProps<SVGSVGElement>) {
         strokeLinejoin='round'
         strokeDasharray='7.6 30.8'
         strokeDashoffset='-18.8'
+      />
+      <path
+        d='M8.7 9.55l1.15-.46.46-1.15.46 1.15 1.15.46-1.15.46-.46 1.15-.46-1.15-1.15-.46Z'
+        fill='rgba(255,255,255,.94)'
       />
       <circle cx='16' cy='16' r='1.15' fill='#fff' />
     </svg>

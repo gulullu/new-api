@@ -17,12 +17,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Activity } from 'lucide-react'
+import { createElement } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useTheme } from '@/context/theme-provider'
 
 import { withRelayBasesDocumentPreferences } from './document-preferences'
 import { InfiniteCanvasIcon } from './infinite-canvas-icon'
+import {
+  InfiniteCanvasNavigationContent,
+  infiniteCanvasHeaderLinkClassName,
+  infiniteCanvasSidebarActionClassName,
+  infiniteCanvasSidebarItemClassName,
+} from './infinite-canvas-navigation'
 
 const serviceStatusUrl = 'https://kuma.relaybases.com/status/relaybases'
 const infiniteCanvasUrl = 'https://canvas.relaybases.com/'
@@ -36,6 +43,7 @@ export function useRelayBasesNavigation() {
     i18n.language,
     theme
   )
+  const infiniteCanvasTitle = t('navigation.infiniteCanvas')
 
   return {
     topNavLinks: [
@@ -45,16 +53,28 @@ export function useRelayBasesNavigation() {
         external: true as const,
       },
       {
-        title: t('navigation.infiniteCanvas'),
+        title: infiniteCanvasTitle,
         href: canvasUrl,
         external: true as const,
+        className: infiniteCanvasHeaderLinkClassName,
+        content: createElement(InfiniteCanvasNavigationContent, {
+          title: infiniteCanvasTitle,
+          zone: 'header',
+        }),
       },
     ],
     sidebarCanvasLink: {
-      title: t('navigation.infiniteCanvas'),
+      title: infiniteCanvasTitle,
       url: canvasUrl,
       icon: InfiniteCanvasIcon,
+      badge: 'AI',
       external: true as const,
+      className: infiniteCanvasSidebarActionClassName,
+      itemClassName: infiniteCanvasSidebarItemClassName,
+      content: createElement(InfiniteCanvasNavigationContent, {
+        title: infiniteCanvasTitle,
+        zone: 'sidebar',
+      }),
     },
     serviceStatusLink: {
       title: t('navigation.serviceStatus'),

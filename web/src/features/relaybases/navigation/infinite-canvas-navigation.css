@@ -1,0 +1,223 @@
+/*
+Copyright (C) 2023-2026 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+.rb-infinite-canvas-header-link {
+  position: relative !important;
+  isolation: isolate !important;
+  display: inline-flex !important;
+  flex: 0 1 auto !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  min-width: 0 !important;
+  max-width: 13rem !important;
+  padding: 0.38rem 0.72rem 0.38rem 0.46rem !important;
+  overflow: hidden !important;
+  border: 1px solid rgb(47 125 225 / 26%) !important;
+  border-radius: 999px !important;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 86%),
+    rgb(47 125 225 / 10%) 48%,
+    rgb(233 76 137 / 8%)
+  ) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 40%),
+    0 10px 26px rgb(20 25 40 / 10%) !important;
+  font-weight: 650 !important;
+  text-decoration: none !important;
+}
+
+.dark .rb-infinite-canvas-header-link,
+[data-theme='dark'] .rb-infinite-canvas-header-link {
+  border-color: rgb(255 255 255 / 14%) !important;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 8%),
+    rgb(47 125 225 / 16%) 48%,
+    rgb(233 76 137 / 11%)
+  ) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 6%),
+    0 14px 30px rgb(0 0 0 / 20%) !important;
+}
+
+.rb-infinite-canvas-icon-shell {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.62em !important;
+  height: 1.62em !important;
+  border-radius: 0.56em !important;
+  filter: drop-shadow(0 8px 14px rgb(47 125 225 / 28%)) !important;
+}
+
+.rb-infinite-canvas-icon-shell svg {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.rb-infinite-canvas-text {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.rb-infinite-canvas-badge {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.08rem 0.32rem !important;
+  border: 1px solid rgb(117 71 209 / 18%) !important;
+  border-radius: 999px !important;
+  background: rgb(117 71 209 / 10%) !important;
+  color: currentcolor !important;
+  font-size: 0.64em !important;
+  line-height: 1 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.rb-infinite-canvas-dashboard-card {
+  position: relative !important;
+  isolation: isolate !important;
+  margin: 0.35rem 0 0.8rem !important;
+  overflow: hidden !important;
+  border: 1px solid rgb(47 125 225 / 22%) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 72%),
+    rgb(47 125 225 / 10%) 48%,
+    rgb(233 76 137 / 7%)
+  ) !important;
+  box-shadow:
+    0 12px 30px rgb(20 25 40 / 10%),
+    inset 0 0 0 1px rgb(255 255 255 / 45%) !important;
+}
+
+.dark .rb-infinite-canvas-dashboard-card,
+[data-theme='dark'] .rb-infinite-canvas-dashboard-card {
+  border-color: rgb(255 255 255 / 13%) !important;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 7.5%),
+    rgb(47 125 225 / 14%) 48%,
+    rgb(233 76 137 / 10%)
+  ) !important;
+  box-shadow:
+    0 16px 34px rgb(0 0 0 / 22%),
+    inset 0 0 0 1px rgb(255 255 255 / 5.5%) !important;
+}
+
+.rb-infinite-canvas-dashboard-action {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 2.75rem !important;
+  gap: 0.375rem !important;
+  padding-right: 2.25rem !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
+.rb-infinite-canvas-dashboard-card .rb-infinite-canvas-text {
+  font-size: 0.94em !important;
+}
+
+.rb-infinite-canvas-dashboard-card .rb-infinite-canvas-badge {
+  position: absolute !important;
+  top: 50% !important;
+  right: 0.55rem !important;
+  padding: 0.15rem 0.4rem !important;
+  transform: translateY(-50%) !important;
+  border-color: rgb(117 71 209 / 20%) !important;
+  font-size: 10px !important;
+  font-weight: 720 !important;
+  letter-spacing: 0.06em !important;
+  pointer-events: none !important;
+}
+
+[data-collapsible='icon'] .rb-infinite-canvas-dashboard-card {
+  margin: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+[data-collapsible='icon'] .rb-infinite-canvas-dashboard-action {
+  min-height: 0 !important;
+  padding: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+[data-collapsible='icon']
+  .rb-infinite-canvas-dashboard-card
+  .rb-infinite-canvas-text,
+[data-collapsible='icon']
+  .rb-infinite-canvas-dashboard-card
+  .rb-infinite-canvas-badge {
+  display: none !important;
+}
+
+[data-collapsible='icon']
+  .rb-infinite-canvas-dashboard-card
+  .rb-infinite-canvas-icon-shell {
+  width: 1.25em !important;
+  height: 1.25em !important;
+  filter: none !important;
+}
+
+@media (max-width: 1180px) {
+  .rb-infinite-canvas-header-link {
+    max-width: 10.75rem !important;
+    gap: 0.38rem !important;
+    padding-right: 0.56rem !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .rb-infinite-canvas-header-link {
+    max-width: 9.25rem !important;
+    padding-left: 0.38rem !important;
+  }
+
+  .rb-infinite-canvas-header-link .rb-infinite-canvas-icon-shell {
+    width: 1.48em !important;
+    height: 1.48em !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .rb-infinite-canvas-header-link {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .rb-infinite-canvas-dashboard-card .rb-infinite-canvas-badge {
+    right: 0.52rem !important;
+  }
+}

@@ -230,10 +230,11 @@ export function PublicHeader(props: PublicHeaderProps) {
                       onClick={(event) => handleNavLinkClick(event, link)}
                       className={cn(
                         'text-muted-foreground hover:text-foreground rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
-                        link.disabled && 'pointer-events-none opacity-50'
+                        link.disabled && 'pointer-events-none opacity-50',
+                        link.className
                       )}
                     >
-                      {t(link.title)}
+                      {link.content ?? t(link.title)}
                     </a>
                   )
                 }
@@ -248,10 +249,11 @@ export function PublicHeader(props: PublicHeaderProps) {
                       isActive
                         ? 'text-foreground'
                         : 'text-muted-foreground hover:text-foreground',
-                      link.disabled && 'pointer-events-none opacity-50'
+                      link.disabled && 'pointer-events-none opacity-50',
+                      link.className
                     )}
                   >
-                    {t(link.title)}
+                    {link.content ?? t(link.title)}
                   </Link>
                 )
               })}
@@ -356,7 +358,8 @@ export function PublicHeader(props: PublicHeaderProps) {
                   ? 'translate-y-0 opacity-100'
                   : 'translate-y-4 opacity-0',
                 isActive ? 'text-foreground' : 'text-muted-foreground',
-                link.disabled && 'pointer-events-none opacity-50'
+                link.disabled && 'pointer-events-none opacity-50',
+                link.className
               )
               const transitionStyle = {
                 transitionDelay: mobileOpen ? `${100 + i * 50}ms` : '0ms',
@@ -374,7 +377,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                     className={linkClassName}
                     style={transitionStyle}
                   >
-                    {t(link.title)}
+                    {link.content ?? t(link.title)}
                   </a>
                 )
               }
@@ -387,7 +390,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                   className={linkClassName}
                   style={transitionStyle}
                 >
-                  {t(link.title)}
+                  {link.content ?? t(link.title)}
                 </Link>
               )
             })}

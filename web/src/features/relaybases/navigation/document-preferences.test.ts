@@ -27,11 +27,18 @@ import {
 } from './document-preferences'
 
 describe('RelayBases document preferences', () => {
-  test('uses Chinese documents only for Chinese interface locales', () => {
-    assert.equal(relayBasesDocumentLanguage('zhCN'), 'zh')
-    assert.equal(relayBasesDocumentLanguage('zh-TW'), 'zh')
-    assert.equal(relayBasesDocumentLanguage('fr'), 'en')
-    assert.equal(relayBasesDocumentLanguage('ja-JP'), 'en')
+  test('preserves every supported interface locale for linked documents', () => {
+    assert.equal(relayBasesDocumentLanguage('zhCN'), 'zh-CN')
+    assert.equal(relayBasesDocumentLanguage('zh-Hans-CN'), 'zh-CN')
+    assert.equal(relayBasesDocumentLanguage('zhTW'), 'zh-TW')
+    assert.equal(relayBasesDocumentLanguage('zh-Hant-TW'), 'zh-TW')
+    assert.equal(relayBasesDocumentLanguage('zh-HK'), 'zh-TW')
+    assert.equal(relayBasesDocumentLanguage('zh-MO'), 'zh-TW')
+    assert.equal(relayBasesDocumentLanguage('fr-FR'), 'fr')
+    assert.equal(relayBasesDocumentLanguage('ja-JP'), 'ja')
+    assert.equal(relayBasesDocumentLanguage('ru-RU'), 'ru')
+    assert.equal(relayBasesDocumentLanguage('vi-VN'), 'vi')
+    assert.equal(relayBasesDocumentLanguage('de-DE'), 'en')
   })
 
   test('adds language and theme only to RelayBases URLs', () => {
@@ -41,7 +48,7 @@ describe('RelayBases document preferences', () => {
         'zhCN',
         'dark'
       ),
-      'https://site.relaybases.com/usage-doc.html?section=keys&lang=zh&theme=dark'
+      'https://site.relaybases.com/usage-doc.html?section=keys&lang=zh-CN&theme=dark'
     )
     assert.equal(
       withRelayBasesDocumentPreferences(
@@ -50,6 +57,14 @@ describe('RelayBases document preferences', () => {
         'light'
       ),
       'https://example.com/docs?section=keys'
+    )
+    assert.equal(
+      withRelayBasesDocumentPreferences(
+        'https://canvas.relaybases.com/',
+        'fr-FR',
+        'light'
+      ),
+      'https://canvas.relaybases.com/?lang=fr&theme=light'
     )
   })
 
@@ -88,7 +103,7 @@ describe('RelayBases document preferences', () => {
         message: {
           type: 'relaybases:prefs',
           theme: 'dark',
-          lang: 'zh',
+          lang: 'zh-TW',
           market: '',
         },
         origin: 'https://site.relaybases.com',

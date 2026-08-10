@@ -149,15 +149,20 @@ function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
   )
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem className={item.itemClassName}>
       <SidebarMenuButton
         isActive={!item.external && checkIsActive(href, item)}
         tooltip={item.title}
         render={link}
+        className={item.className}
       >
-        {item.icon && <item.icon className='shrink-0' />}
-        <span className='min-w-0 flex-1 truncate'>{item.title}</span>
-        {item.badge && <NavBadge>{item.badge}</NavBadge>}
+        {item.content ?? (
+          <>
+            {item.icon && <item.icon className='shrink-0' />}
+            <span className='min-w-0 flex-1 truncate'>{item.title}</span>
+            {item.badge && <NavBadge>{item.badge}</NavBadge>}
+          </>
+        )}
       </SidebarMenuButton>
     </SidebarMenuItem>
   )
