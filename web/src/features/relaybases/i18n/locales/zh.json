@@ -53,7 +53,8 @@
       "save": "节省",
       "amountToPay": "应付",
       "originalPrice": "原价",
-      "discountedPrice": "优惠价"
+      "discountedPrice": "优惠价",
+      "discountPercent": "省{{percent}}%"
     },
     "minimum": {
       "placeholder": "最低 Ɍ{{amount}}",
@@ -61,8 +62,8 @@
       "card": "最低充值 Ɍ{{amount}}，请调整金额后继续。"
     },
     "payment": {
-      "stripe": "银行卡 · 支付宝",
-      "waffo": "银行卡 · 微信支付",
+      "stripe": "支持银行卡和支付宝。跳转 Stripe 安全结账页，可先核对应付金额再付款。",
+      "waffo": "支持银行卡和微信支付。跳转 Waffo 安全结账页，可先核对应付金额再付款。",
       "generic": "跳转所选渠道完成付款。",
       "accessibleName": "使用{{name}}支付",
       "action": "去支付"

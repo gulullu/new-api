@@ -183,25 +183,43 @@ describe('RelayBases wallet components', () => {
       buttons.every((button) => button.textContent?.includes('去支付')),
       true
     )
-    assert.match(buttons[0]?.textContent ?? '', /银行卡 · 支付宝/)
-    assert.match(buttons[1]?.textContent ?? '', /银行卡 · 微信支付/)
-    assert.ok(
-      buttons[1]?.querySelector('img[src="/waffo-logo-dark.svg"]'),
-      'Waffo uses the bundled white brand mark on the light theme shell'
+    assert.match(
+      buttons[0]?.textContent ?? '',
+      /银行卡和支付宝。跳转 Stripe 安全结账页，可先核对应付金额再付款。/
+    )
+    assert.match(
+      buttons[1]?.textContent ?? '',
+      /银行卡和微信支付。跳转 Waffo 安全结账页，可先核对应付金额再付款。/
     )
     assert.ok(
       buttons[1]?.querySelector('img[src="/waffo-logo-light.svg"]'),
-      'Waffo keeps a dark-theme brand mark available'
+      'Waffo uses the bundled dark brand mark on the light theme shell'
+    )
+    assert.ok(
+      buttons[1]?.querySelector('img[src="/waffo-logo-dark.svg"]'),
+      'Waffo keeps a light brand mark available for the dark theme shell'
     )
     assert.match(buttons[0]?.className ?? '', /rounded-lg/)
     assert.match(buttons[0]?.className ?? '', /min-h-\[104px\]/)
     assert.match(buttons[1]?.className ?? '', /min-h-\[104px\]/)
     assert.equal(
-      buttons[0]?.querySelector('.size-5.text-\\[\\#1677FF\\]') !== null,
+      buttons[0]
+        ?.querySelector('svg.text-\\[\\#1677FF\\]')
+        ?.getAttribute('class')
+        ?.includes('size-[22px]'),
       true
     )
     assert.equal(
-      buttons[1]?.querySelector('.size-5.text-\\[\\#07C160\\]') !== null,
+      buttons[1]
+        ?.querySelector('svg.text-\\[\\#07C160\\]')
+        ?.getAttribute('class')
+        ?.includes('size-[22px]'),
+      true
+    )
+    assert.equal(
+      buttons.every((button) =>
+        button.querySelector('span.bg-primary.text-primary-foreground')
+      ),
       true
     )
 

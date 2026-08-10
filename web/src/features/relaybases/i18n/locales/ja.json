@@ -53,7 +53,8 @@
       "save": "割引",
       "amountToPay": "支払",
       "originalPrice": "通常",
-      "discountedPrice": "割引"
+      "discountedPrice": "割引",
+      "discountPercent": "-{{percent}}%"
     },
     "minimum": {
       "placeholder": "最低 Ɍ{{amount}}",
@@ -61,8 +62,8 @@
       "card": "最低チャージ額は Ɍ{{amount}} です。金額を増やして続行してください。"
     },
     "payment": {
-      "stripe": "カード · Alipay",
-      "waffo": "カード · WeChat Pay",
+      "stripe": "カードと現地オンライン決済に対応。Stripe で金額を確認してから安全に支払えます。",
+      "waffo": "カードと現地オンライン決済に対応。Waffo で金額を確認してから安全に支払えます。",
       "generic": "選択した決済サービスで支払います。",
       "accessibleName": "{{name}}で支払う",
       "action": "支払う"

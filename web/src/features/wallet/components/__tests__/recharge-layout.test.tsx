@@ -161,6 +161,12 @@ describe('recharge form compact pricing layout', () => {
     assert.ok(price)
     assert.equal(price.textContent?.trim(), '$2.85')
     assert.doesNotMatch(price.textContent ?? '', /USD|Pay|Save/)
+    assert.equal(
+      rendered.container.querySelector(
+        '[data-topup-preset-value="20"] [data-topup-discount-badge]'
+      ),
+      null
+    )
 
     await unmountCard(rendered)
   })
@@ -173,9 +179,14 @@ describe('recharge form compact pricing layout', () => {
     )
     const original = card?.querySelector('[data-topup-original-price]')
     const discounted = card?.querySelector('[data-topup-discounted-price]')
+    const badge = card?.querySelector('[data-topup-discount-badge]')
     assert.ok(card)
     assert.equal(original?.textContent?.trim(), 'Original $14.25')
     assert.equal(discounted?.textContent?.trim(), 'Sale $12.83')
+    assert.equal(badge?.textContent?.trim(), '-10%')
+    assert.match(badge?.className ?? '', /absolute/)
+    assert.match(badge?.className ?? '', /top-2/)
+    assert.match(badge?.className ?? '', /right-2/)
     assert.doesNotMatch(card.textContent ?? '', /USD|Pay|Save|•/)
     assert.doesNotMatch(card.textContent ?? '', /\//)
 
@@ -196,6 +207,7 @@ describe('recharge form compact pricing layout', () => {
     for (const card of cards) {
       assert.match(card.className, /min-h-\[84px\]/)
       assert.match(card.className, /py-4/)
+      assert.match(card.className, /relative/)
       assert.match(card.className, /min-w-0/)
       assert.match(card.className, /max-w-full/)
       assert.match(card.className, /overflow-hidden/)

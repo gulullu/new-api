@@ -23,7 +23,7 @@ const agreementLink = (
     href='/user-agreement'
     target='_blank'
     rel='noopener noreferrer'
-    className='text-foreground font-semibold underline decoration-1 underline-offset-4'
+    className='text-primary hover:underline'
   />
 )
 
@@ -32,7 +32,7 @@ const privacyLink = (
     href='/privacy-policy'
     target='_blank'
     rel='noopener noreferrer'
-    className='text-foreground font-semibold underline decoration-1 underline-offset-4'
+    className='text-primary hover:underline'
   />
 )
 

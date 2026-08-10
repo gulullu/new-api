@@ -50,7 +50,7 @@ export function LegalConsent({
   return (
     <div
       className={cn(
-        'border-border/60 bg-muted/40 hover:border-foreground/25 relative flex items-start gap-3 overflow-hidden rounded-xl border p-3.5 shadow-sm transition-colors before:absolute before:inset-y-2.5 before:left-0 before:w-0.5 before:rounded-r-full before:bg-foreground/80',
+        'border-border/60 bg-muted/40 flex items-start gap-3 rounded-md border p-3',
         className
       )}
       data-relaybases-legal-consent
