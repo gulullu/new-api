@@ -47,6 +47,22 @@ func relayBasesEffectiveTopupMinimum(c *gin.Context, configured int64) int64 {
 	return minimum
 }
 
+// relayBasesPaymentMethodTopupMinimum applies every configured minimum for a
+// payment type. GetTopUpInfo exposes these values on the cards, so quote and
+// order endpoints must enforce the same strictest rule instead of trusting UI.
+func relayBasesPaymentMethodTopupMinimum(c *gin.Context, method string, configured int64) int64 {
+	for _, payMethod := range operation_setting.PayMethods {
+		if payMethod["type"] != method {
+			continue
+		}
+		methodMinimum, err := strconv.ParseInt(payMethod["min_topup"], 10, 64)
+		if err == nil && methodMinimum > configured {
+			configured = methodMinimum
+		}
+	}
+	return relayBasesEffectiveTopupMinimum(c, configured)
+}
+
 func relayBasesTopupMinimumMessage(c *gin.Context, minimum int64) string {
 	return i18n.T(c, i18n.MsgTopupMinimum, map[string]any{"Amount": minimum})
 }
@@ -94,6 +110,15 @@ func relayBasesTopupPayMethods(
 	minimumByType map[string]int64,
 	defaultMinimum int64,
 ) []map[string]string {
+	configuredMinimumByType := make(map[string]int64, len(methods))
+	for _, method := range methods {
+		configured, err := strconv.ParseInt(method["min_topup"], 10, 64)
+		if err != nil || configured <= configuredMinimumByType[method["type"]] {
+			continue
+		}
+		configuredMinimumByType[method["type"]] = configured
+	}
+
 	result := make([]map[string]string, 0, len(methods))
 	for _, method := range methods {
 		cloned := make(map[string]string, len(method)+1)
@@ -105,7 +130,7 @@ func relayBasesTopupPayMethods(
 		if providerMinimum, ok := minimumByType[cloned["type"]]; ok && providerMinimum > minimum {
 			minimum = providerMinimum
 		}
-		if configured, err := strconv.ParseInt(cloned["min_topup"], 10, 64); err == nil && configured > minimum {
+		if configured := configuredMinimumByType[cloned["type"]]; configured > minimum {
 			minimum = configured
 		}
 		cloned["min_topup"] = strconv.FormatInt(minimum, 10)

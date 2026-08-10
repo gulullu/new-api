@@ -34,9 +34,9 @@ func GetTopUpInfo(c *gin.Context) {
 	enableWaffoPancake := isWaffoPancakeTopUpEnabled()
 	enableWaffo := isWaffoTopUpEnabled()
 	minimumTopup := relayBasesEffectiveTopupMinimum(c, getMinTopup())
-	stripeMinimumTopup := relayBasesEffectiveTopupMinimum(c, getStripeMinTopup())
-	waffoMinimumTopup := relayBasesEffectiveTopupMinimum(c, int64(setting.WaffoMinTopUp))
-	waffoPancakeMinimumTopup := relayBasesEffectiveTopupMinimum(c, int64(setting.WaffoPancakeMinTopUp))
+	stripeMinimumTopup := relayBasesPaymentMethodTopupMinimum(c, model.PaymentMethodStripe, getStripeMinTopup())
+	waffoMinimumTopup := relayBasesPaymentMethodTopupMinimum(c, model.PaymentMethodWaffo, int64(setting.WaffoMinTopUp))
+	waffoPancakeMinimumTopup := relayBasesPaymentMethodTopupMinimum(c, model.PaymentMethodWaffoPancake, int64(setting.WaffoPancakeMinTopUp))
 
 	// 获取支付方式。始终返回请求级副本，避免按用户语言调整最低额时
 	// 修改 operation_setting.PayMethods 的全局共享数据。
@@ -170,7 +170,8 @@ type EpayRequest struct {
 }
 
 type AmountRequest struct {
-	Amount int64 `json:"amount"`
+	Amount        int64  `json:"amount"`
+	PaymentMethod string `json:"payment_method"`
 }
 
 func GetEpayClient() *epay.Client {
@@ -234,7 +235,7 @@ func RequestEpay(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "参数错误"})
 		return
 	}
-	minimumTopup := relayBasesEffectiveTopupMinimum(c, getMinTopup())
+	minimumTopup := relayBasesPaymentMethodTopupMinimum(c, req.PaymentMethod, getMinTopup())
 	if req.Amount < minimumTopup {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": relayBasesTopupMinimumMessage(c, minimumTopup)})
 		return
@@ -439,7 +440,7 @@ func RequestAmount(c *gin.Context) {
 		return
 	}
 
-	minimumTopup := relayBasesEffectiveTopupMinimum(c, getMinTopup())
+	minimumTopup := relayBasesPaymentMethodTopupMinimum(c, req.PaymentMethod, getMinTopup())
 	if req.Amount < minimumTopup {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": relayBasesTopupMinimumMessage(c, minimumTopup)})
 		return

@@ -20,6 +20,10 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import {
+  getRelayBasesPaymentMethodInteractionKey,
+  selectRelayBasesDefaultPaymentMethod,
+} from '@/features/relaybases/wallet/policy'
 import { useStatus } from '@/hooks/use-status'
 import { getSelf } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth-store'
@@ -147,8 +151,32 @@ export function Wallet(props: WalletProps) {
     setConfirmDialogOpen(false)
 
     // Recalculate whenever the server-confirmed minimum changes.
-    const defaultPaymentType =
+    let defaultPaymentType =
       selectedPaymentMethod?.type || getDefaultPaymentType(topupInfo)
+    if (!selectedPaymentMethod) {
+      const defaultPaymentMethod = selectRelayBasesDefaultPaymentMethod(
+        topupInfo.pay_methods ?? [],
+        minTopup
+      )
+      if (defaultPaymentMethod) {
+        defaultPaymentType = defaultPaymentMethod.type
+        setSelectedPaymentMethod(defaultPaymentMethod)
+        setSelectedWaffoMethodIndex(null)
+      } else if (
+        topupInfo.enable_waffo_topup &&
+        (topupInfo.waffo_min_topup ?? minTopup) <= minTopup &&
+        topupInfo.waffo_pay_methods?.[0]
+      ) {
+        const defaultWaffoMethod = topupInfo.waffo_pay_methods[0]
+        defaultPaymentType = PAYMENT_TYPES.WAFFO
+        setSelectedPaymentMethod({
+          name: defaultWaffoMethod.name,
+          type: PAYMENT_TYPES.WAFFO,
+          icon: defaultWaffoMethod.icon,
+        })
+        setSelectedWaffoMethodIndex(0)
+      }
+    }
     calculatePaymentAmount(minTopup, defaultPaymentType)
   }, [topupInfo, selectedPaymentMethod, calculatePaymentAmount])
 
@@ -175,7 +203,7 @@ export function Wallet(props: WalletProps) {
   const handlePaymentMethodSelect = async (method: PaymentMethod) => {
     setSelectedPaymentMethod(method)
     setSelectedWaffoMethodIndex(null)
-    setPaymentLoading(method.type)
+    setPaymentLoading(getRelayBasesPaymentMethodInteractionKey(method))
 
     try {
       // Validate minimum topup
@@ -322,6 +350,7 @@ export function Wallet(props: WalletProps) {
                   onPaymentMethodSelect={handlePaymentMethodSelect}
                   paymentLoading={paymentLoading}
                   selectedPaymentMethod={selectedPaymentMethod}
+                  selectedWaffoMethodIndex={selectedWaffoMethodIndex}
                   redemptionCode={redemptionCode}
                   onRedemptionCodeChange={setRedemptionCode}
                   onRedeem={handleRedeem}

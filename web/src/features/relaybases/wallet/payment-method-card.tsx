@@ -31,6 +31,7 @@ import {
   getRelayBasesChinesePaymentHint,
   getRelayBasesPaymentCopyKey,
   getRelayBasesPaymentGridClass,
+  getRelayBasesPaymentMethodInteractionKey,
   orderRelayBasesPaymentMethods,
 } from './policy'
 
@@ -229,7 +230,7 @@ interface RelayBasesPaymentMethodGridProps {
   baseMinimum: number
   topupAmount: number
   paymentLoading: string | null
-  selectedPaymentType?: string | null
+  selectedPaymentMethod?: PaymentMethod | null
   onSelect: (method: PaymentMethod) => void
 }
 
@@ -238,7 +239,7 @@ export function RelayBasesPaymentMethodGrid({
   baseMinimum,
   topupAmount,
   paymentLoading,
-  selectedPaymentType,
+  selectedPaymentMethod,
   onSelect,
 }: RelayBasesPaymentMethodGridProps) {
   const orderedMethods = orderRelayBasesPaymentMethods(methods)
@@ -251,8 +252,13 @@ export function RelayBasesPaymentMethodGrid({
           method={method}
           minimum={Math.max(method.min_topup ?? 0, baseMinimum)}
           topupAmount={topupAmount}
-          loading={paymentLoading === method.type}
-          selected={selectedPaymentType === method.type}
+          loading={
+            paymentLoading === getRelayBasesPaymentMethodInteractionKey(method)
+          }
+          selected={
+            selectedPaymentMethod?.type === method.type &&
+            selectedPaymentMethod.name === method.name
+          }
           paymentBusy={paymentLoading !== null}
           onSelect={() => onSelect(method)}
         />

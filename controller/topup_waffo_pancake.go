@@ -29,7 +29,7 @@ func RequestWaffoPancakeAmount(c *gin.Context) {
 		return
 	}
 
-	minimumTopup := relayBasesEffectiveTopupMinimum(c, int64(setting.WaffoPancakeMinTopUp))
+	minimumTopup := relayBasesPaymentMethodTopupMinimum(c, model.PaymentMethodWaffoPancake, int64(setting.WaffoPancakeMinTopUp))
 	if req.Amount < minimumTopup {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": relayBasesTopupMinimumMessage(c, minimumTopup)})
 		return
@@ -352,7 +352,7 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "参数错误"})
 		return
 	}
-	minimumTopup := relayBasesEffectiveTopupMinimum(c, int64(setting.WaffoPancakeMinTopUp))
+	minimumTopup := relayBasesPaymentMethodTopupMinimum(c, model.PaymentMethodWaffoPancake, int64(setting.WaffoPancakeMinTopUp))
 	if req.Amount < minimumTopup {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": relayBasesTopupMinimumMessage(c, minimumTopup)})
 		return

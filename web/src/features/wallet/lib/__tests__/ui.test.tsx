@@ -53,23 +53,33 @@ reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 describe('wallet payment icons', () => {
   after(() => domWindow.close())
 
-  test('keeps the bundled Waffo brand mark when a configured icon is unusable', async () => {
-    const container = document.createElement('div')
-    document.body.append(container)
-    const root = createRoot(container)
+  for (const paymentType of ['waffo', 'waffo_pancake']) {
+    test(`keeps the bundled ${paymentType} brand mark when a configured icon is unusable`, async () => {
+      const container = document.createElement('div')
+      document.body.append(container)
+      const root = createRoot(container)
 
-    await act(async () => {
-      root.render(
-        getPaymentIcon('waffo_pancake', 'size-5', 'LuGlobe2', 'Waffo Pancake')
+      await act(async () => {
+        root.render(getPaymentIcon(paymentType, 'size-5', 'LuGlobe2', 'Waffo'))
+      })
+
+      const darkLogo = container.querySelector(
+        'img[src="/waffo-logo-dark.svg"]'
       )
+      const lightLogo = container.querySelector(
+        'img[src="/waffo-logo-light.svg"]'
+      )
+      assert.ok(darkLogo)
+      assert.ok(lightLogo)
+      assert.equal(darkLogo.getAttribute('alt'), '')
+      assert.equal(lightLogo.getAttribute('alt'), '')
+      assert.equal(darkLogo.getAttribute('aria-hidden'), 'true')
+      assert.equal(lightLogo.getAttribute('aria-hidden'), 'true')
+
+      await act(async () => root.unmount())
+      container.remove()
     })
-
-    assert.ok(container.querySelector('img[src="/waffo-logo-dark.svg"]'))
-    assert.ok(container.querySelector('img[src="/waffo-logo-light.svg"]'))
-
-    await act(async () => root.unmount())
-    container.remove()
-  })
+  }
 
   test('keeps configured icon precedence for non-Waffo payment methods', async () => {
     const container = document.createElement('div')

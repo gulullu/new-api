@@ -51,7 +51,9 @@
       "customCredits": "Số API Credits tùy chọn (Ɍ)",
       "pay": "Thanh toán",
       "save": "Tiết kiệm",
-      "amountToPay": "Số tiền cần thanh toán"
+      "amountToPay": "Thanh toán",
+      "originalPrice": "Giá gốc",
+      "discountedPrice": "Ưu đãi"
     },
     "minimum": {
       "placeholder": "Tối thiểu Ɍ{{amount}}",

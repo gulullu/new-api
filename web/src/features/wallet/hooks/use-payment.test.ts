@@ -47,4 +47,23 @@ describe('payment amount routing', () => {
     assert.equal(amount, 18.75)
     assert.deepEqual(calls, ['waffo:120'])
   })
+
+  test('passes the selected legacy channel to the amount endpoint', async () => {
+    let receivedRequest: { amount: number; payment_method?: string } | undefined
+    const amount = await requestPaymentAmount(20, 'custom1', {
+      regular: async (request) => {
+        receivedRequest = request
+        return { success: true, data: '2.85' }
+      },
+      stripe: async () => ({ success: true, data: '0' }),
+      waffo: async () => ({ success: true, data: '0' }),
+      waffoPancake: async () => ({ success: true, data: '0' }),
+    })
+
+    assert.equal(amount, 2.85)
+    assert.deepEqual(receivedRequest, {
+      amount: 20,
+      payment_method: 'custom1',
+    })
+  })
 })

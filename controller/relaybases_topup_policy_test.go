@@ -10,6 +10,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
 	appI18n "github.com/QuantumNous/new-api/i18n"
+	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/gin-gonic/gin"
@@ -118,7 +119,8 @@ func TestRelayBasesTopupPayMethodsClonesAndAppliesProviderMinimum(t *testing.T) 
 
 	original := []map[string]string{
 		{"name": "Stripe", "type": "stripe", "min_topup": "1"},
-		{"name": "Wallet", "type": "wallet", "min_topup": "150"},
+		{"name": "Wallet A", "type": "wallet", "min_topup": "20"},
+		{"name": "Wallet B", "type": "wallet", "min_topup": "150"},
 	}
 	result := relayBasesTopupPayMethods(
 		original,
@@ -128,9 +130,52 @@ func TestRelayBasesTopupPayMethodsClonesAndAppliesProviderMinimum(t *testing.T) 
 
 	assert.Equal(t, "20", result[0]["min_topup"])
 	assert.Equal(t, "150", result[1]["min_topup"])
+	assert.Equal(t, "150", result[2]["min_topup"])
 	assert.Equal(t, "1", original[0]["min_topup"])
 	result[0]["name"] = "Changed"
 	assert.Equal(t, "Stripe", original[0]["name"])
+}
+
+func TestEpayQuoteAndOrderEnforceTheSelectedMethodMinimum(t *testing.T) {
+	require.NoError(t, appI18n.Init())
+	originalQuotaDisplayType := operation_setting.GetGeneralSetting().QuotaDisplayType
+	originalMinTopUp := operation_setting.MinTopUp
+	originalPayMethods := operation_setting.PayMethods
+	t.Cleanup(func() {
+		operation_setting.GetGeneralSetting().QuotaDisplayType = originalQuotaDisplayType
+		operation_setting.MinTopUp = originalMinTopUp
+		operation_setting.PayMethods = originalPayMethods
+	})
+
+	operation_setting.GetGeneralSetting().QuotaDisplayType = operation_setting.QuotaDisplayTypeUSD
+	operation_setting.MinTopUp = 1
+	operation_setting.PayMethods = []map[string]string{
+		{"name": "Custom A", "type": "custom1", "min_topup": "20"},
+		{"name": "Custom B", "type": "custom1", "min_topup": "50"},
+	}
+
+	for _, endpoint := range []struct {
+		name    string
+		handler gin.HandlerFunc
+	}{
+		{name: "quote", handler: RequestAmount},
+		{name: "order", handler: RequestEpay},
+	} {
+		t.Run(endpoint.name, func(t *testing.T) {
+			recorder := performRelayBasesMinimumRequest(
+				t,
+				endpoint.handler,
+				`{"amount":20,"payment_method":"custom1"}`,
+				"en",
+			)
+			assert.Equal(t, http.StatusOK, recorder.Code)
+			assert.JSONEq(
+				t,
+				`{"message":"error","data":"Minimum top-up amount is 50"}`,
+				recorder.Body.String(),
+			)
+		})
+	}
 }
 
 func performRelayBasesMinimumRequest(
@@ -162,6 +207,7 @@ func TestRelayBasesQuoteAndOrderEndpointsShareTwentyCreditMinimum(t *testing.T) 
 	originalPancakeMerchantID := setting.WaffoPancakeMerchantID
 	originalPancakePrivateKey := setting.WaffoPancakePrivateKey
 	originalPancakeProductID := setting.WaffoPancakeProductID
+	originalPayMethods := operation_setting.PayMethods
 	t.Cleanup(func() {
 		operation_setting.GetGeneralSetting().QuotaDisplayType = originalQuotaDisplayType
 		operation_setting.MinTopUp = originalMinTopUp
@@ -172,6 +218,7 @@ func TestRelayBasesQuoteAndOrderEndpointsShareTwentyCreditMinimum(t *testing.T) 
 		setting.WaffoPancakeMerchantID = originalPancakeMerchantID
 		setting.WaffoPancakePrivateKey = originalPancakePrivateKey
 		setting.WaffoPancakeProductID = originalPancakeProductID
+		operation_setting.PayMethods = originalPayMethods
 	})
 
 	operation_setting.MinTopUp = 1
@@ -182,6 +229,7 @@ func TestRelayBasesQuoteAndOrderEndpointsShareTwentyCreditMinimum(t *testing.T) 
 	setting.WaffoPancakeMerchantID = "merchant"
 	setting.WaffoPancakePrivateKey = "private"
 	setting.WaffoPancakeProductID = "product"
+	operation_setting.PayMethods = nil
 
 	endpoints := []struct {
 		name    string
@@ -252,4 +300,49 @@ func TestRelayBasesQuoteAndOrderEndpointsShareTwentyCreditMinimum(t *testing.T) 
 			}
 		})
 	}
+
+	t.Run("configured payment method minima", func(t *testing.T) {
+		operation_setting.GetGeneralSetting().QuotaDisplayType = operation_setting.QuotaDisplayTypeUSD
+		operation_setting.PayMethods = []map[string]string{
+			{"name": "Custom A", "type": "custom1", "min_topup": "20"},
+			{"name": "Custom B", "type": "custom1", "min_topup": "50"},
+			{"name": "Stripe", "type": model.PaymentMethodStripe, "min_topup": "50"},
+			{"name": "Waffo", "type": model.PaymentMethodWaffo, "min_topup": "50"},
+			{"name": "Waffo Pancake", "type": model.PaymentMethodWaffoPancake, "min_topup": "50"},
+		}
+
+		configuredEndpoints := []struct {
+			name    string
+			handler gin.HandlerFunc
+			body    string
+		}{
+			{name: "epay quote", handler: RequestAmount, body: `{"amount":20,"payment_method":"custom1"}`},
+			{name: "epay order", handler: RequestEpay, body: `{"amount":20,"payment_method":"custom1"}`},
+			{name: "Stripe quote", handler: RequestStripeAmount, body: `{"amount":20,"payment_method":"stripe"}`},
+			{name: "Stripe order", handler: RequestStripePay, body: `{"amount":20,"payment_method":"stripe"}`},
+			{name: "Waffo quote", handler: RequestWaffoAmount, body: `{"amount":20}`},
+			{name: "Waffo order", handler: RequestWaffoPay, body: `{"amount":20}`},
+			{name: "Waffo Pancake quote", handler: RequestWaffoPancakeAmount, body: `{"amount":20}`},
+			{name: "Waffo Pancake order", handler: RequestWaffoPancakePay, body: `{"amount":20}`},
+		}
+
+		for _, endpoint := range configuredEndpoints {
+			t.Run(endpoint.name, func(t *testing.T) {
+				recorder := performRelayBasesMinimumRequest(t, endpoint.handler, endpoint.body, "en")
+				assert.Equal(t, http.StatusOK, recorder.Code)
+
+				var payload map[string]any
+				require.NoError(t, common.Unmarshal(recorder.Body.Bytes(), &payload))
+				message, _ := payload["message"].(string)
+				data, _ := payload["data"].(string)
+				assert.True(
+					t,
+					message == "Minimum top-up amount is 50" || data == "Minimum top-up amount is 50",
+					"response must enforce configured minimum for %s: %s",
+					endpoint.name,
+					recorder.Body.String(),
+				)
+			})
+		}
+	})
 }
