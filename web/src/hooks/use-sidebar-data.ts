@@ -21,6 +21,7 @@ import {
   BadgePercent,
   Box,
   CreditCard,
+  Crown,
   FileText,
   FlaskConical,
   Key,
@@ -38,8 +39,10 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import type { SidebarData } from '@/components/layout/types'
+import { RELAYBASES_I18N_NAMESPACE } from '@/features/relaybases/i18n/manifest'
 import { useRelayBasesNavigation } from '@/features/relaybases/navigation/use-relaybases-navigation'
 import { ROLE } from '@/lib/roles'
+import { useAuthStore } from '@/stores/auth-store'
 
 /**
  * Root navigation groups for the application sidebar.
@@ -49,6 +52,10 @@ import { ROLE } from '@/lib/roles'
  */
 export function useSidebarData(): SidebarData {
   const { t } = useTranslation()
+  const { t: relayBasesT } = useTranslation(RELAYBASES_I18N_NAMESPACE)
+  const isPartner = useAuthStore(
+    (state) => state.auth.user?.partner_enabled === true
+  )
   const relayBasesNavigation = useRelayBasesNavigation()
 
   return {
@@ -113,10 +120,12 @@ export function useSidebarData(): SidebarData {
             icon: Wallet,
           },
           {
-            title: t('Referral Rewards'),
+            title: isPartner
+              ? relayBasesT('partner.pageTitle')
+              : t('Referral Rewards'),
             url: '/referral-rewards',
             configUrls: ['/wallet'],
-            icon: BadgePercent,
+            icon: isPartner ? Crown : BadgePercent,
           },
           {
             title: t('Profile'),

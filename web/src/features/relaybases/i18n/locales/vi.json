@@ -76,6 +76,129 @@
       "refundLink": "Đọc Chính sách hoàn tiền"
     }
   },
+  "partner": {
+    "pageTitle": "Chương trình Đối tác",
+    "hero": {
+      "badge": "Đối tác RelayBases",
+      "title": "Nhận hoa hồng từ mỗi lần nạp thành công",
+      "description": "Nhận {{rate}} trên số tiền USD thực trả cho mỗi lần nạp thành công của người dùng được bạn giới thiệu.",
+      "linkLabel": "Liên kết đối tác của bạn",
+      "copyLink": "Sao chép liên kết",
+      "linkCopied": "Đã sao chép liên kết đối tác"
+    },
+    "actions": { "transfer": "Chuyển vào số dư", "withdraw": "Rút tiền" },
+    "metrics": {
+      "available": "Khả dụng",
+      "availableDetail": "Có thể chuyển hoặc rút",
+      "pending": "Đang quyết toán",
+      "pendingDetail": "Khả dụng sau thời gian chờ 7 ngày",
+      "lifetime": "Tổng hoa hồng",
+      "lifetimeDetail": "Đã nhận kể từ khi trở thành Đối tác",
+      "withdrawn": "Đã rút",
+      "withdrawnDetail": "Các khoản đã thanh toán"
+    },
+    "adjustment": "Khoản điều chỉnh {{amount}} sẽ được trừ từ hoa hồng tương lai. Việc chuyển và rút sẽ tiếp tục sau khi hoàn tất.",
+    "common": { "amountUsd": "Số tiền (USD)", "available": "Khả dụng" },
+    "transfer": {
+      "title": "Chuyển hoa hồng vào số dư",
+      "description": "Đổi hoa hồng USD khả dụng thành API Credits theo mức giá RelayBases hiện tại.",
+      "confirm": "Chuyển",
+      "success": "Đã chuyển hoa hồng vào số dư"
+    },
+    "withdrawal": {
+      "title": "Yêu cầu rút tiền",
+      "description": "Chọn phương thức và gửi thông tin nhận tiền để được xét duyệt thủ công.",
+      "minimum": "Số tiền rút tối thiểu là 20 USD. Mỗi lần chỉ có một yêu cầu đang chờ.",
+      "method": "Phương thức nhận tiền",
+      "alipay": "Alipay",
+      "bsc": "USDT trên BNB Smart Chain (BEP-20)",
+      "alipayAccount": "Tài khoản Alipay",
+      "alipayName": "Tên người nhận",
+      "bscAddress": "Địa chỉ BSC",
+      "bscWarning": "Chỉ dùng địa chỉ USDT trên BNB Smart Chain (BEP-20). Dùng mạng khác có thể làm mất tài sản vĩnh viễn.",
+      "submit": "Gửi yêu cầu",
+      "success": "Đã gửi yêu cầu rút tiền",
+      "verifyTitle": "Xác nhận yêu cầu rút",
+      "verifyDescription": "Xác minh danh tính trước khi lưu thông tin nhận tiền.",
+      "status": {
+        "pending": "Đang chờ",
+        "paid": "Đã thanh toán",
+        "rejected": "Bị từ chối"
+      }
+    },
+    "activity": {
+      "title": "Hoạt động đối tác",
+      "description": "Theo dõi quyết toán hoa hồng và tiến độ rút tiền.",
+      "commissions": "Hoa hồng",
+      "withdrawals": "Lịch sử rút",
+      "emptyCommissions": "Chưa có hoa hồng Đối tác.",
+      "emptyWithdrawals": "Chưa có yêu cầu rút tiền.",
+      "paidAmount": "Đã trả {{amount}}",
+      "previous": "Trước",
+      "next": "Tiếp"
+    },
+    "status": {
+      "available": "Khả dụng",
+      "availableOn": "Khả dụng {{date}}",
+      "reversed": "Đã hủy"
+    },
+    "rules": {
+      "title": "Quy tắc Đối tác",
+      "items": [
+        "Hoa hồng áp dụng cho mỗi lần nạp thành công đã xác nhận của người dùng đăng ký qua liên kết của bạn.",
+        "Tỷ lệ riêng được hiển thị trên trang này. Hoa hồng tính theo số tiền USD thực trả và không cộng dồn với thưởng giới thiệu thông thường.",
+        "Hoa hồng bắt đầu sau khi quyền Đối tác được bật; các khoản thanh toán trước đó không được tính lại.",
+        "Mỗi khoản hoa hồng có thời gian quyết toán 7 ngày trước khi khả dụng.",
+        "Hoa hồng khả dụng có thể đổi thành API Credits hoặc rút. Mức rút tối thiểu là 20 USD.",
+        "Hỗ trợ rút qua Alipay hoặc USDT trên BNB Smart Chain (BEP-20). Hãy kiểm tra kỹ thông tin trước khi gửi.",
+        "Mỗi lần chỉ có một yêu cầu rút đang chờ. RelayBases xét duyệt và xử lý thủ công từng yêu cầu.",
+        "Khoản thanh toán được hoàn hoặc bị tranh chấp không nhận hoa hồng. Hoa hồng liên quan có thể bị hủy hoặc trừ từ khoản tương lai."
+      ]
+    },
+    "admin": {
+      "tab": "Đối tác",
+      "profiles": "Hồ sơ Đối tác",
+      "profilesDescription": "Tỷ lệ riêng được gán cho người dùng Đối tác.",
+      "search": "Tìm người dùng hoặc email",
+      "emptyProfiles": "Không tìm thấy Đối tác.",
+      "configure": "Cấu hình Đối tác",
+      "configureDescription": "Bật tư cách Đối tác và đặt tỷ lệ hoa hồng riêng.",
+      "userId": "ID người dùng",
+      "rate": "Tỷ lệ hoa hồng (%)",
+      "save": "Lưu",
+      "partnerSaved": "Đã lưu cấu hình Đối tác",
+      "withdrawals": "Xét duyệt rút tiền",
+      "withdrawalsDescription": "Chỉ xem thông tin nhận tiền được bảo vệ khi xử lý yêu cầu.",
+      "emptyWithdrawals": "Không tìm thấy yêu cầu rút tiền.",
+      "reveal": "Hiển thị",
+      "markPaid": "Xác nhận đã trả",
+      "reject": "Từ chối",
+      "destination": "Thông tin nhận tiền",
+      "reviewDescription": "Ghi mã thanh toán hoặc lý do từ chối trước khi hoàn tất.",
+      "txHash": "Mã giao dịch BSC",
+      "payoutReference": "Mã thanh toán",
+      "note": "Ghi chú quản trị",
+      "confirm": "Xác nhận",
+      "actionComplete": "Đã hoàn tất xét duyệt rút tiền",
+      "verifyRevealTitle": "Hiển thị thông tin nhận tiền",
+      "verifyRevealDescription": "Xác minh danh tính trước khi xem thông tin được bảo vệ.",
+      "verifyReviewTitle": "Xác nhận xét duyệt rút tiền",
+      "verifyReviewDescription": "Xác minh danh tính trước khi thay đổi trạng thái rút tiền."
+    },
+    "audit": {
+      "configure": "Đã đặt tỷ lệ hoa hồng Đối tác thành {{commission_rate_percent}}%.",
+      "balanceTransfer": "Đã chuyển hoa hồng Đối tác thành API Credits.",
+      "withdrawalCreate": "Đã gửi yêu cầu rút tiền Đối tác #{{withdrawal_id}}.",
+      "withdrawalReveal": "Đã xem thông tin nhận tiền của lệnh rút Đối tác #{{withdrawal_id}}.",
+      "withdrawalPaid": "Đã xác nhận lệnh rút Đối tác #{{withdrawal_id}} là đã thanh toán.",
+      "withdrawalReject": "Đã từ chối lệnh rút Đối tác #{{withdrawal_id}}."
+    },
+    "errors": {
+      "request": "Yêu cầu thất bại",
+      "load": "Không thể tải dữ liệu Đối tác.",
+      "retry": "Tải lại"
+    }
+  },
   "pricing": {
     "creditNote": {
       "accessibleName": "Thông tin định giá RelayBases API Credits",

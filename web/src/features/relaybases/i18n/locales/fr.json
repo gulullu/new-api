@@ -76,6 +76,129 @@
       "refundLink": "Lire la politique de remboursement"
     }
   },
+  "partner": {
+    "pageTitle": "Programme Partenaire",
+    "hero": {
+      "badge": "Partenaire RelayBases",
+      "title": "Développez vos revenus à chaque parrainage réussi",
+      "description": "Recevez {{rate}} du montant réellement payé en USD pour chaque recharge réussie de vos invités.",
+      "linkLabel": "Votre lien partenaire",
+      "copyLink": "Copier le lien",
+      "linkCopied": "Lien partenaire copié"
+    },
+    "actions": { "transfer": "Transférer au solde", "withdraw": "Retirer" },
+    "metrics": {
+      "available": "Disponible",
+      "availableDetail": "Prêt à être transféré ou retiré",
+      "pending": "En règlement",
+      "pendingDetail": "Disponible après le délai de 7 jours",
+      "lifetime": "Commissions cumulées",
+      "lifetimeDetail": "Gagnées depuis votre accès Partenaire",
+      "withdrawn": "Retiré",
+      "withdrawnDetail": "Retraits déjà payés"
+    },
+    "adjustment": "Un ajustement de {{amount}} sera déduit des prochaines commissions. Les transferts et retraits reprendront après son règlement.",
+    "common": { "amountUsd": "Montant (USD)", "available": "Disponible" },
+    "transfer": {
+      "title": "Transférer les commissions au solde",
+      "description": "Convertissez vos commissions USD disponibles en API Credits au tarif RelayBases actuel.",
+      "confirm": "Transférer",
+      "success": "Commissions transférées au solde"
+    },
+    "withdrawal": {
+      "title": "Demander un retrait",
+      "description": "Choisissez un mode de paiement et envoyez vos coordonnées pour vérification manuelle.",
+      "minimum": "Retrait minimum : 20 USD. Une seule demande peut être en attente.",
+      "method": "Mode de paiement",
+      "alipay": "Alipay",
+      "bsc": "USDT sur BNB Smart Chain (BEP-20)",
+      "alipayAccount": "Compte Alipay",
+      "alipayName": "Nom du bénéficiaire",
+      "bscAddress": "Adresse BSC",
+      "bscWarning": "Utilisez uniquement une adresse USDT sur BNB Smart Chain (BEP-20). Un autre réseau peut entraîner une perte définitive.",
+      "submit": "Envoyer la demande",
+      "success": "Demande de retrait envoyée",
+      "verifyTitle": "Confirmer le retrait",
+      "verifyDescription": "Vérifiez votre identité avant d’enregistrer les coordonnées de paiement.",
+      "status": {
+        "pending": "En attente",
+        "paid": "Payé",
+        "rejected": "Refusé"
+      }
+    },
+    "activity": {
+      "title": "Activité Partenaire",
+      "description": "Suivez le règlement des commissions et les retraits.",
+      "commissions": "Commissions",
+      "withdrawals": "Retraits",
+      "emptyCommissions": "Aucune commission Partenaire pour le moment.",
+      "emptyWithdrawals": "Aucune demande de retrait pour le moment.",
+      "paidAmount": "Payé {{amount}}",
+      "previous": "Précédent",
+      "next": "Suivant"
+    },
+    "status": {
+      "available": "Disponible",
+      "availableOn": "Disponible le {{date}}",
+      "reversed": "Annulée"
+    },
+    "rules": {
+      "title": "Règles du programme",
+      "items": [
+        "Chaque recharge réussie et confirmée d’un utilisateur inscrit via votre lien peut générer une commission.",
+        "Votre taux personnel apparaît sur cette page. La commission est calculée sur le montant réellement payé en USD et ne se cumule pas avec la récompense de parrainage standard.",
+        "Les commissions commencent après l’activation de l’accès Partenaire ; les paiements antérieurs ne sont pas recalculés.",
+        "Chaque commission est bloquée pendant 7 jours avant de devenir disponible.",
+        "Les commissions disponibles peuvent être converties en API Credits ou retirées. Le retrait minimum est de 20 USD.",
+        "Les retraits sont disponibles via Alipay ou USDT sur BNB Smart Chain (BEP-20). Vérifiez soigneusement les coordonnées avant l’envoi.",
+        "Une seule demande de retrait peut être en attente. RelayBases vérifie et traite manuellement chaque demande.",
+        "Les paiements remboursés ou contestés ne donnent pas droit à une commission. Celle-ci peut être annulée ou déduite des commissions futures."
+      ]
+    },
+    "admin": {
+      "tab": "Partenaires",
+      "profiles": "Profils Partenaire",
+      "profilesDescription": "Taux personnels attribués aux utilisateurs Partenaire.",
+      "search": "Rechercher un utilisateur ou un e-mail",
+      "emptyProfiles": "Aucun profil Partenaire trouvé.",
+      "configure": "Configurer un Partenaire",
+      "configureDescription": "Activez l’accès Partenaire et définissez un taux personnel.",
+      "userId": "ID utilisateur",
+      "rate": "Taux de commission (%)",
+      "save": "Enregistrer",
+      "partnerSaved": "Configuration Partenaire enregistrée",
+      "withdrawals": "Validation des retraits",
+      "withdrawalsDescription": "N’affichez les coordonnées protégées que lors du traitement d’une demande.",
+      "emptyWithdrawals": "Aucune demande de retrait trouvée.",
+      "reveal": "Afficher",
+      "markPaid": "Confirmer le paiement",
+      "reject": "Refuser",
+      "destination": "Coordonnées de paiement",
+      "reviewDescription": "Indiquez la référence de paiement ou la raison du refus avant de terminer.",
+      "txHash": "Hachage de transaction BSC",
+      "payoutReference": "Référence de paiement",
+      "note": "Note administrateur",
+      "confirm": "Confirmer",
+      "actionComplete": "Validation du retrait terminée",
+      "verifyRevealTitle": "Afficher les coordonnées",
+      "verifyRevealDescription": "Vérifiez votre identité avant d’afficher les coordonnées protégées.",
+      "verifyReviewTitle": "Confirmer la validation",
+      "verifyReviewDescription": "Vérifiez votre identité avant de modifier le statut du retrait."
+    },
+    "audit": {
+      "configure": "Taux de commission Partenaire défini sur {{commission_rate_percent}} %.",
+      "balanceTransfer": "Commission Partenaire convertie en API Credits.",
+      "withdrawalCreate": "Retrait Partenaire n° {{withdrawal_id}} demandé.",
+      "withdrawalReveal": "Coordonnées de paiement du retrait Partenaire n° {{withdrawal_id}} consultées.",
+      "withdrawalPaid": "Retrait Partenaire n° {{withdrawal_id}} confirmé comme payé.",
+      "withdrawalReject": "Retrait Partenaire n° {{withdrawal_id}} rejeté."
+    },
+    "errors": {
+      "request": "Échec de la demande",
+      "load": "Impossible de charger les données Partenaire.",
+      "retry": "Réessayer"
+    }
+  },
   "pricing": {
     "creditNote": {
       "accessibleName": "Informations tarifaires des crédits API RelayBases",

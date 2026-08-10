@@ -445,6 +445,13 @@ const AUDIT_TEMPLATES: Record<string, string> = {
   'subscription.plan_create': 'Created a subscription plan',
   'subscription.plan_update': 'Updated a subscription plan',
   'subscription.bind': 'Bound a subscription',
+  // RelayBases Partner program
+  'partner.configure': 'relaybases:partner.audit.configure',
+  'partner.balance_transfer': 'relaybases:partner.audit.balanceTransfer',
+  'partner.withdrawal_create': 'relaybases:partner.audit.withdrawalCreate',
+  'partner.withdrawal_reveal': 'relaybases:partner.audit.withdrawalReveal',
+  'partner.withdrawal_paid': 'relaybases:partner.audit.withdrawalPaid',
+  'partner.withdrawal_reject': 'relaybases:partner.audit.withdrawalReject',
   // Logs
   'log.clear': 'Cleared historical logs',
   'log.cleanup_start': 'Log cleanup task started.',

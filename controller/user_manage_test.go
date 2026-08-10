@@ -34,6 +34,7 @@ func setupManageUserTestDB(t *testing.T) *gorm.DB {
 	model.DB, model.LOG_DB = db, db
 	require.NoError(t, db.AutoMigrate(
 		&model.User{}, &model.UserSession{}, &model.Log{}, &model.CasbinRule{}, &model.AuthzRole{},
+		&model.PartnerProfile{},
 	))
 
 	t.Cleanup(func() {
@@ -97,6 +98,24 @@ func TestUpdateUserSettingPreservesLanguageSidebarAndBillingPreference(t *testin
 	assert.Equal(t, dto.NotifyTypeEmail, settings.NotifyType)
 	assert.Equal(t, "person@example.com", settings.NotificationEmail)
 	assert.Equal(t, "fr", buildSelfUserData(&updated)["language"])
+}
+
+func TestBuildSelfUserDataExposesIndependentPartnerMembership(t *testing.T) {
+	db := setupManageUserTestDB(t)
+	user := model.User{
+		Username: "partner-self-user", Password: "password",
+		Role: common.RoleCommonUser, Status: common.UserStatusEnabled, Group: "vip",
+	}
+	require.NoError(t, db.Create(&user).Error)
+	assert.Equal(t, false, buildSelfUserData(&user)["partner_enabled"])
+
+	require.NoError(t, db.Create(&model.PartnerProfile{
+		UserId:                user.Id,
+		Enabled:               true,
+		CommissionBasisPoints: model.PartnerDefaultCommissionBasisPoints,
+	}).Error)
+	assert.Equal(t, true, buildSelfUserData(&user)["partner_enabled"])
+	assert.Equal(t, "vip", buildSelfUserData(&user)["group"])
 }
 
 func TestManageUserDisableAdvancesAuthVersionOnceAndRevokesSession(t *testing.T) {

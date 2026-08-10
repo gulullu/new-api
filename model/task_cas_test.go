@@ -52,6 +52,10 @@ func TestMain(m *testing.M) {
 		&TopUp{},
 		&ReferralPaymentState{},
 		&ReferralRewardClaim{},
+		&PartnerProfile{},
+		&PartnerWallet{},
+		&PartnerWalletEntry{},
+		&PartnerWithdrawal{},
 		&SubscriptionPlan{},
 		&SubscriptionOrder{},
 		&UserSubscription{},
@@ -91,6 +95,10 @@ func truncateTables(t *testing.T) {
 		DB.Exec("DELETE FROM top_ups")
 		DB.Exec("DELETE FROM referral_payment_states")
 		DB.Exec("DELETE FROM referral_reward_claims")
+		DB.Exec("DELETE FROM partner_wallet_entries")
+		DB.Exec("DELETE FROM partner_withdrawals")
+		DB.Exec("DELETE FROM partner_wallets")
+		DB.Exec("DELETE FROM partner_profiles")
 		DB.Exec("DELETE FROM subscription_orders")
 		DB.Exec("DELETE FROM subscription_plans")
 		DB.Exec("DELETE FROM user_subscriptions")

@@ -164,6 +164,7 @@ func GetAdminReferralRewardDashboard(filter AdminReferralRewardFilter, pageInfo 
 
 	summary := AdminReferralRewardSummary{}
 	if err := tx.Model(&ReferralRewardClaim{}).
+		Where("program = ?", ReferralRewardProgramStandard).
 		Select(
 			"COUNT(*) AS total_records, "+
 				"COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS awarded_records, "+
@@ -187,7 +188,8 @@ func GetAdminReferralRewardDashboard(filter AdminReferralRewardFilter, pageInfo 
 
 	query := tx.Table("referral_reward_claims AS rewards").
 		Joins("LEFT JOIN users AS inviters ON inviters.id = rewards.inviter_id").
-		Joins("LEFT JOIN users AS invitees ON invitees.id = rewards.invitee_id")
+		Joins("LEFT JOIN users AS invitees ON invitees.id = rewards.invitee_id").
+		Where("rewards.program = ?", ReferralRewardProgramStandard)
 	query = applyAdminReferralRewardFilter(query, filter)
 
 	var total int64
