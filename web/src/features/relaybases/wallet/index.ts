@@ -24,6 +24,7 @@ export {
 export {
   formatRelayBasesCredits,
   formatRelayBasesUsd,
+  formatRelayBasesUsdCompact,
   getRelayBasesCreditsDocsUrl,
   getRelayBasesPaymentCopyKey,
   orderRelayBasesPaymentMethods,

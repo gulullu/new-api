@@ -23,13 +23,15 @@ import type { PaymentMethod } from '../../../wallet/types'
 import {
   formatRelayBasesCredits,
   formatRelayBasesUsd,
+  formatRelayBasesUsdCompact,
   getRelayBasesChinesePaymentHint,
   getRelayBasesCreditsDocsUrl,
   getRelayBasesPaymentCopyKey,
   getRelayBasesPaymentGridClass,
-  getRelayBasesTopupLanguageTier,
+  getRelayBasesPaymentMethodInteractionKey,
   isRelayBasesChineseLanguage,
   orderRelayBasesPaymentMethods,
+  selectRelayBasesDefaultPaymentMethod,
 } from '../policy'
 
 describe('RelayBases wallet policy', () => {
@@ -38,9 +40,6 @@ describe('RelayBases wallet policy', () => {
     assert.equal(isRelayBasesChineseLanguage('zhTW'), true)
     assert.equal(isRelayBasesChineseLanguage('zh-TW'), true)
     assert.equal(isRelayBasesChineseLanguage('en'), false)
-    assert.equal(getRelayBasesTopupLanguageTier('zhCN'), 'chinese')
-    assert.equal(getRelayBasesTopupLanguageTier('fr'), 'non-chinese')
-    assert.equal(getRelayBasesTopupLanguageTier(), 'unknown')
   })
 
   test('orders gateways without mutating the backend response', () => {
@@ -58,6 +57,33 @@ describe('RelayBases wallet policy', () => {
       ['stripe', 'waffo_pancake', 'alipay', 'wxpay', 'custom']
     )
     assert.equal(methods[0]?.type, 'custom')
+  })
+
+  test('selects the first visually ordered gateway available at the current amount', () => {
+    const methods = [
+      { name: 'Custom', type: 'custom1', min_topup: 50 },
+      { name: 'Waffo', type: 'waffo_pancake', min_topup: 20 },
+      { name: 'Stripe', type: 'stripe', min_topup: 20 },
+    ]
+
+    assert.equal(
+      selectRelayBasesDefaultPaymentMethod(methods, 20)?.type,
+      'stripe'
+    )
+    assert.equal(methods[0]?.type, 'custom1')
+  })
+
+  test('keeps interaction identity distinct for methods sharing a type', () => {
+    assert.notEqual(
+      getRelayBasesPaymentMethodInteractionKey({
+        name: 'Custom A',
+        type: 'custom1',
+      }),
+      getRelayBasesPaymentMethodInteractionKey({
+        name: 'Custom B',
+        type: 'custom1',
+      })
+    )
   })
 
   test('maps gateway copy and Chinese payment hints', () => {
@@ -81,13 +107,17 @@ describe('RelayBases wallet policy', () => {
   test('formats credits and payment money with explicit units', () => {
     assert.equal(formatRelayBasesCredits(20, 'en'), 'Ɍ 20')
     assert.equal(formatRelayBasesUsd(2.8, 'en'), 'USD 2.80')
+    assert.equal(formatRelayBasesUsdCompact(2.8, 'en'), '$2.80')
     assert.equal(formatRelayBasesCredits('invalid', 'en'), 'Ɍ —')
+    assert.equal(formatRelayBasesUsdCompact('invalid', 'en'), '$—')
   })
 
   test('selects locale-aware docs anchors and responsive grid classes', () => {
     assert.match(getRelayBasesCreditsDocsUrl('zhCN'), /lang=zh#zh-credits$/)
     assert.match(getRelayBasesCreditsDocsUrl('fr'), /lang=en#en-credits$/)
     assert.match(getRelayBasesPaymentGridClass(1), /grid-cols-1/)
+    assert.match(getRelayBasesPaymentGridClass(2), /grid-cols-1/)
+    assert.match(getRelayBasesPaymentGridClass(2), /sm:grid-cols-2/)
     assert.match(getRelayBasesPaymentGridClass(4), /xl:grid-cols-4/)
   })
 })

@@ -44,15 +44,6 @@ export function isRelayBasesChineseLanguage(language?: string | null): boolean {
   )
 }
 
-export type RelayBasesTopupLanguageTier = 'chinese' | 'non-chinese' | 'unknown'
-
-export function getRelayBasesTopupLanguageTier(
-  language?: string | null
-): RelayBasesTopupLanguageTier {
-  if (!language) return 'unknown'
-  return isRelayBasesChineseLanguage(language) ? 'chinese' : 'non-chinese'
-}
-
 export function orderRelayBasesPaymentMethods(
   methods: PaymentMethod[]
 ): PaymentMethod[] {
@@ -64,6 +55,23 @@ export function orderRelayBasesPaymentMethods(
       return rankA - rankB || a.index - b.index
     })
     .map(({ method }) => method)
+}
+
+export function selectRelayBasesDefaultPaymentMethod(
+  methods: PaymentMethod[],
+  topupAmount: number
+): PaymentMethod | null {
+  return (
+    orderRelayBasesPaymentMethods(methods).find(
+      (method) => (method.min_topup ?? 0) <= topupAmount
+    ) ?? null
+  )
+}
+
+export function getRelayBasesPaymentMethodInteractionKey(
+  method: Pick<PaymentMethod, 'name' | 'type'>
+): string {
+  return JSON.stringify([method.type, method.name])
 }
 
 export type RelayBasesPaymentCopyKey =
@@ -122,6 +130,15 @@ export function formatRelayBasesUsd(
   const numeric = Number(amount)
   if (!Number.isFinite(numeric)) return 'USD —'
   return `USD ${numberFormatter(language, 2, 2).format(numeric)}`
+}
+
+export function formatRelayBasesUsdCompact(
+  amount: number | string,
+  language?: string
+): string {
+  const numeric = Number(amount)
+  if (!Number.isFinite(numeric)) return '$—'
+  return `$${numberFormatter(language, 2, 2).format(numeric)}`
 }
 
 export function getRelayBasesCreditsDocsUrl(language?: string | null): string {

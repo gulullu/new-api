@@ -31,18 +31,14 @@ import { TitledCard } from '@/components/ui/titled-card'
 import { RELAYBASES_I18N_NAMESPACE } from '@/features/relaybases/i18n/manifest'
 import {
   formatRelayBasesCredits,
-  formatRelayBasesUsd,
+  formatRelayBasesUsdCompact,
   RelayBasesCreditsNotice,
   RelayBasesPaymentMethodCard,
   RelayBasesPaymentMethodGrid,
 } from '@/features/relaybases/wallet'
 import { cn } from '@/lib/utils'
 
-import {
-  getDiscountLabel,
-  getMinTopupAmount,
-  calculatePresetPricing,
-} from '../lib'
+import { getMinTopupAmount, calculatePresetPricing } from '../lib'
 import type {
   PaymentMethod,
   PresetAmount,
@@ -63,6 +59,8 @@ interface RechargeFormCardProps {
   calculating: boolean
   onPaymentMethodSelect: (method: PaymentMethod) => void
   paymentLoading: string | null
+  selectedPaymentMethod?: PaymentMethod | null
+  selectedWaffoMethodIndex?: number | null
   redemptionCode: string
   onRedemptionCodeChange: (code: string) => void
   onRedeem: () => void
@@ -92,6 +90,8 @@ export function RechargeFormCard({
   calculating,
   onPaymentMethodSelect,
   paymentLoading,
+  selectedPaymentMethod,
+  selectedWaffoMethodIndex,
   redemptionCode,
   onRedemptionCodeChange,
   onRedeem,
@@ -157,7 +157,7 @@ export function RechargeFormCard({
             {/* Preset Amounts Skeleton */}
             <div className='space-y-3'>
               <Skeleton className='h-3 w-16' />
-              <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
+              <div className='grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 md:grid-cols-4'>
                 {Array.from({ length: 8 }, (_, index) => `preset-${index}`).map(
                   (key) => (
                     <Skeleton key={key} className='h-[72px] rounded-lg' />
@@ -228,13 +228,16 @@ export function RechargeFormCard({
                   <Label className='text-muted-foreground text-xs font-medium tracking-wider uppercase'>
                     {tRelayBases('wallet.labels.creditsReceived')}
                   </Label>
-                  <div className='grid grid-cols-2 gap-1.5 sm:gap-3 md:grid-cols-4'>
+                  <div
+                    data-topup-preset-grid
+                    className='grid min-w-0 grid-cols-1 gap-1.5 min-[360px]:grid-cols-2 sm:gap-3 md:grid-cols-4'
+                  >
                     {presetAmounts.map((preset) => {
                       const discount =
                         preset.discount ||
                         topupInfo?.discount?.[preset.value] ||
                         1.0
-                      const { actualPrice, savedAmount, hasDiscount } =
+                      const { originalPrice, actualPrice, hasDiscount } =
                         calculatePresetPricing(
                           preset.value,
                           priceRatio,
@@ -243,43 +246,55 @@ export function RechargeFormCard({
                       return (
                         <Button
                           key={preset.value}
+                          data-topup-preset-value={preset.value}
                           variant='outline'
                           className={cn(
-                            'flex min-h-16 flex-col items-start rounded-lg px-3 py-2.5 text-left whitespace-normal sm:min-h-[72px] sm:p-4',
+                            'flex min-h-16 w-full min-w-0 max-w-full flex-col items-start overflow-hidden rounded-lg px-3 py-2.5 text-left whitespace-normal sm:min-h-[72px] sm:p-4',
                             selectedPreset === preset.value
                               ? 'border-foreground bg-foreground/5 dark:border-foreground dark:bg-foreground/10'
                               : 'border-muted'
                           )}
                           onClick={() => onSelectPreset(preset)}
                         >
-                          <div className='flex w-full items-center justify-between'>
-                            <div className='text-base font-semibold sm:text-lg'>
-                              {formatRelayBasesCredits(
-                                preset.value,
-                                relayBasesLanguage
-                              )}
-                            </div>
-                            {hasDiscount && (
-                              <div className='text-xs font-medium text-green-600'>
-                                {getDiscountLabel(discount)}
-                              </div>
-                            )}
-                          </div>
-                          <div className='text-muted-foreground mt-1.5 w-full text-xs sm:mt-2'>
-                            {tRelayBases('wallet.labels.pay')}{' '}
-                            {formatRelayBasesUsd(
-                              actualPrice,
+                          <div className='w-full min-w-0 text-base font-semibold break-words sm:text-lg'>
+                            {formatRelayBasesCredits(
+                              preset.value,
                               relayBasesLanguage
                             )}
-                            {hasDiscount && savedAmount > 0 && (
-                              <span className='text-green-600'>
-                                {' '}
-                                • {tRelayBases('wallet.labels.save')}{' '}
-                                {formatRelayBasesUsd(
-                                  savedAmount,
-                                  relayBasesLanguage
-                                )}
+                          </div>
+                          <div
+                            data-topup-preset-price
+                            className='text-muted-foreground mt-1.5 w-full max-w-full min-w-0 text-xs leading-4 break-words whitespace-normal sm:mt-2'
+                          >
+                            {hasDiscount ? (
+                              <span className='inline-flex max-w-full flex-wrap items-baseline gap-x-1'>
+                                <span
+                                  data-topup-original-price
+                                  className='whitespace-nowrap line-through'
+                                >
+                                  {tRelayBases('wallet.labels.originalPrice')}{' '}
+                                  {formatRelayBasesUsdCompact(
+                                    originalPrice,
+                                    relayBasesLanguage
+                                  )}
+                                </span>
+                                <span aria-hidden='true'>/</span>
+                                <span
+                                  data-topup-discounted-price
+                                  className='whitespace-nowrap text-green-600'
+                                >
+                                  {tRelayBases('wallet.labels.discountedPrice')}{' '}
+                                  {formatRelayBasesUsdCompact(
+                                    actualPrice,
+                                    relayBasesLanguage
+                                  )}
+                                </span>
                               </span>
+                            ) : (
+                              formatRelayBasesUsdCompact(
+                                actualPrice,
+                                relayBasesLanguage
+                              )
                             )}
                           </div>
                         </Button>
@@ -296,7 +311,10 @@ export function RechargeFormCard({
                 >
                   {tRelayBases('wallet.labels.customCredits')}
                 </Label>
-                <div className='grid grid-cols-[minmax(0,1fr)_minmax(110px,0.55fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center'>
+                <div
+                  data-topup-custom-row
+                  className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(9.5rem,0.55fr)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center'
+                >
                   <Input
                     id='topup-amount'
                     type='number'
@@ -309,15 +327,27 @@ export function RechargeFormCard({
                     aria-describedby='relaybases-minimum-topup-notice'
                     className='h-9 text-base sm:h-10 sm:text-lg'
                   />
-                  <div className='bg-muted/30 flex min-h-9 items-center justify-between gap-2 rounded-md border px-3 lg:min-w-52'>
-                    <span className='text-muted-foreground truncate text-xs'>
-                      {tRelayBases('wallet.labels.amountToPay')}:
+                  <div
+                    data-topup-custom-payment-summary
+                    className='bg-muted/30 flex min-h-9 min-w-0 items-center justify-between gap-2 rounded-md border px-3 lg:min-w-52'
+                  >
+                    <span
+                      data-topup-custom-payment-label
+                      className='text-muted-foreground shrink-0 text-xs whitespace-nowrap'
+                    >
+                      {tRelayBases('wallet.labels.amountToPay')}
                     </span>
                     {calculating ? (
                       <Skeleton className='h-5 w-16' />
                     ) : (
-                      <span className='text-sm font-semibold'>
-                        {formatRelayBasesUsd(paymentAmount, relayBasesLanguage)}
+                      <span
+                        data-topup-custom-payment-value
+                        className='shrink-0 text-sm font-semibold whitespace-nowrap'
+                      >
+                        {formatRelayBasesUsdCompact(
+                          paymentAmount,
+                          relayBasesLanguage
+                        )}
                       </span>
                     )}
                   </div>
@@ -343,6 +373,7 @@ export function RechargeFormCard({
                     baseMinimum={minTopup}
                     topupAmount={topupAmount}
                     paymentLoading={paymentLoading}
+                    selectedPaymentMethod={selectedPaymentMethod}
                     onSelect={onPaymentMethodSelect}
                   />
                 ) : null}
@@ -381,6 +412,10 @@ export function RechargeFormCard({
                             minimum={waffoMin}
                             topupAmount={topupAmount}
                             loading={paymentLoading === loadingKey}
+                            selected={
+                              selectedPaymentMethod?.type === 'waffo' &&
+                              selectedWaffoMethodIndex === index
+                            }
                             paymentBusy={paymentLoading !== null}
                             onSelect={() => onWaffoMethodSelect(method, index)}
                           />

@@ -21,6 +21,7 @@ import { after, describe, test } from 'node:test'
 
 import { Window } from 'happy-dom'
 
+import type { TopupInfo } from '../../../wallet/types'
 import en from '../../i18n/locales/en.json'
 import zhCN from '../../i18n/locales/zh.json'
 
@@ -57,6 +58,9 @@ const { createInstance } = await import('i18next')
 const { I18nextProvider, initReactI18next } = await import('react-i18next')
 const { RelayBasesCreditsNotice, RelayBasesPaymentMethodGrid } =
   await import('../index')
+const { getRelayBasesPaymentMethodInteractionKey } = await import('../policy')
+const { RechargeFormCard } =
+  await import('../../../wallet/components/recharge-form-card')
 
 const i18n = createInstance()
 await i18n.use(initReactI18next).init({
@@ -73,25 +77,82 @@ const reactTestGlobals = globalThis as typeof globalThis & {
 }
 reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 
-async function renderWalletComponents(topupAmount: number) {
+async function renderWalletComponents(
+  topupAmount: number,
+  selectedPaymentType?: string,
+  paymentLoading: string | null = null
+) {
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
+  const methods = [
+    { name: 'Waffo Pancake', type: 'waffo_pancake', min_topup: 20 },
+    { name: 'Stripe', type: 'stripe', min_topup: 20 },
+  ]
 
   await act(async () => {
     root.render(
       <I18nextProvider i18n={i18n}>
         <RelayBasesPaymentMethodGrid
-          methods={[
-            { name: 'Waffo Pancake', type: 'waffo_pancake', min_topup: 20 },
-            { name: 'Stripe', type: 'stripe', min_topup: 20 },
-          ]}
+          methods={methods}
           baseMinimum={20}
           topupAmount={topupAmount}
-          paymentLoading={null}
+          paymentLoading={paymentLoading}
+          selectedPaymentMethod={
+            methods.find((method) => method.type === selectedPaymentType) ??
+            null
+          }
           onSelect={() => undefined}
         />
         <RelayBasesCreditsNotice />
+      </I18nextProvider>
+    )
+  })
+
+  return { container, root }
+}
+
+async function renderLegacyWaffoSelection() {
+  const container = document.createElement('div')
+  document.body.append(container)
+  const root = createRoot(container)
+  const topupInfo: TopupInfo = {
+    enable_online_topup: false,
+    enable_stripe_topup: false,
+    pay_methods: [],
+    min_topup: 20,
+    stripe_min_topup: 20,
+    amount_options: [],
+    discount: {},
+    enable_waffo_topup: true,
+    waffo_min_topup: 20,
+  }
+
+  await act(async () => {
+    root.render(
+      <I18nextProvider i18n={i18n}>
+        <RechargeFormCard
+          topupInfo={topupInfo}
+          presetAmounts={[]}
+          selectedPreset={null}
+          onSelectPreset={() => undefined}
+          topupAmount={20}
+          onTopupAmountChange={() => undefined}
+          paymentAmount={2.85}
+          calculating={false}
+          onPaymentMethodSelect={() => undefined}
+          paymentLoading={null}
+          selectedPaymentMethod={{ name: 'Channel B', type: 'waffo' }}
+          selectedWaffoMethodIndex={1}
+          redemptionCode=''
+          onRedemptionCodeChange={() => undefined}
+          onRedeem={() => undefined}
+          redeeming={false}
+          enableWaffoTopup
+          waffoPayMethods={[{ name: 'Channel A' }, { name: 'Channel B' }]}
+          waffoMinTopup={20}
+          onWaffoMethodSelect={() => undefined}
+        />
       </I18nextProvider>
     )
   })
@@ -118,6 +179,17 @@ describe('RelayBases wallet components', () => {
     assert.match(buttons[1]?.getAttribute('aria-label') ?? '', /Waffo Pancake/)
     assert.match(buttons[0]?.textContent ?? '', /支付宝/)
     assert.match(buttons[1]?.textContent ?? '', /微信支付/)
+    assert.ok(
+      buttons[1]?.querySelector('img[src="/waffo-logo-dark.svg"]'),
+      'Waffo uses the bundled white brand mark on the light theme shell'
+    )
+    assert.ok(
+      buttons[1]?.querySelector('img[src="/waffo-logo-light.svg"]'),
+      'Waffo keeps a dark-theme brand mark available'
+    )
+    assert.match(buttons[0]?.className ?? '', /border-2/)
+    assert.match(buttons[0]?.className ?? '', /shadow-sm/)
+    assert.match(buttons[1]?.className ?? '', /border-2/)
 
     const docs = rendered.container.querySelector('a[href*="#zh-credits"]')
     const refund = rendered.container.querySelector('a[href*="refund"]')
@@ -127,8 +199,21 @@ describe('RelayBases wallet components', () => {
     await unmount(rendered)
   })
 
+  test('exposes and emphasizes the selected payment method', async () => {
+    const rendered = await renderWalletComponents(20, 'waffo_pancake')
+    const buttons = [...rendered.container.querySelectorAll('button')]
+
+    assert.equal(buttons[0]?.getAttribute('aria-pressed'), 'false')
+    assert.equal(buttons[1]?.getAttribute('aria-pressed'), 'true')
+    assert.doesNotMatch(buttons[0]?.className ?? '', /ring-slate-900\/15/)
+    assert.match(buttons[1]?.className ?? '', /ring-slate-900\/15/)
+    assert.ok(buttons[1]?.querySelector('svg.lucide-check'))
+
+    await unmount(rendered)
+  })
+
   test('keeps minimum copy visible and both gateways disabled below the floor', async () => {
-    const rendered = await renderWalletComponents(19)
+    const rendered = await renderWalletComponents(19, 'waffo_pancake')
     const buttons = [...rendered.container.querySelectorAll('button')]
 
     assert.equal(
@@ -145,6 +230,66 @@ describe('RelayBases wallet components', () => {
       ),
       true
     )
+    assert.equal(
+      buttons.every(
+        (button) => button.getAttribute('aria-pressed') === 'false'
+      ),
+      true
+    )
+    assert.equal(
+      buttons.every((button) => !button.querySelector('svg.lucide-check')),
+      true
+    )
+
+    await unmount(rendered)
+  })
+
+  test('shows loading state only on the exact method when types repeat', async () => {
+    const customA = { name: 'Custom A', type: 'custom1', min_topup: 20 }
+    const customB = { name: 'Custom B', type: 'custom1', min_topup: 20 }
+    const methods = [customA, customB]
+    const container = document.createElement('div')
+    document.body.append(container)
+    const root = createRoot(container)
+
+    await act(async () => {
+      root.render(
+        <I18nextProvider i18n={i18n}>
+          <RelayBasesPaymentMethodGrid
+            methods={methods}
+            baseMinimum={20}
+            topupAmount={20}
+            paymentLoading={getRelayBasesPaymentMethodInteractionKey(customB)}
+            selectedPaymentMethod={customB}
+            onSelect={() => undefined}
+          />
+        </I18nextProvider>
+      )
+    })
+
+    const buttons = [...container.querySelectorAll('button')]
+    assert.equal(buttons[0]?.getAttribute('aria-busy'), 'false')
+    assert.equal(buttons[1]?.getAttribute('aria-busy'), 'true')
+    assert.equal(buttons[0]?.getAttribute('aria-pressed'), 'false')
+    assert.equal(buttons[1]?.getAttribute('aria-pressed'), 'true')
+    assert.equal(buttons[0]?.querySelector('svg.animate-spin'), null)
+    assert.ok(buttons[1]?.querySelector('svg.animate-spin'))
+
+    await unmount({ container, root })
+  })
+
+  test('keeps the selected legacy Waffo submethod emphasized after quoting', async () => {
+    const rendered = await renderLegacyWaffoSelection()
+    const channelA = rendered.container.querySelector(
+      'button[aria-label*="Channel A"]'
+    )
+    const channelB = rendered.container.querySelector(
+      'button[aria-label*="Channel B"]'
+    )
+
+    assert.equal(channelA?.getAttribute('aria-pressed'), 'false')
+    assert.equal(channelB?.getAttribute('aria-pressed'), 'true')
+    assert.ok(channelB?.querySelector('svg.lucide-check'))
 
     await unmount(rendered)
   })

@@ -51,7 +51,9 @@
       "customCredits": "自訂到帳 API Credits（Ɍ）",
       "pay": "支付",
       "save": "節省",
-      "amountToPay": "待支付金額"
+      "amountToPay": "應付",
+      "originalPrice": "原價",
+      "discountedPrice": "優惠價"
     },
     "minimum": {
       "placeholder": "最低 Ɍ{{amount}}",

@@ -51,7 +51,9 @@
       "customCredits": "任意の API Credits（Ɍ）",
       "pay": "支払い",
       "save": "割引",
-      "amountToPay": "支払額"
+      "amountToPay": "支払",
+      "originalPrice": "通常",
+      "discountedPrice": "割引"
     },
     "minimum": {
       "placeholder": "最低 Ɍ{{amount}}",

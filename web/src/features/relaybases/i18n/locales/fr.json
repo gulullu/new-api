@@ -51,7 +51,9 @@
       "customCredits": "Crédits API personnalisés (Ɍ)",
       "pay": "Payer",
       "save": "Économiser",
-      "amountToPay": "Montant à payer"
+      "amountToPay": "À payer",
+      "originalPrice": "Initial",
+      "discountedPrice": "Réduit"
     },
     "minimum": {
       "placeholder": "Minimum Ɍ{{amount}}",

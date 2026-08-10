@@ -218,6 +218,8 @@ export interface WaffoPancakePaymentRequest {
 export interface AmountRequest {
   /** Topup amount to calculate */
   amount: number
+  /** Selected gateway type; legacy quote endpoints use it for channel limits */
+  payment_method?: string
 }
 
 /**

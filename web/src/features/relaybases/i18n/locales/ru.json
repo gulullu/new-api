@@ -51,7 +51,9 @@
       "customCredits": "Произвольное количество API Credits (Ɍ)",
       "pay": "К оплате",
       "save": "Экономия",
-      "amountToPay": "Сумма к оплате"
+      "amountToPay": "К оплате",
+      "originalPrice": "Обычно",
+      "discountedPrice": "Со скидкой"
     },
     "minimum": {
       "placeholder": "Минимум Ɍ{{amount}}",
