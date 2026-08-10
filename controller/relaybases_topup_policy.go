@@ -10,21 +10,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const (
-	relayBasesChineseMinimumTopup    int64 = 20
-	relayBasesNonChineseMinimumTopup int64 = 100
-)
+const relayBasesMinimumTopup int64 = 20
 
 // relayBasesMinimumTopupCredits is the deployment policy expressed in the
-// user-facing RelayBases credit unit. The server resolves it from the
-// authenticated user's persisted interface language; the browser never sends
-// a minimum that the payment endpoints trust.
-func relayBasesMinimumTopupCredits(c *gin.Context) int64 {
-	lang := i18n.GetLangFromContext(c)
-	if lang == i18n.LangZhCN || lang == i18n.LangZhTW {
-		return relayBasesChineseMinimumTopup
-	}
-	return relayBasesNonChineseMinimumTopup
+// user-facing RelayBases credit unit. The server applies the same policy to
+// every interface language; the browser never sends a minimum that the
+// payment endpoints trust.
+func relayBasesMinimumTopupCredits(_ *gin.Context) int64 {
+	return relayBasesMinimumTopup
 }
 
 // relayBasesMinimumTopupFloor converts the credit policy into the request unit

@@ -75,7 +75,7 @@ describe('RelayBases locale coverage', () => {
     }
   })
 
-  test('keeps amount interpolation in every minimum message', () => {
+  test('renders the unified Ɍ20 minimum in every locale', () => {
     const keys = [
       'wallet.minimum.placeholder',
       'wallet.minimum.notice',
@@ -84,6 +84,9 @@ describe('RelayBases locale coverage', () => {
     for (const locale of localeNames) {
       for (const key of keys) {
         assert.match(locales[locale][key], /\{\{amount\}\}/)
+        const rendered = locales[locale][key].replaceAll('{{amount}}', '20')
+        assert.match(rendered, /Ɍ20/)
+        assert.doesNotMatch(rendered, /Ɍ100/)
       }
     }
   })

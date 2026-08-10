@@ -20,7 +20,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
-import { getRelayBasesTopupLanguageTier } from '@/features/relaybases/wallet/policy'
 import { useStatus } from '@/hooks/use-status'
 import { getSelf } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth-store'
@@ -68,8 +67,6 @@ export function Wallet(props: WalletProps) {
   const { t } = useTranslation()
   const authenticatedUser = useAuthStore((state) => state.auth.user)
   const authenticatedUserGroup = authenticatedUser?.group
-  const persistedLanguage = authenticatedUser?.language
-  const topupLanguageTier = getRelayBasesTopupLanguageTier(persistedLanguage)
   const [user, setUser] = useState<UserWalletData | null>(null)
   const [userLoading, setUserLoading] = useState(true)
   const [topupAmount, setTopupAmount] = useState(0)
@@ -90,18 +87,13 @@ export function Wallet(props: WalletProps) {
   const [showSubscriptionPanel, setShowSubscriptionPanel] = useState(true)
 
   const { status } = useStatus()
-  const {
-    topupInfo,
-    presetAmounts,
-    loading: topupLoading,
-  } = useTopupInfo(topupLanguageTier)
+  const { topupInfo, presetAmounts, loading: topupLoading } = useTopupInfo()
   const {
     amount: paymentAmount,
     calculating,
     processing,
     calculatePaymentAmount,
     processPayment,
-    cancelPaymentAmountCalculation,
   } = usePayment()
   const {
     affiliateLink,
@@ -142,15 +134,6 @@ export function Wallet(props: WalletProps) {
     }
   }, [props.initialShowHistory])
 
-  const previousTopupLanguageTierRef = useRef(topupLanguageTier)
-  useEffect(() => {
-    if (previousTopupLanguageTierRef.current === topupLanguageTier) return
-    previousTopupLanguageTierRef.current = topupLanguageTier
-    setConfirmDialogOpen(false)
-    cancelPaymentAmountCalculation()
-    setPaymentLoading(null)
-  }, [cancelPaymentAmountCalculation, topupLanguageTier])
-
   // Initialize topup amount when topup info is loaded
   const previousMinimumTopupRef = useRef<number | null>(null)
   useEffect(() => {
@@ -163,8 +146,7 @@ export function Wallet(props: WalletProps) {
     setSelectedPreset(null)
     setConfirmDialogOpen(false)
 
-    // Recalculate whenever the server-confirmed language tier changes the
-    // minimum. Switching between languages in the same tier keeps user input.
+    // Recalculate whenever the server-confirmed minimum changes.
     const defaultPaymentType =
       selectedPaymentMethod?.type || getDefaultPaymentType(topupInfo)
     calculatePaymentAmount(minTopup, defaultPaymentType)

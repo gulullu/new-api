@@ -27,7 +27,6 @@ import {
   getRelayBasesCreditsDocsUrl,
   getRelayBasesPaymentCopyKey,
   getRelayBasesPaymentGridClass,
-  getRelayBasesTopupLanguageTier,
   isRelayBasesChineseLanguage,
   orderRelayBasesPaymentMethods,
 } from '../policy'
@@ -38,9 +37,6 @@ describe('RelayBases wallet policy', () => {
     assert.equal(isRelayBasesChineseLanguage('zhTW'), true)
     assert.equal(isRelayBasesChineseLanguage('zh-TW'), true)
     assert.equal(isRelayBasesChineseLanguage('en'), false)
-    assert.equal(getRelayBasesTopupLanguageTier('zhCN'), 'chinese')
-    assert.equal(getRelayBasesTopupLanguageTier('fr'), 'non-chinese')
-    assert.equal(getRelayBasesTopupLanguageTier(), 'unknown')
   })
 
   test('orders gateways without mutating the backend response', () => {

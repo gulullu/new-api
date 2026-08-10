@@ -44,15 +44,6 @@ export function isRelayBasesChineseLanguage(language?: string | null): boolean {
   )
 }
 
-export type RelayBasesTopupLanguageTier = 'chinese' | 'non-chinese' | 'unknown'
-
-export function getRelayBasesTopupLanguageTier(
-  language?: string | null
-): RelayBasesTopupLanguageTier {
-  if (!language) return 'unknown'
-  return isRelayBasesChineseLanguage(language) ? 'chinese' : 'non-chinese'
-}
-
 export function orderRelayBasesPaymentMethods(
   methods: PaymentMethod[]
 ): PaymentMethod[] {
