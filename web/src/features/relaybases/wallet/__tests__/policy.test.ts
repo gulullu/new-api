@@ -88,6 +88,8 @@ describe('RelayBases wallet policy', () => {
     assert.match(getRelayBasesCreditsDocsUrl('zhCN'), /lang=zh#zh-credits$/)
     assert.match(getRelayBasesCreditsDocsUrl('fr'), /lang=en#en-credits$/)
     assert.match(getRelayBasesPaymentGridClass(1), /grid-cols-1/)
+    assert.match(getRelayBasesPaymentGridClass(2), /grid-cols-1/)
+    assert.match(getRelayBasesPaymentGridClass(2), /sm:grid-cols-2/)
     assert.match(getRelayBasesPaymentGridClass(4), /xl:grid-cols-4/)
   })
 })

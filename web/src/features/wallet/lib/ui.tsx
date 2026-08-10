@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import i18next from 'i18next'
 import { CreditCard, Landmark } from 'lucide-react'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { SiAlipay, SiWechat, SiStripe } from 'react-icons/si'
 
 import { ReactIconByName } from '@/components/react-icon-by-name'
@@ -68,6 +68,29 @@ export function getPaymentIcon(
   icon?: string,
   altName?: string
 ): ReactNode {
+  // Waffo Pancake has a bundled brand mark. Keep it ahead of configured
+  // icon resolution so an obsolete or unavailable react-icons name cannot
+  // leave checkout surfaces with an empty icon shell.
+  if (paymentType === PAYMENT_TYPES.WAFFO_PANCAKE) {
+    return (
+      <span
+        className={`inline-flex items-center justify-center leading-none ${className}`}
+        style={{ transform: 'scale(2)' }}
+      >
+        <img
+          src='/waffo-logo-light.svg'
+          alt={i18next.t('Waffo')}
+          className='block h-full w-full object-contain dark:hidden'
+        />
+        <img
+          src='/waffo-logo-dark.svg'
+          alt={i18next.t('Waffo')}
+          className='hidden h-full w-full object-contain dark:block'
+        />
+      </span>
+    )
+  }
+
   const iconValue = icon?.trim()
   const safeIconUrl = normalizeHttpIconUrl(iconValue)
   if (safeIconUrl) {
@@ -132,27 +155,6 @@ export function getPaymentIcon(
           className={className}
           style={{ color: PAYMENT_ICON_COLORS[PAYMENT_TYPES.WAFFO] }}
         />
-      )
-    case PAYMENT_TYPES.WAFFO_PANCAKE:
-      // The W glyph fills only ~40% of its viewBox vertically (wide and
-      // short letterform); scale(2) brings its rendered height in line
-      // with Stripe's S and Creem's Landmark.
-      return (
-        <span
-          className={`inline-flex items-center justify-center leading-none ${className}`}
-          style={{ transform: 'scale(2)' }}
-        >
-          <img
-            src='/waffo-logo-light.svg'
-            alt={i18next.t('Waffo')}
-            className='block h-full w-full object-contain dark:hidden'
-          />
-          <img
-            src='/waffo-logo-dark.svg'
-            alt={i18next.t('Waffo')}
-            className='hidden h-full w-full object-contain dark:block'
-          />
-        </span>
       )
     default:
       return <CreditCard className={className} />

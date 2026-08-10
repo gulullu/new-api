@@ -63,6 +63,7 @@ interface RechargeFormCardProps {
   calculating: boolean
   onPaymentMethodSelect: (method: PaymentMethod) => void
   paymentLoading: string | null
+  selectedPaymentMethod?: PaymentMethod | null
   redemptionCode: string
   onRedemptionCodeChange: (code: string) => void
   onRedeem: () => void
@@ -92,6 +93,7 @@ export function RechargeFormCard({
   calculating,
   onPaymentMethodSelect,
   paymentLoading,
+  selectedPaymentMethod,
   redemptionCode,
   onRedemptionCodeChange,
   onRedeem,
@@ -343,6 +345,7 @@ export function RechargeFormCard({
                     baseMinimum={minTopup}
                     topupAmount={topupAmount}
                     paymentLoading={paymentLoading}
+                    selectedPaymentType={selectedPaymentMethod?.type}
                     onSelect={onPaymentMethodSelect}
                   />
                 ) : null}

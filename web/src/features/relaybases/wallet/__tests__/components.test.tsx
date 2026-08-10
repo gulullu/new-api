@@ -73,7 +73,10 @@ const reactTestGlobals = globalThis as typeof globalThis & {
 }
 reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 
-async function renderWalletComponents(topupAmount: number) {
+async function renderWalletComponents(
+  topupAmount: number,
+  selectedPaymentType?: string
+) {
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
@@ -89,6 +92,7 @@ async function renderWalletComponents(topupAmount: number) {
           baseMinimum={20}
           topupAmount={topupAmount}
           paymentLoading={null}
+          selectedPaymentType={selectedPaymentType}
           onSelect={() => undefined}
         />
         <RelayBasesCreditsNotice />
@@ -118,6 +122,17 @@ describe('RelayBases wallet components', () => {
     assert.match(buttons[1]?.getAttribute('aria-label') ?? '', /Waffo Pancake/)
     assert.match(buttons[0]?.textContent ?? '', /支付宝/)
     assert.match(buttons[1]?.textContent ?? '', /微信支付/)
+    assert.ok(
+      buttons[1]?.querySelector('img[src="/waffo-logo-dark.svg"]'),
+      'Waffo uses the bundled white brand mark on the light theme shell'
+    )
+    assert.ok(
+      buttons[1]?.querySelector('img[src="/waffo-logo-light.svg"]'),
+      'Waffo keeps a dark-theme brand mark available'
+    )
+    assert.match(buttons[0]?.className ?? '', /border-2/)
+    assert.match(buttons[0]?.className ?? '', /shadow-sm/)
+    assert.match(buttons[1]?.className ?? '', /border-2/)
 
     const docs = rendered.container.querySelector('a[href*="#zh-credits"]')
     const refund = rendered.container.querySelector('a[href*="refund"]')
@@ -127,8 +142,21 @@ describe('RelayBases wallet components', () => {
     await unmount(rendered)
   })
 
+  test('exposes and emphasizes the selected payment method', async () => {
+    const rendered = await renderWalletComponents(20, 'waffo_pancake')
+    const buttons = [...rendered.container.querySelectorAll('button')]
+
+    assert.equal(buttons[0]?.getAttribute('aria-pressed'), 'false')
+    assert.equal(buttons[1]?.getAttribute('aria-pressed'), 'true')
+    assert.doesNotMatch(buttons[0]?.className ?? '', /ring-slate-900\/15/)
+    assert.match(buttons[1]?.className ?? '', /ring-slate-900\/15/)
+    assert.ok(buttons[1]?.querySelector('svg.lucide-check'))
+
+    await unmount(rendered)
+  })
+
   test('keeps minimum copy visible and both gateways disabled below the floor', async () => {
-    const rendered = await renderWalletComponents(19)
+    const rendered = await renderWalletComponents(19, 'waffo_pancake')
     const buttons = [...rendered.container.querySelectorAll('button')]
 
     assert.equal(
@@ -143,6 +171,16 @@ describe('RelayBases wallet components', () => {
       buttons.every((button) =>
         button.className.includes('disabled:opacity-100')
       ),
+      true
+    )
+    assert.equal(
+      buttons.every(
+        (button) => button.getAttribute('aria-pressed') === 'false'
+      ),
+      true
+    )
+    assert.equal(
+      buttons.every((button) => !button.querySelector('svg.lucide-check')),
       true
     )
 
