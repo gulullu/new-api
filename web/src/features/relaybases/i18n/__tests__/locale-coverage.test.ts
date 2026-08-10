@@ -91,6 +91,25 @@ describe('RelayBases locale coverage', () => {
     }
   })
 
+  test('keeps wallet payment action copy short in every locale', () => {
+    const keys = [
+      'wallet.payment.stripe',
+      'wallet.payment.waffo',
+      'wallet.payment.action',
+    ]
+    for (const locale of localeNames) {
+      for (const key of keys) {
+        assert.ok(
+          locales[locale][key].length <= 24,
+          `${locale}: ${key} is too long for the wallet payment card`
+        )
+      }
+    }
+    assert.equal(locales.zh['wallet.payment.stripe'], '银行卡 · 支付宝')
+    assert.equal(locales.zh['wallet.payment.waffo'], '银行卡 · 微信支付')
+    assert.equal(locales.zh['wallet.payment.action'], '去支付')
+  })
+
   test('provides the complete localized pricing catalog', () => {
     const modelPrefix = 'pricing.modelDescriptions.'
     const expectedModels = Object.keys(locales.en)

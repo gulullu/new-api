@@ -61,10 +61,11 @@
       "card": "最低充值 Ɍ{{amount}}，请调整金额后继续。"
     },
     "payment": {
-      "stripe": "支持银行卡及多种主流在线支付方式，包括支付宝。",
-      "waffo": "支持银行卡及多种主流在线支付方式，包括微信支付。",
-      "generic": "将跳转至所选支付渠道确认订单并完成付款。",
-      "accessibleName": "使用{{name}}支付"
+      "stripe": "银行卡 · 支付宝",
+      "waffo": "银行卡 · 微信支付",
+      "generic": "跳转所选渠道完成付款。",
+      "accessibleName": "使用{{name}}支付",
+      "action": "去支付"
     },
     "creditsNotice": {
       "title": "充值后获得 API Credits",

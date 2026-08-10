@@ -61,10 +61,11 @@
       "card": "Mức nạp tối thiểu: Ɍ{{amount}}. Hãy tăng số tiền để tiếp tục."
     },
     "payment": {
-      "stripe": "Hỗ trợ thẻ và các phương thức thanh toán trực tuyến phổ biến, tùy theo khả năng cung cấp.",
-      "waffo": "Hỗ trợ thẻ và các phương thức thanh toán trực tuyến phổ biến, tùy theo khả năng cung cấp.",
-      "generic": "Tiếp tục đến nhà cung cấp đã chọn để kiểm tra và hoàn tất thanh toán.",
-      "accessibleName": "Thanh toán bằng {{name}}"
+      "stripe": "Thẻ · Alipay",
+      "waffo": "Thẻ · WeChat Pay",
+      "generic": "Tiếp tục thanh toán qua nhà cung cấp đã chọn.",
+      "accessibleName": "Thanh toán bằng {{name}}",
+      "action": "Thanh toán"
     },
     "creditsNotice": {
       "title": "Bạn nhận được gì sau khi thanh toán",

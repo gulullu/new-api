@@ -61,10 +61,11 @@
       "card": "最低儲值 Ɍ{{amount}}，請調整金額後繼續。"
     },
     "payment": {
-      "stripe": "支援銀行卡及多種主流線上支付方式，包括支付寶。",
-      "waffo": "支援銀行卡及多種主流線上支付方式，包括微信支付。",
-      "generic": "將前往所選支付管道確認訂單並完成付款。",
-      "accessibleName": "使用{{name}}支付"
+      "stripe": "銀行卡 · 支付寶",
+      "waffo": "銀行卡 · 微信支付",
+      "generic": "前往所選管道完成付款。",
+      "accessibleName": "使用{{name}}支付",
+      "action": "付款"
     },
     "creditsNotice": {
       "title": "儲值後獲得 API Credits",
