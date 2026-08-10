@@ -279,27 +279,27 @@ export function RechargeFormCard({
                           </div>
                           <div
                             data-topup-preset-price
-                            className='text-muted-foreground mt-3 flex w-full max-w-full min-w-0 flex-col gap-1 text-xs leading-4 break-words whitespace-normal'
+                            className='text-muted-foreground mt-3 flex w-full max-w-full min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs leading-4 break-words whitespace-normal'
                           >
                             {hasDiscount ? (
                               <>
                                 <span
-                                  data-topup-original-price
-                                  className='whitespace-nowrap line-through'
-                                >
-                                  {tRelayBases('wallet.labels.originalPrice')}{' '}
-                                  {formatRelayBasesUsdCompact(
-                                    originalPrice,
-                                    relayBasesLanguage
-                                  )}
-                                </span>
-                                <span
                                   data-topup-discounted-price
-                                  className='whitespace-nowrap text-green-600'
+                                  className='font-semibold whitespace-nowrap text-green-600'
                                 >
                                   {tRelayBases('wallet.labels.discountedPrice')}{' '}
                                   {formatRelayBasesUsdCompact(
                                     actualPrice,
+                                    relayBasesLanguage
+                                  )}
+                                </span>
+                                <span
+                                  data-topup-original-price
+                                  className='text-muted-foreground/80 text-[11px] whitespace-nowrap line-through'
+                                >
+                                  {tRelayBases('wallet.labels.originalPrice')}{' '}
+                                  {formatRelayBasesUsdCompact(
+                                    originalPrice,
                                     relayBasesLanguage
                                   )}
                                 </span>
