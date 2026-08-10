@@ -16,7 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { BadgePercent, ExternalLink, Loader2, X } from 'lucide-react'
+import { Cancel01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { BadgePercent, ExternalLink, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -78,9 +80,9 @@ export function RelayBasesVipPaymentClose(
       disabled={props.processing}
       aria-label={t('Close')}
       data-relaybases-vip-close
-      className='absolute top-2 right-2'
+      className='absolute top-2 right-2 z-10'
     >
-      <X aria-hidden='true' />
+      <HugeiconsIcon aria-hidden='true' icon={Cancel01Icon} strokeWidth={2} />
       <span className='sr-only'>{t('Close')}</span>
     </AlertDialogCancel>
   )

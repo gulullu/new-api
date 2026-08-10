@@ -61,10 +61,11 @@
       "card": "Minimum top-up: Ɍ{{amount}}. Increase the amount to continue."
     },
     "payment": {
-      "stripe": "Supports cards and popular online payment methods, subject to availability.",
-      "waffo": "Supports cards and popular online payment methods, subject to availability.",
-      "generic": "Continue to the selected payment provider to review and complete your payment.",
-      "accessibleName": "Pay with {{name}}"
+      "stripe": "Cards · Alipay",
+      "waffo": "Cards · WeChat Pay",
+      "generic": "Continue to pay with this provider.",
+      "accessibleName": "Pay with {{name}}",
+      "action": "Pay now"
     },
     "creditsNotice": {
       "title": "What you receive after payment",

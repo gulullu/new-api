@@ -230,7 +230,7 @@ export function RechargeFormCard({
                   </Label>
                   <div
                     data-topup-preset-grid
-                    className='grid min-w-0 grid-cols-1 gap-1.5 min-[360px]:grid-cols-2 sm:gap-3 md:grid-cols-4'
+                    className='grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:gap-3 md:grid-cols-4'
                   >
                     {presetAmounts.map((preset) => {
                       const discount =
@@ -249,7 +249,7 @@ export function RechargeFormCard({
                           data-topup-preset-value={preset.value}
                           variant='outline'
                           className={cn(
-                            'flex min-h-16 w-full min-w-0 max-w-full flex-col items-start overflow-hidden rounded-lg px-3 py-2.5 text-left whitespace-normal sm:min-h-[72px] sm:p-4',
+                            'flex min-h-[84px] w-full min-w-0 max-w-full flex-col items-start overflow-hidden rounded-lg px-3.5 py-4 text-left whitespace-normal sm:min-h-[88px] sm:p-4',
                             selectedPreset === preset.value
                               ? 'border-foreground bg-foreground/5 dark:border-foreground dark:bg-foreground/10'
                               : 'border-muted'
@@ -264,10 +264,10 @@ export function RechargeFormCard({
                           </div>
                           <div
                             data-topup-preset-price
-                            className='text-muted-foreground mt-1.5 w-full max-w-full min-w-0 text-xs leading-4 break-words whitespace-normal sm:mt-2'
+                            className='text-muted-foreground mt-2 flex w-full max-w-full min-w-0 flex-col gap-0.5 text-xs leading-4 break-words whitespace-normal'
                           >
                             {hasDiscount ? (
-                              <span className='inline-flex max-w-full flex-wrap items-baseline gap-x-1'>
+                              <>
                                 <span
                                   data-topup-original-price
                                   className='whitespace-nowrap line-through'
@@ -278,7 +278,6 @@ export function RechargeFormCard({
                                     relayBasesLanguage
                                   )}
                                 </span>
-                                <span aria-hidden='true'>/</span>
                                 <span
                                   data-topup-discounted-price
                                   className='whitespace-nowrap text-green-600'
@@ -289,7 +288,7 @@ export function RechargeFormCard({
                                     relayBasesLanguage
                                   )}
                                 </span>
-                              </span>
+                              </>
                             ) : (
                               formatRelayBasesUsdCompact(
                                 actualPrice,
@@ -329,7 +328,7 @@ export function RechargeFormCard({
                   />
                   <div
                     data-topup-custom-payment-summary
-                    className='bg-muted/30 flex min-h-9 min-w-0 items-center justify-between gap-2 rounded-md border px-3 lg:min-w-52'
+                    className='bg-muted/30 flex min-h-10 min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md border px-3 py-2 lg:min-w-52'
                   >
                     <span
                       data-topup-custom-payment-label

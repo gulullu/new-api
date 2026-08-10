@@ -61,10 +61,11 @@
       "card": "Recharge minimale : Ɍ{{amount}}. Augmentez le montant pour continuer."
     },
     "payment": {
-      "stripe": "Prend en charge les cartes et les principaux moyens de paiement en ligne, selon leur disponibilité.",
-      "waffo": "Prend en charge les cartes et les principaux moyens de paiement en ligne, selon leur disponibilité.",
-      "generic": "Continuez vers le prestataire sélectionné pour vérifier et terminer le paiement.",
-      "accessibleName": "Payer avec {{name}}"
+      "stripe": "Cartes · Alipay",
+      "waffo": "Cartes · WeChat Pay",
+      "generic": "Poursuivre le paiement avec ce prestataire.",
+      "accessibleName": "Payer avec {{name}}",
+      "action": "Payer"
     },
     "creditsNotice": {
       "title": "Ce que vous recevez après le paiement",

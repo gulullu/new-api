@@ -80,78 +80,85 @@ export function PaymentConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className='max-h-[calc(100dvh-1.5rem)] overflow-y-auto max-sm:w-[calc(100vw-1.5rem)] sm:max-w-md'>
+      <AlertDialogContent className='grid max-h-[calc(100dvh-1.5rem)] grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-sm:w-[calc(100vw-1.5rem)] sm:max-w-md'>
         {showRelayBasesVipPaymentWarning && (
           <RelayBasesVipPaymentClose processing={processing} />
         )}
-        <AlertDialogHeader>
-          <AlertDialogTitle className='text-xl font-semibold'>
-            {t('Confirm Payment')}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('Review your payment details')}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+        <div
+          data-payment-confirm-scroll
+          className='min-h-0 overflow-y-auto pr-1'
+        >
+          <AlertDialogHeader
+            className={showRelayBasesVipPaymentWarning ? 'pr-8' : undefined}
+          >
+            <AlertDialogTitle className='text-xl font-semibold'>
+              {t('Confirm Payment')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('Review your payment details')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-        <div className='space-y-3 py-3 sm:space-y-4 sm:py-4'>
-          <div className='flex items-center justify-between'>
-            <span className='text-muted-foreground text-sm'>
-              {t('Topup Amount')}
-            </span>
-            <span className='text-lg font-semibold'>
-              {formatRelayBasesCredits(topupAmount, relayBasesLanguage)}
-            </span>
-          </div>
-
-          <div className='flex items-center justify-between'>
-            <span className='text-muted-foreground text-sm'>
-              {t('You Pay')}
-            </span>
-            {calculating ? (
-              <Skeleton className='h-6 w-24' />
-            ) : (
-              <div className='flex items-baseline gap-2'>
-                <span className='text-2xl font-semibold'>
-                  {formatRelayBasesUsd(paymentAmount, relayBasesLanguage)}
-                </span>
-                {hasDiscount && (
-                  <span className='text-muted-foreground text-sm line-through'>
-                    {formatRelayBasesUsd(originalAmount, relayBasesLanguage)}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {hasDiscount && !calculating && (
-            <div className='bg-muted/50 rounded-lg p-3'>
-              <div className='flex items-center justify-between text-sm'>
-                <span className='text-muted-foreground'>{t('You save')}</span>
-                <span className='font-semibold text-green-600'>
-                  {formatRelayBasesUsd(discountAmount, relayBasesLanguage)}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className='border-t pt-4'>
+          <div className='space-y-3 py-3 sm:space-y-4 sm:py-4'>
             <div className='flex items-center justify-between'>
               <span className='text-muted-foreground text-sm'>
-                {t('Payment Method')}
+                {t('Topup Amount')}
               </span>
-              <div className='flex items-center gap-2'>
-                {getPaymentIcon(
-                  paymentMethod?.type,
-                  'h-4 w-4',
-                  paymentMethod?.icon,
-                  paymentMethod?.name
-                )}
-                <span className='font-medium'>{paymentMethod?.name}</span>
+              <span className='text-lg font-semibold'>
+                {formatRelayBasesCredits(topupAmount, relayBasesLanguage)}
+              </span>
+            </div>
+
+            <div className='flex items-center justify-between'>
+              <span className='text-muted-foreground text-sm'>
+                {t('You Pay')}
+              </span>
+              {calculating ? (
+                <Skeleton className='h-6 w-24' />
+              ) : (
+                <div className='flex items-baseline gap-2'>
+                  <span className='text-2xl font-semibold'>
+                    {formatRelayBasesUsd(paymentAmount, relayBasesLanguage)}
+                  </span>
+                  {hasDiscount && (
+                    <span className='text-muted-foreground text-sm line-through'>
+                      {formatRelayBasesUsd(originalAmount, relayBasesLanguage)}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {hasDiscount && !calculating && (
+              <div className='bg-muted/50 rounded-lg p-3'>
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-muted-foreground'>{t('You save')}</span>
+                  <span className='font-semibold text-green-600'>
+                    {formatRelayBasesUsd(discountAmount, relayBasesLanguage)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className='border-t pt-4'>
+              <div className='flex items-center justify-between'>
+                <span className='text-muted-foreground text-sm'>
+                  {t('Payment Method')}
+                </span>
+                <div className='flex items-center gap-2'>
+                  {getPaymentIcon(
+                    paymentMethod?.type,
+                    'h-4 w-4',
+                    paymentMethod?.icon,
+                    paymentMethod?.name
+                  )}
+                  <span className='font-medium'>{paymentMethod?.name}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {showRelayBasesVipPaymentWarning && <RelayBasesVipPaymentNotice />}
+            {showRelayBasesVipPaymentWarning && <RelayBasesVipPaymentNotice />}
+          </div>
         </div>
 
         {showRelayBasesVipPaymentWarning ? (

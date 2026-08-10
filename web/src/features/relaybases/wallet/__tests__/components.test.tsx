@@ -179,6 +179,12 @@ describe('RelayBases wallet components', () => {
     assert.match(buttons[1]?.getAttribute('aria-label') ?? '', /Waffo Pancake/)
     assert.match(buttons[0]?.textContent ?? '', /支付宝/)
     assert.match(buttons[1]?.textContent ?? '', /微信支付/)
+    assert.equal(
+      buttons.every((button) => button.textContent?.includes('去支付')),
+      true
+    )
+    assert.match(buttons[0]?.textContent ?? '', /银行卡 · 支付宝/)
+    assert.match(buttons[1]?.textContent ?? '', /银行卡 · 微信支付/)
     assert.ok(
       buttons[1]?.querySelector('img[src="/waffo-logo-dark.svg"]'),
       'Waffo uses the bundled white brand mark on the light theme shell'
@@ -187,9 +193,17 @@ describe('RelayBases wallet components', () => {
       buttons[1]?.querySelector('img[src="/waffo-logo-light.svg"]'),
       'Waffo keeps a dark-theme brand mark available'
     )
-    assert.match(buttons[0]?.className ?? '', /border-2/)
-    assert.match(buttons[0]?.className ?? '', /shadow-sm/)
-    assert.match(buttons[1]?.className ?? '', /border-2/)
+    assert.match(buttons[0]?.className ?? '', /rounded-lg/)
+    assert.match(buttons[0]?.className ?? '', /min-h-\[104px\]/)
+    assert.match(buttons[1]?.className ?? '', /min-h-\[104px\]/)
+    assert.equal(
+      buttons[0]?.querySelector('.size-5.text-\\[\\#1677FF\\]') !== null,
+      true
+    )
+    assert.equal(
+      buttons[1]?.querySelector('.size-5.text-\\[\\#07C160\\]') !== null,
+      true
+    )
 
     const docs = rendered.container.querySelector('a[href*="#zh-credits"]')
     const refund = rendered.container.querySelector('a[href*="refund"]')
@@ -199,15 +213,18 @@ describe('RelayBases wallet components', () => {
     await unmount(rendered)
   })
 
-  test('exposes and emphasizes the selected payment method', async () => {
+  test('keeps payment cards as actions instead of pressed tabs', async () => {
     const rendered = await renderWalletComponents(20, 'waffo_pancake')
     const buttons = [...rendered.container.querySelectorAll('button')]
 
-    assert.equal(buttons[0]?.getAttribute('aria-pressed'), 'false')
-    assert.equal(buttons[1]?.getAttribute('aria-pressed'), 'true')
-    assert.doesNotMatch(buttons[0]?.className ?? '', /ring-slate-900\/15/)
-    assert.match(buttons[1]?.className ?? '', /ring-slate-900\/15/)
-    assert.ok(buttons[1]?.querySelector('svg.lucide-check'))
+    assert.equal(buttons[0]?.getAttribute('aria-pressed'), null)
+    assert.equal(buttons[1]?.getAttribute('aria-pressed'), null)
+    assert.doesNotMatch(buttons[1]?.className ?? '', /ring-slate-900\/15/)
+    assert.equal(buttons[1]?.querySelector('svg.lucide-check'), null)
+    assert.equal(
+      buttons.every((button) => button.textContent?.includes('去支付')),
+      true
+    )
 
     await unmount(rendered)
   })
@@ -231,9 +248,7 @@ describe('RelayBases wallet components', () => {
       true
     )
     assert.equal(
-      buttons.every(
-        (button) => button.getAttribute('aria-pressed') === 'false'
-      ),
+      buttons.every((button) => button.getAttribute('aria-pressed') === null),
       true
     )
     assert.equal(
@@ -270,8 +285,8 @@ describe('RelayBases wallet components', () => {
     const buttons = [...container.querySelectorAll('button')]
     assert.equal(buttons[0]?.getAttribute('aria-busy'), 'false')
     assert.equal(buttons[1]?.getAttribute('aria-busy'), 'true')
-    assert.equal(buttons[0]?.getAttribute('aria-pressed'), 'false')
-    assert.equal(buttons[1]?.getAttribute('aria-pressed'), 'true')
+    assert.equal(buttons[0]?.getAttribute('aria-pressed'), null)
+    assert.equal(buttons[1]?.getAttribute('aria-pressed'), null)
     assert.equal(buttons[0]?.querySelector('svg.animate-spin'), null)
     assert.ok(buttons[1]?.querySelector('svg.animate-spin'))
 
@@ -287,9 +302,10 @@ describe('RelayBases wallet components', () => {
       'button[aria-label*="Channel B"]'
     )
 
-    assert.equal(channelA?.getAttribute('aria-pressed'), 'false')
-    assert.equal(channelB?.getAttribute('aria-pressed'), 'true')
-    assert.ok(channelB?.querySelector('svg.lucide-check'))
+    assert.equal(channelA?.getAttribute('aria-pressed'), null)
+    assert.equal(channelB?.getAttribute('aria-pressed'), null)
+    assert.equal(channelB?.querySelector('svg.lucide-check'), null)
+    assert.equal(channelB?.textContent?.includes('去支付'), true)
 
     await unmount(rendered)
   })

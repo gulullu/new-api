@@ -177,11 +177,12 @@ describe('recharge form compact pricing layout', () => {
     assert.equal(original?.textContent?.trim(), 'Original $14.25')
     assert.equal(discounted?.textContent?.trim(), 'Sale $12.83')
     assert.doesNotMatch(card.textContent ?? '', /USD|Pay|Save|•/)
+    assert.doesNotMatch(card.textContent ?? '', /\//)
 
     await unmountCard(rendered)
   })
 
-  test('uses a single-column fallback below 360px and constrains every preset', async () => {
+  test('uses a single-column fallback below 360px with taller preset cards', async () => {
     const rendered = await renderCard()
 
     const grid = rendered.container.querySelector('[data-topup-preset-grid]')
@@ -193,6 +194,8 @@ describe('recharge form compact pricing layout', () => {
     assert.match(grid.className, /min-\[360px\]:grid-cols-2/)
     assert.equal(cards.length, 2)
     for (const card of cards) {
+      assert.match(card.className, /min-h-\[84px\]/)
+      assert.match(card.className, /py-4/)
       assert.match(card.className, /min-w-0/)
       assert.match(card.className, /max-w-full/)
       assert.match(card.className, /overflow-hidden/)

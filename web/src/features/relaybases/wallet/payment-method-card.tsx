@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Check, ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronRight, Loader2 } from 'lucide-react'
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SiAlipay, SiStripe, SiWechat } from 'react-icons/si'
@@ -62,7 +62,7 @@ function RelayBasesPaymentBrandIcon(props: {
   method: PaymentMethod
 }) {
   if (props.brand === 'stripe') {
-    return <SiStripe aria-hidden='true' className='size-6 text-white' />
+    return <SiStripe aria-hidden='true' className='size-7 text-white' />
   }
 
   if (props.brand === 'waffo') {
@@ -72,13 +72,13 @@ function RelayBasesPaymentBrandIcon(props: {
           src='/waffo-logo-dark.svg'
           alt=''
           aria-hidden='true'
-          className='block size-7 object-contain dark:hidden'
+          className='block size-8 object-contain dark:hidden'
         />
         <img
           src='/waffo-logo-light.svg'
           alt=''
           aria-hidden='true'
-          className='hidden size-7 object-contain dark:block'
+          className='hidden size-8 object-contain dark:block'
         />
       </>
     )
@@ -86,7 +86,7 @@ function RelayBasesPaymentBrandIcon(props: {
 
   return getPaymentIcon(
     props.method.type,
-    'size-6',
+    'size-7',
     props.method.icon,
     props.method.name
   )
@@ -118,17 +118,9 @@ export function RelayBasesPaymentMethodCard({
   const accessibleName = t('wallet.payment.accessibleName', {
     name: method.name,
   })
+  const actionLabel = t('wallet.payment.action')
   const brand = getRelayBasesPaymentBrand(method.type)
-  const active = !belowMinimum && (selected || loading)
-  let trailingIcon = (
-    <ChevronRight className='size-4 transition-transform group-hover:translate-x-0.5' />
-  )
-  if (active) {
-    trailingIcon = <Check className='size-4' />
-  }
-  if (loading) {
-    trailingIcon = <Loader2 className='size-4 animate-spin' />
-  }
+  const selectedAvailable = !belowMinimum && selected
 
   return (
     <Button
@@ -136,7 +128,6 @@ export function RelayBasesPaymentMethodCard({
       variant='outline'
       onClick={onSelect}
       disabled={disabled}
-      aria-pressed={active}
       aria-busy={loading}
       aria-label={
         belowMinimum ? `${accessibleName}. ${description}` : accessibleName
@@ -144,23 +135,16 @@ export function RelayBasesPaymentMethodCard({
       aria-describedby={descriptionId}
       title={belowMinimum ? description : undefined}
       className={cn(
-        'group relative h-auto min-h-[88px] w-full min-w-0 justify-start gap-3.5 overflow-hidden rounded-2xl border-2 px-4 py-3.5 text-left whitespace-normal shadow-sm transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed',
+        'group relative grid h-auto min-h-[104px] w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center justify-start gap-x-3 gap-y-2 overflow-hidden rounded-lg border px-4 py-4 text-left whitespace-normal shadow-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-muted/20 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed sm:min-h-[86px] sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:py-3.5',
         brand === 'stripe' &&
-          'border-[#635BFF]/25 bg-gradient-to-br from-background via-background to-[#635BFF]/[0.07] hover:border-[#635BFF]/60 hover:bg-[#635BFF]/[0.06] dark:border-[#7A73FF]/35 dark:to-[#635BFF]/[0.12]',
+          'border-[#635BFF]/20 bg-background hover:border-[#635BFF]/45 dark:border-[#7A73FF]/30',
         brand === 'waffo' &&
-          'border-slate-900/20 bg-gradient-to-br from-background via-background to-slate-950/[0.05] hover:border-slate-900/55 hover:bg-slate-950/[0.04] dark:border-white/25 dark:to-white/[0.07] dark:hover:border-white/55 dark:hover:bg-white/[0.06]',
+          'border-slate-900/15 bg-background hover:border-slate-900/40 dark:border-white/20 dark:hover:border-white/45',
         brand === 'generic' &&
-          'border-border/80 bg-gradient-to-br from-background to-muted/45 hover:border-foreground/35',
-        active &&
-          brand === 'stripe' &&
-          'border-[#635BFF] bg-[#635BFF]/[0.08] shadow-[0_8px_24px_-16px_rgba(99,91,255,0.9)] ring-2 ring-[#635BFF]/20 hover:border-[#635BFF]',
-        active &&
-          brand === 'waffo' &&
-          'border-slate-900 bg-slate-950/[0.06] shadow-[0_8px_24px_-16px_rgba(15,23,42,0.8)] ring-2 ring-slate-900/15 hover:border-slate-900 dark:border-white dark:bg-white/[0.08] dark:ring-white/15 dark:hover:border-white',
-        active &&
-          brand === 'generic' &&
-          'border-foreground/70 bg-muted/60 ring-2 ring-foreground/10',
-        active ? 'disabled:opacity-100' : paymentBusy && 'disabled:opacity-60',
+          'border-border/80 bg-background hover:border-foreground/30',
+        selectedAvailable && 'border-foreground/30 bg-muted/25',
+        loading && 'border-foreground/45 bg-muted/30 disabled:opacity-100',
+        !loading && paymentBusy && 'disabled:opacity-55',
         belowMinimum &&
           'border-muted bg-muted/35 text-muted-foreground shadow-none ring-0 hover:translate-y-0 hover:border-muted hover:bg-muted/35 hover:shadow-none disabled:opacity-100'
       )}
@@ -168,7 +152,7 @@ export function RelayBasesPaymentMethodCard({
       <span
         aria-hidden='true'
         className={cn(
-          'flex size-11 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-transform duration-200 group-hover:scale-[1.03]',
+          'flex size-12 shrink-0 items-center justify-center rounded-lg border shadow-sm transition-transform duration-200 group-hover:scale-[1.03]',
           brand === 'stripe' &&
             'border-[#635BFF] bg-[#635BFF] shadow-[0_5px_14px_-8px_rgba(99,91,255,0.95)]',
           brand === 'waffo' &&
@@ -179,7 +163,7 @@ export function RelayBasesPaymentMethodCard({
         <RelayBasesPaymentBrandIcon brand={brand} method={method} />
       </span>
 
-      <span className='flex min-w-0 flex-1 flex-col items-start gap-1.5'>
+      <span className='flex min-w-0 flex-col items-start gap-1.5'>
         <span className='text-foreground w-full text-sm font-semibold break-words sm:text-[15px]'>
           {method.name}
         </span>
@@ -190,13 +174,13 @@ export function RelayBasesPaymentMethodCard({
           {channelHint === 'alipay' && (
             <SiAlipay
               aria-hidden='true'
-              className='mt-0.5 size-3.5 shrink-0 text-[#1677FF]'
+              className='mt-0.5 size-5 shrink-0 text-[#1677FF]'
             />
           )}
           {channelHint === 'wechat' && (
             <SiWechat
               aria-hidden='true'
-              className='mt-0.5 size-3.5 shrink-0 text-[#07C160]'
+              className='mt-0.5 size-5 shrink-0 text-[#07C160]'
             />
           )}
           <span>{description}</span>
@@ -206,20 +190,21 @@ export function RelayBasesPaymentMethodCard({
       <span
         aria-hidden='true'
         className={cn(
-          'flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors',
-          !active && 'border-border/80 bg-background/80 text-muted-foreground',
-          active &&
-            brand === 'stripe' &&
-            'border-[#635BFF] bg-[#635BFF] text-white',
-          active &&
-            brand === 'waffo' &&
-            'border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950',
-          active &&
-            brand === 'generic' &&
-            'border-transparent bg-foreground text-background'
+          'col-span-2 inline-flex h-8 w-full shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors sm:col-span-1 sm:w-auto',
+          belowMinimum
+            ? 'bg-muted text-muted-foreground'
+            : 'bg-foreground text-background group-hover:bg-foreground/90',
+          loading && 'bg-foreground text-background'
         )}
       >
-        {trailingIcon}
+        {loading ? (
+          <Loader2 className='size-3.5 animate-spin' />
+        ) : (
+          <>
+            <span>{actionLabel}</span>
+            <ChevronRight className='size-3.5 transition-transform group-hover:translate-x-0.5' />
+          </>
+        )}
       </span>
     </Button>
   )
