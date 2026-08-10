@@ -185,15 +185,15 @@ describe('recharge form compact pricing layout', () => {
     assert.equal(discounted?.textContent?.trim(), 'Sale $12.83')
     assert.equal(badge?.textContent?.trim(), '-10%')
     assert.match(badge?.className ?? '', /absolute/)
-    assert.match(badge?.className ?? '', /top-2/)
-    assert.match(badge?.className ?? '', /right-2/)
+    assert.match(badge?.className ?? '', /top-3/)
+    assert.match(badge?.className ?? '', /right-3/)
     assert.doesNotMatch(card.textContent ?? '', /USD|Pay|Save|•/)
     assert.doesNotMatch(card.textContent ?? '', /\//)
 
     await unmountCard(rendered)
   })
 
-  test('uses a single-column fallback below 360px with taller preset cards', async () => {
+  test('uses a single-column fallback below 360px with spacious preset cards', async () => {
     const rendered = await renderCard()
 
     const grid = rendered.container.querySelector('[data-topup-preset-grid]')
@@ -202,11 +202,15 @@ describe('recharge form compact pricing layout', () => {
     )
     assert.ok(grid)
     assert.match(grid.className, /grid-cols-1/)
+    assert.match(grid.className, /gap-2\.5/)
     assert.match(grid.className, /min-\[360px\]:grid-cols-2/)
+    assert.match(grid.className, /sm:gap-4/)
     assert.equal(cards.length, 2)
     for (const card of cards) {
-      assert.match(card.className, /min-h-\[84px\]/)
-      assert.match(card.className, /py-4/)
+      assert.match(card.className, /min-h-\[100px\]/)
+      assert.match(card.className, /sm:min-h-\[104px\]/)
+      assert.match(card.className, /py-5/)
+      assert.match(card.className, /justify-center/)
       assert.match(card.className, /relative/)
       assert.match(card.className, /min-w-0/)
       assert.match(card.className, /max-w-full/)
