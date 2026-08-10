@@ -16,14 +16,30 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-// ============================================================================
-// Affiliate Functions
-// ============================================================================
+import assert from 'node:assert/strict'
+import { after, describe, test } from 'node:test'
 
-/**
- * Generate affiliate link
- */
-export function generateAffiliateLink(affCode: string): string {
-  if (typeof window === 'undefined') return ''
-  return `${window.location.origin}/?aff=${encodeURIComponent(affCode)}`
-}
+import { Window } from 'happy-dom'
+
+import { generateAffiliateLink } from '../affiliate'
+
+const domWindow = new Window({ url: 'https://relaybases.com/wallet' })
+Object.defineProperty(globalThis, 'window', {
+  configurable: true,
+  value: domWindow,
+})
+
+describe('affiliate link generation', () => {
+  after(() => domWindow.close())
+
+  test('points referral traffic to the homepage instead of the sign-up page', () => {
+    assert.equal(
+      generateAffiliateLink('D0Ys'),
+      'https://relaybases.com/?aff=D0Ys'
+    )
+    assert.equal(
+      generateAffiliateLink('A/B'),
+      'https://relaybases.com/?aff=A%2FB'
+    )
+  })
+})
