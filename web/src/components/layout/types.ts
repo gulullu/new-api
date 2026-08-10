@@ -26,6 +26,12 @@ type BaseNavItem = {
   title: string
   badge?: string
   icon?: React.ElementType
+  /** Optional native presentation supplied by a feature-owned navigation item. */
+  content?: React.ReactNode
+  /** Classes applied to the interactive menu button. */
+  className?: string
+  /** Classes applied to the surrounding sidebar menu item. */
+  itemClassName?: string
   activeUrls?: (LinkProps['to'] | (string & {}))[]
   configUrls?: (LinkProps['to'] | (string & {}))[]
   /**
@@ -95,6 +101,10 @@ export type SidebarData = {
 export type TopNavLink = {
   title: string
   href: string
+  /** Optional native presentation supplied by a feature-owned navigation item. */
+  content?: React.ReactNode
+  /** Classes applied to the navigation link. */
+  className?: string
   isActive?: boolean
   disabled?: boolean
   requiresAuth?: boolean

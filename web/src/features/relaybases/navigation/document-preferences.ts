@@ -17,6 +17,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 export type RelayBasesDocumentTheme = 'light' | 'dark'
+export type RelayBasesDocumentLanguage =
+  | 'en'
+  | 'zh-CN'
+  | 'zh-TW'
+  | 'fr'
+  | 'ja'
+  | 'ru'
+  | 'vi'
 
 const SITE_HOME_VERSION = 'site-home-lang-sync-20260704-v4'
 const CN_HOME_VERSION = 'cn-home-20260621-v14'
@@ -38,14 +46,32 @@ function isSiteHomeUrl(url: URL): boolean {
   )
 }
 
-export function relayBasesDocumentLanguage(language: string): 'en' | 'zh' {
+export function relayBasesDocumentLanguage(
+  language: string
+): RelayBasesDocumentLanguage {
   const normalized = language.trim().toLowerCase().replaceAll('_', '-')
-  return normalized === 'zh' ||
-    normalized === 'zhcn' ||
+  if (
     normalized === 'zhtw' ||
-    normalized.startsWith('zh-')
-    ? 'zh'
-    : 'en'
+    normalized.startsWith('zh-tw') ||
+    normalized.startsWith('zh-hant') ||
+    normalized.startsWith('zh-hk') ||
+    normalized.startsWith('zh-mo')
+  ) {
+    return 'zh-TW'
+  }
+  if (
+    normalized === 'zh' ||
+    normalized === 'zhcn' ||
+    normalized.startsWith('zh-cn') ||
+    normalized.startsWith('zh-hans')
+  ) {
+    return 'zh-CN'
+  }
+  if (normalized === 'fr' || normalized.startsWith('fr-')) return 'fr'
+  if (normalized === 'ja' || normalized.startsWith('ja-')) return 'ja'
+  if (normalized === 'ru' || normalized.startsWith('ru-')) return 'ru'
+  if (normalized === 'vi' || normalized.startsWith('vi-')) return 'vi'
+  return 'en'
 }
 
 export function withRelayBasesDocumentPreferences(

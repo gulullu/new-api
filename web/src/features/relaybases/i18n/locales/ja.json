@@ -21,6 +21,18 @@
       "both": "登録すると、<agreement>利用規約</agreement>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
       "agreementOnly": "登録すると、<agreement>利用規約</agreement>に同意したものとみなされます。",
       "privacyOnly": "登録すると、<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。"
+    },
+    "termsFooter": {
+      "signIn": {
+        "both": "ログインすると、<agreement>利用規約</agreement>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
+        "agreementOnly": "ログインすると、<agreement>利用規約</agreement>に同意したものとみなされます。",
+        "privacyOnly": "ログインすると、<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。"
+      },
+      "signUp": {
+        "both": "アカウントを作成すると、<agreement>利用規約</agreement>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
+        "agreementOnly": "アカウントを作成すると、<agreement>利用規約</agreement>に同意したものとみなされます。",
+        "privacyOnly": "アカウントを作成すると、<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。"
+      }
     }
   },
   "logExport": {

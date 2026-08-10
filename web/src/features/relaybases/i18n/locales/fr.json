@@ -21,6 +21,18 @@
       "both": "En vous inscrivant, vous acceptez les <agreement>Conditions d’utilisation</agreement> et la <privacy>Politique de confidentialité</privacy>.",
       "agreementOnly": "En vous inscrivant, vous acceptez les <agreement>Conditions d’utilisation</agreement>.",
       "privacyOnly": "En vous inscrivant, vous acceptez la <privacy>Politique de confidentialité</privacy>."
+    },
+    "termsFooter": {
+      "signIn": {
+        "both": "En vous connectant, vous acceptez nos <agreement>Conditions d’utilisation</agreement> et notre <privacy>Politique de confidentialité</privacy>.",
+        "agreementOnly": "En vous connectant, vous acceptez nos <agreement>Conditions d’utilisation</agreement>.",
+        "privacyOnly": "En vous connectant, vous acceptez notre <privacy>Politique de confidentialité</privacy>."
+      },
+      "signUp": {
+        "both": "En créant un compte, vous acceptez nos <agreement>Conditions d’utilisation</agreement> et notre <privacy>Politique de confidentialité</privacy>.",
+        "agreementOnly": "En créant un compte, vous acceptez nos <agreement>Conditions d’utilisation</agreement>.",
+        "privacyOnly": "En créant un compte, vous acceptez notre <privacy>Politique de confidentialité</privacy>."
+      }
     }
   },
   "logExport": {

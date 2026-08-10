@@ -163,4 +163,5 @@ Worker 不得伪造支付回调、计算或赠送额度、决定返利资格、�
 | 2026-08-09 | `v1.0.0-rc.24` / `88786a2b` | 推荐返利改为每位受邀用户仅首笔已验签正式付款可获返利，首笔不合格时不顺延；新增订单单位价快照、去重受邀用户投影、转余额缓存失效和精简的七语言界面 | `top_ups.referral_unit_price`；既有返利账本和用户返利余额不修改；User 投影不落库 | 无新增 | 见第 4、7 节；回滚保留新增列和全部历史返利 |
 | 2026-08-09 | `v1.0.0-rc.24` / `5259a8e0` | 新增 VIP 海外渠道支付确认提醒和七语言双选项；支付与折扣计算不变 | 无 | RelayBases Telegram 客服 `https://t.me/relaybases` | 定向组件/交互/i18n 测试；回滚删除独立组件及确认弹窗的布尔接线 |
 | 2026-08-10 | `v1.0.0-rc.24` / `fc5ab87f` | 将 Worker 中的 New API 展示迁入低耦合原生 feature；补齐七语言钱包、认证、导航、模型广场、公告/FAQ/notice/分组；按界面语言执行 Ɍ20/Ɍ100 最低充值 | 无 schema 变更；公告翻译仅为代码目录和源哈希映射 | `relaybases-site` Worker 仅保留安全与边缘服务 | 七语言递归覆盖、Go/前端全量测试、直连/代理差异；回滚应用不依赖 Worker 展示回退 |
+| 2026-08-10 | `v1.0.0-rc.24` / `f087a738` | 以 feature-owned content/class slot 恢复 Infinite Canvas 顶栏胶囊、侧栏卡片、AI 标识、折叠态与移动端原样式；文档与 Canvas 链接透传七种语言和主题；登录/注册法律提示改为七语言完整句 | 无 | `site.relaybases.com`、`canvas.relaybases.com` | 前端 typecheck、10 项定向回归与 production build；回滚删除独立展示组件和窄 slot，不改导航数据或业务接口 |
 | YYYY-MM-DD | tag + commit | 一句话说明 | 字段/迁移/无 | Worker/支付平台/无 | 测试命令、发布版本、回滚提交 |

@@ -21,6 +21,18 @@
       "both": "注册即表示您同意<agreement>用户协议</agreement>和<privacy>隐私政策</privacy>。",
       "agreementOnly": "注册即表示您同意<agreement>用户协议</agreement>。",
       "privacyOnly": "注册即表示您同意<privacy>隐私政策</privacy>。"
+    },
+    "termsFooter": {
+      "signIn": {
+        "both": "登录即表示您同意我们的<agreement>用户协议</agreement>和<privacy>隐私政策</privacy>。",
+        "agreementOnly": "登录即表示您同意我们的<agreement>用户协议</agreement>。",
+        "privacyOnly": "登录即表示您同意我们的<privacy>隐私政策</privacy>。"
+      },
+      "signUp": {
+        "both": "创建账户即表示您同意我们的<agreement>用户协议</agreement>和<privacy>隐私政策</privacy>。",
+        "agreementOnly": "创建账户即表示您同意我们的<agreement>用户协议</agreement>。",
+        "privacyOnly": "创建账户即表示您同意我们的<privacy>隐私政策</privacy>。"
+      }
     }
   },
   "logExport": {

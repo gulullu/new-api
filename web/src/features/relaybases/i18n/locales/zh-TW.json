@@ -21,6 +21,18 @@
       "both": "註冊即表示您同意<agreement>使用者協議</agreement>和<privacy>隱私權政策</privacy>。",
       "agreementOnly": "註冊即表示您同意<agreement>使用者協議</agreement>。",
       "privacyOnly": "註冊即表示您同意<privacy>隱私權政策</privacy>。"
+    },
+    "termsFooter": {
+      "signIn": {
+        "both": "登入即表示您同意我們的<agreement>使用者協議</agreement>和<privacy>隱私權政策</privacy>。",
+        "agreementOnly": "登入即表示您同意我們的<agreement>使用者協議</agreement>。",
+        "privacyOnly": "登入即表示您同意我們的<privacy>隱私權政策</privacy>。"
+      },
+      "signUp": {
+        "both": "建立帳戶即表示您同意我們的<agreement>使用者協議</agreement>和<privacy>隱私權政策</privacy>。",
+        "agreementOnly": "建立帳戶即表示您同意我們的<agreement>使用者協議</agreement>。",
+        "privacyOnly": "建立帳戶即表示您同意我們的<privacy>隱私權政策</privacy>。"
+      }
     }
   },
   "logExport": {
