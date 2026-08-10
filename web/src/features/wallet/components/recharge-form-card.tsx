@@ -160,7 +160,7 @@ export function RechargeFormCard({
               <div className='grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 md:grid-cols-4'>
                 {Array.from({ length: 8 }, (_, index) => `preset-${index}`).map(
                   (key) => (
-                    <Skeleton key={key} className='h-[72px] rounded-lg' />
+                    <Skeleton key={key} className='h-[100px] rounded-lg' />
                   )
                 )}
               </div>
@@ -230,7 +230,7 @@ export function RechargeFormCard({
                   </Label>
                   <div
                     data-topup-preset-grid
-                    className='grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:gap-3 md:grid-cols-4'
+                    className='grid min-w-0 grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 min-[360px]:gap-3 sm:gap-4 md:grid-cols-4'
                   >
                     {presetAmounts.map((preset) => {
                       const discount =
@@ -249,7 +249,7 @@ export function RechargeFormCard({
                           data-topup-preset-value={preset.value}
                           variant='outline'
                           className={cn(
-                            'relative flex min-h-[84px] w-full min-w-0 max-w-full flex-col items-start overflow-hidden rounded-lg px-3.5 py-4 text-left whitespace-normal sm:min-h-[88px] sm:p-4',
+                            'relative flex min-h-[100px] w-full min-w-0 max-w-full flex-col items-start justify-center overflow-hidden rounded-lg px-4 py-5 text-left whitespace-normal sm:min-h-[104px] sm:p-5',
                             selectedPreset === preset.value
                               ? 'border-foreground bg-foreground/5 dark:border-foreground dark:bg-foreground/10'
                               : 'border-muted'
@@ -259,7 +259,7 @@ export function RechargeFormCard({
                           {hasDiscount && (
                             <span
                               data-topup-discount-badge
-                              className='bg-primary/10 text-primary absolute top-2 right-2 rounded-md px-1.5 py-0.5 text-[11px] leading-none font-medium'
+                              className='bg-primary/10 text-primary absolute top-3 right-3 rounded-md px-1.5 py-0.5 text-[11px] leading-none font-medium'
                             >
                               {tRelayBases('wallet.labels.discountPercent', {
                                 percent: Math.round((1 - discount) * 100),
@@ -279,7 +279,7 @@ export function RechargeFormCard({
                           </div>
                           <div
                             data-topup-preset-price
-                            className='text-muted-foreground mt-2 flex w-full max-w-full min-w-0 flex-col gap-0.5 text-xs leading-4 break-words whitespace-normal'
+                            className='text-muted-foreground mt-3 flex w-full max-w-full min-w-0 flex-col gap-1 text-xs leading-4 break-words whitespace-normal'
                           >
                             {hasDiscount ? (
                               <>
