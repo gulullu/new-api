@@ -122,6 +122,18 @@ describe('Infinite Canvas navigation presentation', () => {
       card.querySelector('[data-rb-infinite-canvas-badge]')?.textContent,
       'AI'
     )
+    assert.equal(
+      header
+        .querySelector('[data-rb-infinite-canvas-text]')
+        ?.getAttribute('data-rb-infinite-canvas-compact'),
+      '1'
+    )
+    assert.equal(
+      card
+        .querySelector('[data-rb-infinite-canvas-text]')
+        ?.getAttribute('data-rb-infinite-canvas-compact'),
+      '1'
+    )
     assert.ok(card.querySelector('svg path[fill="rgba(255,255,255,.94)"]'))
     assert.equal(getComputedStyle(header).borderRadius, '999px')
     assert.equal(getComputedStyle(card).borderRadius, '16px')

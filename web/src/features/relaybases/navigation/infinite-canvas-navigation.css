@@ -147,6 +147,18 @@ For commercial licensing, please contact support@quantumnous.com
   font-size: 0.94em !important;
 }
 
+.rb-infinite-canvas-header-link
+  .rb-infinite-canvas-text[data-rb-infinite-canvas-compact='1'] {
+  font-size: 0.86em !important;
+  letter-spacing: -0.015em !important;
+}
+
+.rb-infinite-canvas-dashboard-card
+  .rb-infinite-canvas-text[data-rb-infinite-canvas-compact='1'] {
+  font-size: 0.75em !important;
+  letter-spacing: -0.01em !important;
+}
+
 .rb-infinite-canvas-dashboard-card .rb-infinite-canvas-badge {
   position: absolute !important;
   top: 50% !important;
