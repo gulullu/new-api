@@ -209,6 +209,23 @@ func TestConfigurePartnerKeepsApiRoutingGroupAndEnablesMembership(t *testing.T) 
 	assert.Equal(t, "vip", user.Group)
 }
 
+func TestPartnerAdminListsReturnEmptyArrays(t *testing.T) {
+	truncateTables(t)
+	pageInfo := &common.PageInfo{Page: 1, PageSize: 10}
+
+	profiles, profileTotal, err := ListPartnerProfiles("", pageInfo)
+	require.NoError(t, err)
+	assert.NotNil(t, profiles)
+	assert.Empty(t, profiles)
+	assert.Zero(t, profileTotal)
+
+	withdrawals, withdrawalTotal, err := ListPartnerWithdrawals("", "", pageInfo)
+	require.NoError(t, err)
+	assert.NotNil(t, withdrawals)
+	assert.Empty(t, withdrawals)
+	assert.Zero(t, withdrawalTotal)
+}
+
 func TestDisabledPartnerMembershipCannotWithdraw(t *testing.T) {
 	truncateTables(t)
 	require.NoError(t, DB.Create(&User{Id: 6701, Username: "former-partner", AffCode: "fp6701", Group: "default", Status: common.UserStatusEnabled}).Error)

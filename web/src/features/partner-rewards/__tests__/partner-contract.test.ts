@@ -12,6 +12,7 @@ import zh from '@/features/relaybases/i18n/locales/zh.json'
 import {
   microsFromUsd,
   netPartnerLifetimeUsdMicros,
+  partnerListCount,
   percentFromBasisPoints,
   usdFromMicros,
 } from '../lib'
@@ -33,6 +34,13 @@ describe('Partner program contract', () => {
       120_000_000
     )
     assert.equal(netPartnerLifetimeUsdMicros(5_000_000, 10_000_000), 0)
+  })
+
+  test('treats null and missing admin lists as empty', () => {
+    assert.equal(partnerListCount(null), 0)
+    assert.equal(partnerListCount(undefined), 0)
+    assert.equal(partnerListCount([]), 0)
+    assert.equal(partnerListCount([{ id: 1 }]), 1)
   })
 
   test('publishes complete rules in all seven locales without fee copy', () => {
