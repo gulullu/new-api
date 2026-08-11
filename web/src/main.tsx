@@ -28,11 +28,11 @@ import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { toast } from 'sonner'
 
+import { applyRelayBasesFaviconToDom } from '@/features/relaybases/branding/favicon'
 import { currentRelayBasesContentLocale } from '@/features/relaybases/content/locale'
 import { RelayBasesPreferenceLinkBridge } from '@/features/relaybases/navigation/preference-link-bridge'
 import { getStatus } from '@/lib/api'
 import { installBuildMetadata } from '@/lib/build-metadata'
-import { applyFaviconToDom } from '@/lib/dom-utils'
 import '@/lib/dayjs'
 import { initializeFrontendCache } from '@/lib/frontend-cache'
 import { handleServerError } from '@/lib/handle-server-error'
@@ -120,6 +120,7 @@ if (!rootElement) {
 ;(function initSystemBranding() {
   try {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
+    applyRelayBasesFaviconToDom()
     const apply = (name: string) => {
       document.title = name
       const metaTitle = document.querySelector(
@@ -133,7 +134,6 @@ if (!rootElement) {
       if (saved) {
         const s = JSON.parse(saved)
         if (s?.system_name) apply(s.system_name)
-        if (s?.logo) applyFaviconToDom(s.logo)
       }
     } catch {
       /* empty */
@@ -149,7 +149,6 @@ if (!rootElement) {
             /* empty */
           }
         }
-        if (s?.logo) applyFaviconToDom(s.logo as string)
       })
       .catch(() => {
         /* empty */
