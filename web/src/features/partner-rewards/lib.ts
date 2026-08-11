@@ -6,13 +6,15 @@ function currentIntlLocale(): string | undefined {
   return toIntlLocale(i18next.resolvedLanguage || i18next.language)
 }
 
-export function usdFromMicros(value: number): string {
-  return new Intl.NumberFormat(currentIntlLocale(), {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  }).format(value / 1_000_000)
+export function usdFromMicros(value: number, language?: string): string {
+  const amount = new Intl.NumberFormat(
+    toIntlLocale(language) ?? currentIntlLocale(),
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    }
+  ).format(value / 1_000_000)
+  return `$${amount}`
 }
 
 export function microsFromUsd(value: string): number | null {

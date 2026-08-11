@@ -28,7 +28,11 @@ describe('Partner program contract', () => {
     assert.equal(microsFromUsd('-1'), null)
     assert.equal(microsFromUsd('9007199254.740992'), null)
     assert.match(percentFromBasisPoints(3000), /^30\s?%$/)
-    assert.match(usdFromMicros(30_500_000), /30[.,]5/)
+    for (const locale of ['en', 'zhCN', 'zhTW', 'fr', 'ja', 'ru', 'vi']) {
+      const amount = usdFromMicros(30_500_000, locale)
+      assert.match(amount, /^\$30[.,]50$/, locale)
+      assert.doesNotMatch(amount, /US\$|\$US|USD/, locale)
+    }
     assert.equal(
       netPartnerLifetimeUsdMicros(125_000_000, 5_000_000),
       120_000_000
