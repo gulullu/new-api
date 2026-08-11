@@ -29,7 +29,12 @@ import {
   revealPartnerDestination,
   reviewPartnerWithdrawal,
 } from './api'
-import { partnerDate, percentFromBasisPoints, usdFromMicros } from './lib'
+import {
+  partnerDate,
+  partnerListCount,
+  percentFromBasisPoints,
+  usdFromMicros,
+} from './lib'
 import type { PartnerDestination, PartnerWithdrawalAdmin } from './types'
 
 export function PartnerAdmin() {
@@ -198,7 +203,7 @@ export function PartnerAdmin() {
               </div>
             ))}
             {!profiles.isLoading &&
-            (profiles.data?.data?.items.length ?? 0) === 0 ? (
+            partnerListCount(profiles.data?.data?.items) === 0 ? (
               <p className='text-muted-foreground p-6 text-center text-sm'>
                 {t('partner.admin.emptyProfiles')}
               </p>
@@ -330,7 +335,7 @@ export function PartnerAdmin() {
             </div>
           ))}
           {!withdrawals.isLoading &&
-          (withdrawals.data?.data?.items.length ?? 0) === 0 ? (
+          partnerListCount(withdrawals.data?.data?.items) === 0 ? (
             <p className='text-muted-foreground p-6 text-center text-sm'>
               {t('partner.admin.emptyWithdrawals')}
             </p>

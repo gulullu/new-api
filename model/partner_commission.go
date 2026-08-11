@@ -868,7 +868,7 @@ func ListPartnerProfiles(keyword string, pageInfo *common.PageInfo) ([]PartnerPr
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	var items []PartnerProfileAdminItem
+	items := make([]PartnerProfileAdminItem, 0)
 	if err := query.Select(
 		"users.id AS user_id, users.username, users.email, profiles.commission_basis_points, " +
 			"profiles.effective_at, profiles.updated_at",
@@ -899,7 +899,7 @@ func ListPartnerWithdrawals(status string, keyword string, pageInfo *common.Page
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	var items []PartnerWithdrawalAdminItem
+	items := make([]PartnerWithdrawalAdminItem, 0)
 	if err := query.Select("withdrawals.*, users.username, users.email").Order("withdrawals.id DESC").Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Scan(&items).Error; err != nil {
 		return nil, 0, err
 	}

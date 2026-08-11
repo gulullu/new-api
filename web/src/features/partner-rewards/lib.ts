@@ -42,6 +42,10 @@ export function netPartnerLifetimeUsdMicros(
   return Math.max(0, earnedUsdMicros - reversedUsdMicros)
 }
 
+export function partnerListCount<T>(items: T[] | null | undefined): number {
+  return items?.length ?? 0
+}
+
 export function partnerDate(timestamp: number): string {
   if (!timestamp) return '—'
   return new Intl.DateTimeFormat(currentIntlLocale(), {
