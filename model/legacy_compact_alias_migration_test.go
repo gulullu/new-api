@@ -20,9 +20,11 @@ func useDeprecatedCompactAliasMigrationDB(t *testing.T) *gorm.DB {
 	require.NoError(t, db.AutoMigrate(&Channel{}, &Ability{}, &Token{}, &Model{}, &Option{}))
 	DB = db
 	common.SetMainDatabaseType(common.DatabaseTypeSQLite)
+	initCol()
 	t.Cleanup(func() {
 		DB = previousDB
 		common.SetMainDatabaseType(previousType)
+		initCol()
 	})
 	return db
 }
@@ -48,6 +50,11 @@ func TestNormalizeDeprecatedCompactModelListPrefersExistingBaseModels(t *testing
 			value: "gpt-5.6-luna-openai-compact,other,gpt-5.6-luna-openai-compact",
 			want:  "gpt-5.6-luna,other",
 		},
+		{
+			name:  "deprecated wildcard alias is deleted instead of becoming a wildcard",
+			value: "*-openai-compact,other",
+			want:  "other",
+		},
 	}
 
 	for _, test := range tests {
@@ -67,7 +74,7 @@ func TestNormalizeDeprecatedCompactModelListPrefersExistingBaseModels(t *testing
 func TestMigrateDeprecatedCompactAliasesNormalizesDataAndIsIdempotent(t *testing.T) {
 	db := useDeprecatedCompactAliasMigrationDB(t)
 	testModel := "gpt-5.5-openai-compact"
-	modelMapping := `{"gpt-5.5":"official-base","gpt-5.5-openai-compact":"legacy-loses","only-openai-compact":"upstream-only-openai-compact","other":"gpt-5.6-sol-openai-compact"}`
+	modelMapping := `{"gpt-5.5":"official-base","gpt-5.5-openai-compact":"legacy-loses","only-openai-compact":"upstream-only-openai-compact","other":"gpt-5.6-sol-openai-compact","*-openai-compact":"must-drop","wild-upstream":"*-openai-compact"}`
 	priority := int64(10)
 	weight := uint(20)
 	channel := Channel{
@@ -75,7 +82,7 @@ func TestMigrateDeprecatedCompactAliasesNormalizesDataAndIsIdempotent(t *testing
 		Key:          "test-key",
 		Status:       common.ChannelStatusEnabled,
 		Name:         "codex-test",
-		Models:       "gpt-5.5-openai-compact,gpt-5.6-sol,gpt-5.5,gpt-5.6-sol-openai-compact,gpt-5.6-luna-openai-compact,gpt-5.6-luna-openai-compact,gpt-5.4",
+		Models:       "gpt-5.5-openai-compact,gpt-5.6-sol,*-openai-compact,gpt-5.5,gpt-5.6-sol-openai-compact,gpt-5.6-luna-openai-compact,gpt-5.6-luna-openai-compact,gpt-5.4",
 		Group:        "default",
 		TestModel:    &testModel,
 		ModelMapping: &modelMapping,
@@ -92,7 +99,7 @@ func TestMigrateDeprecatedCompactAliasesNormalizesDataAndIsIdempotent(t *testing
 		Enabled:   true,
 	}).Error)
 
-	activeToken := Token{UserId: 1, Key: "active-token", ModelLimitsEnabled: true, ModelLimits: "gpt-5.5-openai-compact,gpt-5.5,gpt-5.6-luna-openai-compact,gpt-5.4"}
+	activeToken := Token{UserId: 1, Key: "active-token", ModelLimitsEnabled: true, ModelLimits: "gpt-5.5-openai-compact,*-openai-compact,gpt-5.5,gpt-5.6-luna-openai-compact,gpt-5.4"}
 	deletedToken := Token{UserId: 1, Key: "deleted-token", ModelLimitsEnabled: true, ModelLimits: "gpt-5.6-sol-openai-compact"}
 	require.NoError(t, db.Create(&activeToken).Error)
 	require.NoError(t, db.Create(&deletedToken).Error)
@@ -118,7 +125,7 @@ func TestMigrateDeprecatedCompactAliasesNormalizesDataAndIsIdempotent(t *testing
 	assert.Equal(t, int64(1), stats.ChannelsUpdated)
 	assert.Equal(t, int64(1), stats.ChannelMappingsUpdated)
 	assert.Equal(t, int64(2), stats.TokensUpdated)
-	assert.Equal(t, int64(4), stats.AbilitiesDeleted)
+	assert.Equal(t, int64(5), stats.AbilitiesDeleted)
 	assert.Equal(t, int64(2), stats.ModelMetadataDeleted)
 	assert.Equal(t, int64(5), stats.PricingEntriesDeleted)
 
@@ -129,6 +136,7 @@ func TestMigrateDeprecatedCompactAliasesNormalizesDataAndIsIdempotent(t *testing
 	assert.Equal(t, "gpt-5.5", *migratedChannel.TestModel)
 	require.NotNil(t, migratedChannel.ModelMapping)
 	assert.JSONEq(t, `{"gpt-5.5":"official-base","only":"upstream-only","other":"gpt-5.6-sol"}`, *migratedChannel.ModelMapping)
+	assert.NotContains(t, *migratedChannel.ModelMapping, `"*"`)
 
 	var abilityModels []string
 	require.NoError(t, db.Model(&Ability{}).Where("channel_id = ?", channel.Id).Order("model ASC").Pluck("model", &abilityModels).Error)
@@ -196,13 +204,13 @@ func TestMigrateDeprecatedCompactAliasesRollsBackEveryChangeOnFailure(t *testing
 
 func TestDeprecatedCompactAliasesCannotReenterPersistedConfiguration(t *testing.T) {
 	db := useDeprecatedCompactAliasMigrationDB(t)
-	modelMapping := `{"gpt-5.5-openai-compact":"upstream-gpt-5.5-openai-compact"}`
+	modelMapping := `{"gpt-5.5-openai-compact":"upstream-gpt-5.5-openai-compact","*-openai-compact":"must-drop","unsafe":"*-openai-compact"}`
 	channel := Channel{
 		Type:         constant.ChannelTypeOpenAI,
 		Key:          "new-channel-key",
 		Status:       common.ChannelStatusEnabled,
 		Name:         "new-channel",
-		Models:       "gpt-5.5-openai-compact,gpt-5.6-sol",
+		Models:       "gpt-5.5-openai-compact,*-openai-compact,gpt-5.6-sol",
 		Group:        "default",
 		ModelMapping: &modelMapping,
 		CreatedTime:  1,
@@ -216,9 +224,24 @@ func TestDeprecatedCompactAliasesCannotReenterPersistedConfiguration(t *testing.
 	require.NoError(t, db.Model(&Ability{}).Where("model LIKE ?", "%"+constant.DeprecatedOpenAICompactModelSuffix).Count(&deprecatedAbilityCount).Error)
 	assert.Zero(t, deprecatedAbilityCount)
 
-	token := Token{UserId: 1, Key: "new-token", ModelLimitsEnabled: true, ModelLimits: "gpt-5.5-openai-compact,gpt-5.6-sol"}
+	token := Token{UserId: 1, Key: "new-token", ModelLimitsEnabled: true, ModelLimits: "gpt-5.5-openai-compact,*-openai-compact,gpt-5.6-sol"}
 	require.NoError(t, token.Insert())
 	assert.Equal(t, "gpt-5.5,gpt-5.6-sol", token.ModelLimits)
+
+	wildcardOnlyChannel := Channel{
+		Type:        constant.ChannelTypeOpenAI,
+		Key:         "wildcard-only-key",
+		Status:      common.ChannelStatusEnabled,
+		Name:        "wildcard-only-channel",
+		Models:      "*-openai-compact",
+		Group:       "default",
+		CreatedTime: 1,
+	}
+	require.NoError(t, wildcardOnlyChannel.Insert())
+	assert.Empty(t, wildcardOnlyChannel.Models)
+	var wildcardOnlyAbilityCount int64
+	require.NoError(t, db.Model(&Ability{}).Where("channel_id = ?", wildcardOnlyChannel.Id).Count(&wildcardOnlyAbilityCount).Error)
+	assert.Zero(t, wildcardOnlyAbilityCount)
 
 	assert.Error(t, validateOptionValue("ModelRatio", `{"gpt-5.5-openai-compact":1}`))
 	assert.Error(t, validateOptionValue("billing_setting.billing_expr", `{"gpt-5.5-openai-compact":"p * 1"}`))

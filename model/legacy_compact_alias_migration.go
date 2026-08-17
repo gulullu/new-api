@@ -98,8 +98,13 @@ func MigrateDeprecatedCompactAliases() (DeprecatedCompactAliasMigrationStats, er
 			}
 			if channel.TestModel != nil {
 				if baseModel, changed := deprecatedCompactBaseModel(*channel.TestModel); changed {
-					updates["test_model"] = baseModel
-					channel.TestModel = &baseModel
+					if baseModel == "" {
+						updates["test_model"] = nil
+						channel.TestModel = nil
+					} else {
+						updates["test_model"] = baseModel
+						channel.TestModel = &baseModel
+					}
 				}
 			}
 			if channel.ModelMapping != nil && strings.Contains(*channel.ModelMapping, constant.DeprecatedOpenAICompactModelSuffix) {
@@ -155,7 +160,7 @@ func MigrateDeprecatedCompactAliases() (DeprecatedCompactAliasMigrationStats, er
 
 		var options []Option
 		if err := tx.Where(
-			"key IN ? AND value LIKE ?",
+			commonKeyCol+" IN ? AND value LIKE ?",
 			deprecatedCompactPricingOptionKeys,
 			containsPattern,
 		).Find(&options).Error; err != nil {
@@ -180,7 +185,7 @@ func MigrateDeprecatedCompactAliases() (DeprecatedCompactAliasMigrationStats, er
 			if err != nil {
 				return fmt.Errorf("encode model pricing option %s: %w", option.Key, err)
 			}
-			if err := tx.Model(&Option{}).Where("key = ?", option.Key).Update("value", string(encoded)).Error; err != nil {
+			if err := tx.Model(&Option{}).Where(commonKeyCol+" = ?", option.Key).Update("value", string(encoded)).Error; err != nil {
 				return fmt.Errorf("update model pricing option %s: %w", option.Key, err)
 			}
 			stats.PricingEntriesDeleted += deleted
@@ -199,7 +204,11 @@ func deprecatedCompactBaseModel(modelName string) (string, bool) {
 	if !constant.IsDeprecatedOpenAICompactModel(trimmed) {
 		return modelName, false
 	}
-	return strings.TrimSuffix(trimmed, constant.DeprecatedOpenAICompactModelSuffix), true
+	baseModel := strings.TrimSuffix(trimmed, constant.DeprecatedOpenAICompactModelSuffix)
+	if baseModel == "" || baseModel == "*" {
+		return "", true
+	}
+	return baseModel, true
 }
 
 func normalizeDeprecatedCompactAliasesForChannel(channel *Channel) error {
@@ -211,7 +220,11 @@ func normalizeDeprecatedCompactAliasesForChannel(channel *Channel) error {
 	}
 	if channel.TestModel != nil {
 		if baseModel, changed := deprecatedCompactBaseModel(*channel.TestModel); changed {
-			channel.TestModel = &baseModel
+			if baseModel == "" {
+				channel.TestModel = nil
+			} else {
+				channel.TestModel = &baseModel
+			}
 		}
 	}
 	if channel.ModelMapping != nil && strings.Contains(*channel.ModelMapping, constant.DeprecatedOpenAICompactModelSuffix) {
@@ -240,6 +253,10 @@ func normalizeDeprecatedCompactModelMapping(value string) (string, bool, error) 
 			continue
 		}
 		if baseUpstreamModel, isDeprecated := deprecatedCompactBaseModel(upstreamModelName); isDeprecated {
+			if baseUpstreamModel == "" {
+				changed = true
+				continue
+			}
 			upstreamModelName = baseUpstreamModel
 			changed = true
 		}
@@ -254,6 +271,9 @@ func normalizeDeprecatedCompactModelMapping(value string) (string, bool, error) 
 			continue
 		}
 		if baseUpstreamModel, upstreamIsDeprecated := deprecatedCompactBaseModel(upstreamModelName); upstreamIsDeprecated {
+			if baseUpstreamModel == "" {
+				continue
+			}
 			upstreamModelName = baseUpstreamModel
 		}
 		normalized[baseModelName] = upstreamModelName
@@ -297,7 +317,7 @@ func normalizeDeprecatedCompactModelList(value string) (string, bool) {
 			continue
 		}
 		if constant.IsDeprecatedOpenAICompactModel(modelName) {
-			baseModel := strings.TrimSuffix(modelName, constant.DeprecatedOpenAICompactModelSuffix)
+			baseModel, _ := deprecatedCompactBaseModel(modelName)
 			if baseModel == "" {
 				continue
 			}
