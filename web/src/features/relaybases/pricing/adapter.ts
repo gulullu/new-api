@@ -232,8 +232,8 @@ function localizeVendorName(
 }
 
 /**
- * Applies catalog presentation only. It preserves the exact model/group set
- * returned by the server and never changes any billing field.
+ * Applies catalog presentation and removes internal routing aliases. It never
+ * changes billing fields or the public groups returned by the server.
  */
 export function adaptRelayBasesPricingData(
   data: PricingData,
@@ -241,6 +241,7 @@ export function adaptRelayBasesPricingData(
 ): PricingData {
   const copy = getRelayBasesI18nResource(language).pricing
   const models = data.data
+    .filter((model) => !model.model_name.endsWith('-openai-compact'))
     .map((model, index) => ({ model: adaptModel(model, copy), index }))
     .sort(
       (left, right) =>

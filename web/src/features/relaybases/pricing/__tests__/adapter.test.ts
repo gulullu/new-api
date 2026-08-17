@@ -120,6 +120,46 @@ describe('RelayBases pricing presentation adapter', () => {
     )
   })
 
+  test('hides internal Compact routing aliases from the model square', () => {
+    const source = pricingData([
+      model('gpt-5.5'),
+      model('gpt-5.5-openai-compact'),
+      model('future-openai-compact'),
+    ])
+
+    const adapted = adaptRelayBasesPricingData(source, 'en')
+
+    assert.deepEqual(
+      adapted.data.map((item) => item.model_name),
+      ['gpt-5.5']
+    )
+  })
+
+  test('adds the official Grok 4.6 and GLM-5.3 model metadata', () => {
+    const source = pricingData([model('grok-4.6'), model('glm-5.3')])
+
+    const adapted = adaptRelayBasesPricingData(source, 'en')
+    const grok = adapted.data.find((item) => item.model_name === 'grok-4.6')
+    const glm = adapted.data.find((item) => item.model_name === 'glm-5.3')
+
+    assert.equal(grok?.context_length, 500000)
+    assert.equal(grok?.knowledge_cutoff, '2026-02-01')
+    assert.equal(grok?.release_date, '2026-08-12')
+    assert.deepEqual(grok?.input_modalities, ['text', 'image'])
+    assert.ok(grok?.capabilities?.includes('function_calling'))
+    assert.ok(grok?.capabilities?.includes('structured_output'))
+    assert.ok(grok?.capabilities?.includes('reasoning'))
+
+    assert.equal(glm?.context_length, 1000000)
+    assert.equal(glm?.max_output_tokens, 128000)
+    assert.deepEqual(glm?.input_modalities, ['text'])
+    assert.ok(glm?.capabilities?.includes('streaming'))
+    assert.ok(glm?.capabilities?.includes('function_calling'))
+    assert.ok(glm?.capabilities?.includes('structured_output'))
+    assert.ok(glm?.capabilities?.includes('reasoning'))
+    assert.ok(glm?.capabilities?.includes('caching'))
+  })
+
   test('uses the curated stable model and group order', () => {
     const source = pricingData([
       model('future-model', { vendor_id: 99 }),

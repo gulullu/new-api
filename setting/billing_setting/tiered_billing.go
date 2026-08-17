@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	BillingModeRatio      = "ratio"
-	BillingModeTieredExpr = "tiered_expr"
-	BillingModeField      = "billing_mode"
-	BillingExprField      = "billing_expr"
+	BillingModeRatio         = "ratio"
+	BillingModeTieredExpr    = "tiered_expr"
+	BillingModeField         = "billing_mode"
+	BillingExprField         = "billing_expr"
+	DefaultGrok46BillingExpr = `len < 200000 ? tier("standard", p * 2 + c * 6 + cr * 0.5) : tier("long_context", p * 4 + c * 12 + cr * 1)`
 )
 
 // BillingSetting is managed by config.GlobalConfig.Register.
@@ -23,8 +24,12 @@ type BillingSetting struct {
 }
 
 var billingSetting = BillingSetting{
-	BillingMode: make(map[string]string),
-	BillingExpr: make(map[string]string),
+	BillingMode: map[string]string{
+		"grok-4.6": BillingModeTieredExpr,
+	},
+	BillingExpr: map[string]string{
+		"grok-4.6": DefaultGrok46BillingExpr,
+	},
 }
 
 func init() {
