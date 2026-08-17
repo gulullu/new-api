@@ -1,10 +1,12 @@
 package model
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 
 	"gorm.io/gorm"
 )
@@ -45,6 +47,9 @@ type Model struct {
 }
 
 func (mi *Model) Insert() error {
+	if constant.IsDeprecatedOpenAICompactModel(mi.ModelName) {
+		return fmt.Errorf("deprecated Compact model aliases cannot be persisted")
+	}
 	now := common.GetTimestamp()
 	mi.CreatedTime = now
 	mi.UpdatedTime = now
@@ -75,6 +80,9 @@ func IsModelNameDuplicated(id int, name string) (bool, error) {
 }
 
 func (mi *Model) Update() error {
+	if constant.IsDeprecatedOpenAICompactModel(mi.ModelName) {
+		return fmt.Errorf("deprecated Compact model aliases cannot be persisted")
+	}
 	mi.UpdatedTime = common.GetTimestamp()
 	// 使用 Select 强制更新所有字段，包括零值
 	return DB.Model(&Model{}).Where("id = ?", mi.Id).

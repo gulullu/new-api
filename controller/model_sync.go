@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/model"
 
 	"github.com/gin-gonic/gin"
@@ -336,7 +337,7 @@ func SyncUpstreamModels(c *gin.Context) {
 	}
 	modelByName := make(map[string]upstreamModel)
 	for _, m := range modelsEnv.Data {
-		if m.ModelName != "" {
+		if m.ModelName != "" && !constant.IsDeprecatedOpenAICompactModel(m.ModelName) {
 			modelByName[m.ModelName] = m
 		}
 	}
@@ -535,7 +536,7 @@ func SyncUpstreamPreview(c *gin.Context) {
 	modelByName := make(map[string]upstreamModel)
 	upstreamNames := make([]string, 0, len(modelsEnv.Data))
 	for _, m := range modelsEnv.Data {
-		if m.ModelName != "" {
+		if m.ModelName != "" && !constant.IsDeprecatedOpenAICompactModel(m.ModelName) {
 			modelByName[m.ModelName] = m
 			upstreamNames = append(upstreamNames, m.ModelName)
 		}

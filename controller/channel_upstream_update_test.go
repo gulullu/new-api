@@ -390,7 +390,7 @@ func TestFetchNewAPIModelsUsesOpenAIContract(t *testing.T) {
 		assert.Equal(t, "/v1/models", r.URL.Path)
 		assert.Equal(t, "Bearer new-api-key", r.Header.Get("Authorization"))
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(`{"data":[{"id":"gpt-5"},{"id":" gpt-5-mini "}]}`))
+		_, err := w.Write([]byte(`{"data":[{"id":"gpt-5"},{"id":"gpt-5-openai-compact"},{"id":" gpt-5-mini "}]}`))
 		assert.NoError(t, err)
 	}))
 	t.Cleanup(server.Close)
@@ -413,6 +413,7 @@ func TestNormalizeModelNames(t *testing.T) {
 		" gpt-4o ",
 		"",
 		"gpt-4o",
+		"gpt-4o-openai-compact",
 		"gpt-4.1",
 		"   ",
 	})

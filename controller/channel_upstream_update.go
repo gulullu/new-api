@@ -100,7 +100,7 @@ type upstreamModelUpdateChannelSummary struct {
 func normalizeModelNames(models []string) []string {
 	return lo.Uniq(lo.FilterMap(models, func(model string, _ int) (string, bool) {
 		trimmed := strings.TrimSpace(model)
-		return trimmed, trimmed != ""
+		return trimmed, trimmed != "" && !constant.IsDeprecatedOpenAICompactModel(trimmed)
 	}))
 }
 

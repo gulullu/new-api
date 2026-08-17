@@ -265,6 +265,73 @@ func TestGetUserModelsExpandsAutoGroupsInConfiguredOrder(t *testing.T) {
 	assert.Equal(t, "zz-default-model", models[2])
 }
 
+func TestDeprecatedCompactAliasIsFilteredFromDynamicModelData(t *testing.T) {
+	withSelfUseModeEnabled(t)
+	db := setupModelListControllerTestDB(t)
+	model.InvalidatePricingCache()
+	t.Cleanup(model.InvalidatePricingCache)
+
+	const (
+		baseModel       = "zz-compact-filter-base"
+		deprecatedAlias = baseModel + constant.DeprecatedOpenAICompactModelSuffix
+	)
+	require.NoError(t, db.Create(&model.User{
+		Id:       1010,
+		Username: "compact-filter-user",
+		Password: "password",
+		Group:    "default",
+		Status:   common.UserStatusEnabled,
+	}).Error)
+	require.NoError(t, db.Create(&model.Channel{
+		Id:     1010,
+		Type:   constant.ChannelTypeOpenAI,
+		Key:    "compact-filter-key",
+		Status: common.ChannelStatusEnabled,
+		Name:   "compact-filter-channel",
+		Models: baseModel + "," + deprecatedAlias,
+		Group:  "default",
+	}).Error)
+	require.NoError(t, db.Create(&[]model.Ability{
+		{Group: "default", Model: baseModel, ChannelId: 1010, Enabled: true},
+		// Deliberately bypass model write guards to prove every dynamic data
+		// outlet remains safe even if stale data is injected directly.
+		{Group: "default", Model: deprecatedAlias, ChannelId: 1010, Enabled: true},
+	}).Error)
+
+	userRecorder := httptest.NewRecorder()
+	userContext, _ := gin.CreateTestContext(userRecorder)
+	userContext.Request = httptest.NewRequest(http.MethodGet, "/api/user/models?group=default", nil)
+	userContext.Set("id", 1010)
+	GetUserModels(userContext)
+	userModels := decodeUserModelsResponse(t, userRecorder)
+	assert.Contains(t, userModels, baseModel)
+	assert.NotContains(t, userModels, deprecatedAlias)
+
+	listRecorder := httptest.NewRecorder()
+	listContext, _ := gin.CreateTestContext(listRecorder)
+	listContext.Request = httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+	common.SetContextKey(listContext, constant.ContextKeyUserGroup, "default")
+	ListModels(listContext, constant.ChannelTypeOpenAI)
+	listModels := decodeListModelsResponse(t, listRecorder)
+	assert.Contains(t, listModels, baseModel)
+	assert.NotContains(t, listModels, deprecatedAlias)
+
+	pricingRecorder := httptest.NewRecorder()
+	pricingContext, _ := gin.CreateTestContext(pricingRecorder)
+	pricingContext.Request = httptest.NewRequest(http.MethodGet, "/api/pricing", nil)
+	pricingContext.Set("id", 1010)
+	GetPricing(pricingContext)
+	var pricingPayload struct {
+		Success bool            `json:"success"`
+		Data    []model.Pricing `json:"data"`
+	}
+	require.NoError(t, common.Unmarshal(pricingRecorder.Body.Bytes(), &pricingPayload))
+	require.True(t, pricingPayload.Success)
+	pricingModels := pricingByModelName(pricingPayload.Data)
+	assert.Contains(t, pricingModels, baseModel)
+	assert.NotContains(t, pricingModels, deprecatedAlias)
+}
+
 func TestListModelsIncludesTieredBillingModel(t *testing.T) {
 	withSelfUseModeDisabled(t)
 	withTieredBillingConfig(t, map[string]string{

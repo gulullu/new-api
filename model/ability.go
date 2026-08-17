@@ -37,27 +37,52 @@ func GetAllEnableAbilityWithChannels() ([]AbilityWithChannel, error) {
 		Joins("left join channels on abilities.channel_id = channels.id").
 		Where("abilities.enabled = ?", true).
 		Scan(&abilities).Error
-	return abilities, err
+	if err != nil {
+		return nil, err
+	}
+	filtered := abilities[:0]
+	for _, ability := range abilities {
+		if !constant.IsDeprecatedOpenAICompactModel(ability.Model) {
+			filtered = append(filtered, ability)
+		}
+	}
+	return filtered, nil
 }
 
 func GetGroupEnabledModels(group string) []string {
 	var models []string
 	// Find distinct models
 	DB.Table("abilities").Where(commonGroupCol+" = ? and enabled = ?", group, true).Distinct("model").Pluck("model", &models)
-	return models
+	return filterDeprecatedCompactModelNames(models)
 }
 
 func GetEnabledModels() []string {
 	var models []string
 	// Find distinct models
 	DB.Table("abilities").Where("enabled = ?", true).Distinct("model").Pluck("model", &models)
-	return models
+	return filterDeprecatedCompactModelNames(models)
 }
 
 func GetAllEnableAbilities() []Ability {
 	var abilities []Ability
 	DB.Find(&abilities, "enabled = ?", true)
-	return abilities
+	filtered := abilities[:0]
+	for _, ability := range abilities {
+		if !constant.IsDeprecatedOpenAICompactModel(ability.Model) {
+			filtered = append(filtered, ability)
+		}
+	}
+	return filtered
+}
+
+func filterDeprecatedCompactModelNames(models []string) []string {
+	filtered := models[:0]
+	for _, modelName := range models {
+		if !constant.IsDeprecatedOpenAICompactModel(modelName) {
+			filtered = append(filtered, modelName)
+		}
+	}
+	return filtered
 }
 
 func getPriority(group string, model string, retry int) (int, error) {

@@ -318,6 +318,21 @@ func InitResources() error {
 
 	// Initialize options, should after model.InitDB()
 	if common.IsMasterNode {
+		stats, migrationErr := model.MigrateDeprecatedCompactAliases()
+		if migrationErr != nil {
+			return fmt.Errorf("failed to migrate deprecated Compact model aliases: %w", migrationErr)
+		}
+		if stats.TotalChanges() > 0 {
+			common.SysLog(fmt.Sprintf(
+				"deprecated Compact model aliases migrated: channels=%d, channel_mappings=%d, tokens=%d, abilities=%d, model_metadata=%d, pricing_entries=%d",
+				stats.ChannelsUpdated,
+				stats.ChannelMappingsUpdated,
+				stats.TokensUpdated,
+				stats.AbilitiesDeleted,
+				stats.ModelMetadataDeleted,
+				stats.PricingEntriesDeleted,
+			))
+		}
 		if err := model.MigrateRetiredFrontendOptions(); err != nil {
 			common.SysError("failed to migrate retired frontend options: " + err.Error())
 		}

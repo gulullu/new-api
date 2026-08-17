@@ -209,6 +209,9 @@ func validateOptionValue(key string, value string) error {
 	if key == operation_setting.ToolPriceOptionKey {
 		return operation_setting.ValidateToolPricesJSON(value)
 	}
+	if isDeprecatedCompactPricingOptionKey(key) {
+		return validateDeprecatedCompactPricingOption(value)
+	}
 	if key == "MaxTokenAutoGroups" {
 		return setting.ValidateMaxTokenAutoGroups(value)
 	}

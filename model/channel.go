@@ -427,6 +427,11 @@ func BatchInsertChannels(channels []Channel) error {
 	if len(channels) == 0 {
 		return nil
 	}
+	for i := range channels {
+		if err := normalizeDeprecatedCompactAliasesForChannel(&channels[i]); err != nil {
+			return fmt.Errorf("normalize deprecated Compact aliases for channel %d: %w", i, err)
+		}
+	}
 	tx := DB.Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -520,8 +525,10 @@ func (channel *Channel) GetStatusCodeMapping() string {
 }
 
 func (channel *Channel) Insert() error {
-	var err error
-	err = DB.Create(channel).Error
+	if err := normalizeDeprecatedCompactAliasesForChannel(channel); err != nil {
+		return err
+	}
+	err := DB.Create(channel).Error
 	if err != nil {
 		return err
 	}
@@ -530,6 +537,9 @@ func (channel *Channel) Insert() error {
 }
 
 func (channel *Channel) Update() error {
+	if err := normalizeDeprecatedCompactAliasesForChannel(channel); err != nil {
+		return err
+	}
 	// If this is a multi-key channel, recalculate MultiKeySize based on the current key list to avoid inconsistency after editing keys
 	if channel.ChannelInfo.IsMultiKey {
 		var keyStr string
@@ -803,6 +813,20 @@ func DisableChannelByTag(tag string) error {
 }
 
 func EditChannelByTag(tag string, newTag *string, modelMapping *string, models *string, group *string, priority *int64, weight *uint, paramOverride *string, headerOverride *string) error {
+	if modelMapping != nil && strings.Contains(*modelMapping, constant.DeprecatedOpenAICompactModelSuffix) {
+		normalized, changed, err := normalizeDeprecatedCompactModelMapping(*modelMapping)
+		if err != nil {
+			return err
+		}
+		if changed {
+			modelMapping = &normalized
+		}
+	}
+	if models != nil {
+		if normalized, changed := normalizeDeprecatedCompactModelList(*models); changed {
+			models = &normalized
+		}
+	}
 	updateData := Channel{}
 	shouldReCreateAbilities := false
 	updatedTag := tag
