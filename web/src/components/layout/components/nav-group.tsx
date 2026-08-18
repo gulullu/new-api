@@ -136,6 +136,7 @@ function useCloseMobileSidebarAfterNavigation() {
  * Sidebar menu link item
  */
 function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
+  const { isMobile } = useSidebar()
   const closeMobileSidebar = useCloseMobileSidebarAfterNavigation()
   const link = item.external ? (
     <a
@@ -145,7 +146,11 @@ function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
       onClick={closeMobileSidebar}
     />
   ) : (
-    <Link to={item.url} onClick={closeMobileSidebar} />
+    <Link
+      to={item.url}
+      preload={isMobile ? false : undefined}
+      onClick={closeMobileSidebar}
+    />
   )
 
   return (
@@ -178,6 +183,7 @@ function SidebarMenuCollapsible({
   item: NavCollapsible
   href: string
 }) {
+  const { isMobile } = useSidebar()
   const closeMobileSidebar = useCloseMobileSidebarAfterNavigation()
   // 检查当前路径是否匹配子菜单项
   const isSubItemActive = checkIsActive(href, item)
@@ -214,7 +220,13 @@ function SidebarMenuCollapsible({
             <SidebarMenuSubItem key={subItem.title}>
               <SidebarMenuSubButton
                 isActive={checkIsActive(href, subItem)}
-                render={<Link to={subItem.url} onClick={closeMobileSidebar} />}
+                render={
+                  <Link
+                    to={subItem.url}
+                    preload={isMobile ? false : undefined}
+                    onClick={closeMobileSidebar}
+                  />
+                }
               >
                 {subItem.icon && <subItem.icon className='shrink-0' />}
                 <span className='min-w-0 flex-1 truncate'>{subItem.title}</span>

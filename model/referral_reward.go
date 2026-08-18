@@ -732,7 +732,7 @@ func finishReferralRewardReversal(outcome ReferralRewardReversalResult, reason s
 	// unavailable after the first callback, the gateway retry can still repair
 	// the stale cache without deducting the reward twice.
 	if outcome.ClaimId > 0 && outcome.InviterId > 0 {
-		if err := InvalidateUserCache(outcome.InviterId); err != nil {
+		if err := invalidateUserCache(outcome.InviterId); err != nil {
 			common.SysError("failed to invalidate inviter cache after referral reward reversal: claim_id=" +
 				decimal.NewFromInt(int64(outcome.ClaimId)).String() +
 				" inviter_id=" + decimal.NewFromInt(int64(outcome.InviterId)).String() +

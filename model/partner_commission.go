@@ -527,7 +527,7 @@ func TransferPartnerCommissionToQuota(userId int, amountUsdMicros int64, request
 	if err != nil {
 		return 0, err
 	}
-	if err := InvalidateUserCache(userId); err != nil {
+	if err := invalidateUserCache(userId); err != nil {
 		common.SysError(fmt.Sprintf("failed to invalidate user cache after partner transfer: user_id=%d error=%q", userId, err.Error()))
 	}
 	return transferredQuota, nil

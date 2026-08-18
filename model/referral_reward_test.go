@@ -17,6 +17,11 @@ import (
 	"gorm.io/gorm"
 )
 
+func rechargeVerifiedEpayForTest(referenceId string, actualPaymentMethod string, callerIP string, payment VerifiedPayment) error {
+	_, err := RechargeVerifiedEpay(referenceId, actualPaymentMethod, callerIP, payment)
+	return err
+}
+
 func TestReferralRewardBillingAmountNormalizesConfiguredUSDGateways(t *testing.T) {
 	originalStripeUnitPrice := setting.StripeUnitPrice
 	originalWaffoPancakeUnitPrice := setting.WaffoPancakeUnitPrice
@@ -143,7 +148,7 @@ func completeReferralTopUp(t *testing.T, topUp *TopUp, payment VerifiedPayment) 
 	t.Helper()
 	switch topUp.PaymentProvider {
 	case PaymentProviderEpay:
-		require.NoError(t, RechargeEpay(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+		require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
 	case PaymentProviderStripe:
 		require.NoError(t, Recharge(topUp.TradeNo, "customer-refund-before-payment", "127.0.0.1", payment))
 	case PaymentProviderCreem:
@@ -358,7 +363,7 @@ func TestReferralRewardUsesFirstVerifiedAmountAndIsIdempotent(t *testing.T) {
 	// 90 after discounts. Only 90 may be used for the 3% reward.
 	payment, err := NewVerifiedPayment("90", "cny", "epay-event-1", "epay-payment-1", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+	require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
 
 	wantReward := expectedReferralRewardQuota(t, "90")
 	var inviter User
@@ -377,7 +382,7 @@ func TestReferralRewardUsesFirstVerifiedAmountAndIsIdempotent(t *testing.T) {
 	// A duplicate callback must not credit either the buyer or inviter again.
 	var inviteeBefore User
 	require.NoError(t, DB.First(&inviteeBefore, 5102).Error)
-	require.NoError(t, RechargeEpay(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+	require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
 	var inviteeAfter User
 	require.NoError(t, DB.First(&inviteeAfter, 5102).Error)
 	require.NoError(t, DB.First(&inviter, 5101).Error)
@@ -392,7 +397,7 @@ func TestReferralRewardUsesFirstVerifiedAmountAndIsIdempotent(t *testing.T) {
 	secondTopUp := createReferralTopUp(t, 5102, "reward-second-real-payment", PaymentProviderEpay, common.TopUpStatusPending)
 	secondPayment, err := NewVerifiedPayment("50", "CNY", "epay-event-2", "epay-payment-2", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(secondTopUp.TradeNo, "alipay", "127.0.0.1", secondPayment))
+	require.NoError(t, rechargeVerifiedEpayForTest(secondTopUp.TradeNo, "alipay", "127.0.0.1", secondPayment))
 
 	require.NoError(t, DB.First(&inviter, 5101).Error)
 	assert.Equal(t, 1, inviter.AffCount)
@@ -410,7 +415,7 @@ func TestReferralRewardUsesFirstVerifiedAmountAndIsIdempotent(t *testing.T) {
 	replayedTopUp := createReferralTopUp(t, 5102, "reward-replayed-provider-payment", PaymentProviderEpay, common.TopUpStatusPending)
 	replayedPayment, err := NewVerifiedPayment("50", "CNY", "epay-event-2-replayed", "epay-payment-2", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(replayedTopUp.TradeNo, "alipay", "127.0.0.1", replayedPayment))
+	require.NoError(t, rechargeVerifiedEpayForTest(replayedTopUp.TradeNo, "alipay", "127.0.0.1", replayedPayment))
 	require.NoError(t, DB.First(&inviter, 5101).Error)
 	assert.Equal(t, 1, inviter.AffCount)
 	assert.Equal(t, wantReward, inviter.AffQuota)
@@ -435,8 +440,8 @@ func TestDistinctVerifiedTopUpsAwardOneFirstPaymentReward(t *testing.T) {
 	errs := make(chan error, 2)
 	var wg sync.WaitGroup
 	for _, callback := range []func() error{
-		func() error { return RechargeEpay(first.TradeNo, "alipay", "127.0.0.1", firstPayment) },
-		func() error { return RechargeEpay(second.TradeNo, "alipay", "127.0.0.1", secondPayment) },
+		func() error { return rechargeVerifiedEpayForTest(first.TradeNo, "alipay", "127.0.0.1", firstPayment) },
+		func() error { return rechargeVerifiedEpayForTest(second.TradeNo, "alipay", "127.0.0.1", secondPayment) },
 	} {
 		wg.Add(1)
 		go func(callback func() error) {
@@ -516,7 +521,7 @@ func TestReferralRewardRejectsSandboxAndHistoricalVerifiedTopUps(t *testing.T) {
 		topUp := createReferralTopUp(t, 5202, "reward-sandbox-payment", PaymentProviderEpay, common.TopUpStatusPending)
 		payment, err := NewVerifiedPayment("90", "CNY", "sandbox-event", "sandbox-payment", false)
 		require.NoError(t, err)
-		require.NoError(t, RechargeEpay(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+		require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
 
 		var inviter User
 		require.NoError(t, DB.First(&inviter, 5201).Error)
@@ -529,7 +534,7 @@ func TestReferralRewardRejectsSandboxAndHistoricalVerifiedTopUps(t *testing.T) {
 		verified := createReferralTopUp(t, 5202, "reward-after-sandbox", PaymentProviderEpay, common.TopUpStatusPending)
 		verifiedPayment, err := NewVerifiedPayment("90", "CNY", "verified-event", "verified-payment", true)
 		require.NoError(t, err)
-		require.NoError(t, RechargeEpay(verified.TradeNo, "alipay", "127.0.0.1", verifiedPayment))
+		require.NoError(t, rechargeVerifiedEpayForTest(verified.TradeNo, "alipay", "127.0.0.1", verifiedPayment))
 		require.NoError(t, DB.First(&inviter, 5201).Error)
 		assert.Equal(t, 1, inviter.AffCount)
 	})
@@ -542,7 +547,7 @@ func TestReferralRewardRejectsSandboxAndHistoricalVerifiedTopUps(t *testing.T) {
 		topUp := createReferralTopUp(t, 5302, "reward-later-payment", PaymentProviderEpay, common.TopUpStatusPending)
 		payment, err := NewVerifiedPayment("90", "CNY", "later-event", "later-payment", true)
 		require.NoError(t, err)
-		require.NoError(t, RechargeEpay(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+		require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
 
 		var inviter User
 		require.NoError(t, DB.First(&inviter, 5301).Error)
@@ -600,7 +605,7 @@ func TestManualCompletionDoesNotEarnReferralReward(t *testing.T) {
 	verified := createReferralTopUp(t, 5352, "reward-after-manual", PaymentProviderEpay, common.TopUpStatusPending)
 	payment, err := NewVerifiedPayment("90", "CNY", "verified-after-manual-event", "verified-after-manual-payment", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(verified.TradeNo, "alipay", "127.0.0.1", payment))
+	require.NoError(t, rechargeVerifiedEpayForTest(verified.TradeNo, "alipay", "127.0.0.1", payment))
 
 	var claim ReferralRewardClaim
 	require.NoError(t, DB.Where("invitee_id = ?", 5352).First(&claim).Error)
@@ -834,7 +839,7 @@ func TestReferralRewardWithholdsOverflowWithoutFailingPayment(t *testing.T) {
 	topUp := createReferralTopUp(t, 5702, "reward-overflow-payment", PaymentProviderEpay, common.TopUpStatusPending)
 	payment, err := NewVerifiedPayment("90", "CNY", "overflow-event", "overflow-payment", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+	require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
 
 	var updatedTopUp TopUp
 	require.NoError(t, DB.First(&updatedTopUp, topUp.Id).Error)
@@ -854,7 +859,7 @@ func TestReferralRewardWithholdsOverflowWithoutFailingPayment(t *testing.T) {
 	second := createReferralTopUp(t, 5702, "reward-after-withheld", PaymentProviderEpay, common.TopUpStatusPending)
 	secondPayment, err := NewVerifiedPayment("50", "CNY", "overflow-event-2", "overflow-payment-2", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(second.TradeNo, "alipay", "127.0.0.1", secondPayment))
+	require.NoError(t, rechargeVerifiedEpayForTest(second.TradeNo, "alipay", "127.0.0.1", secondPayment))
 	var claimCount int64
 	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5702).Count(&claimCount).Error)
 	assert.Equal(t, int64(1), claimCount)
@@ -866,7 +871,7 @@ func TestReferralRewardReversalReclaimsTransferredQuotaAndIsIdempotent(t *testin
 	topUp := createReferralTopUp(t, 5802, "reward-reversal-payment", PaymentProviderEpay, common.TopUpStatusPending)
 	payment, err := NewVerifiedPayment("90", "CNY", "reversal-original-event", "reversal-original-payment", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+	require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
 
 	rewardQuota := expectedReferralRewardQuota(t, "90")
 	var inviter User
@@ -922,7 +927,7 @@ func TestReferralRewardReversalReclaimsTransferredQuotaAndIsIdempotent(t *testin
 	second := createReferralTopUp(t, 5802, "reward-after-reversal", PaymentProviderEpay, common.TopUpStatusPending)
 	secondPayment, err := NewVerifiedPayment("50", "CNY", "reversal-second-event", "reversal-second-payment", true)
 	require.NoError(t, err)
-	require.NoError(t, RechargeEpay(second.TradeNo, "alipay", "127.0.0.1", secondPayment))
+	require.NoError(t, rechargeVerifiedEpayForTest(second.TradeNo, "alipay", "127.0.0.1", secondPayment))
 	require.NoError(t, DB.First(&inviter, 5801).Error)
 	assert.Zero(t, inviter.AffQuota)
 	var claimCount int64

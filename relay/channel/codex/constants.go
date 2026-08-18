@@ -1,6 +1,6 @@
 package codex
 
-var baseModelList = []string{
+var ModelList = []string{
 	"gpt-5.6-sol",
 	"gpt-5.6-terra",
 	"gpt-5.6-luna",
@@ -10,7 +10,5 @@ var baseModelList = []string{
 	"gpt-5.3-codex-spark",
 	"codex-auto-review",
 }
-
-var ModelList = append([]string(nil), baseModelList...)
 
 const ChannelName = "codex"
