@@ -149,6 +149,24 @@ func TestLocalizeUserGroupsUsesHashGuardAndEnglishFallbackEntry(t *testing.T) {
 	assert.Equal(t, "custom administrator text", localized["edited"]["desc"])
 }
 
+func TestLocalizeClaudeMaxGroupsUsesCurrentAdministratorDescriptions(t *testing.T) {
+	t.Parallel()
+	const claudeMax = "Claude 纯 Max 路线，适合高频生产环境使用，禁止蒸馏。"
+	const claudeMaxUltra = "Claude 纯 Max 路线，适合高频生产环境使用，可蒸馏。"
+	require.Equal(t, "7fe34730", ContentSourceHash(claudeMax))
+	require.Equal(t, "3ef7ac4e", ContentSourceHash(claudeMaxUltra))
+
+	groups := map[string]map[string]any{
+		"claude-max":       {"desc": claudeMax, "ratio": 1.8},
+		"claude-max-ultra": {"desc": claudeMaxUltra, "ratio": 2.1},
+	}
+	localized := LocalizeUserGroups(groups, LocaleEnglish)
+	assert.Equal(t, "Pure Claude Max route for high-frequency production use; distillation is prohibited.", localized["claude-max"]["desc"])
+	assert.Equal(t, "Pure Claude Max route for high-frequency production use; distillation is permitted.", localized["claude-max-ultra"]["desc"])
+	assert.Equal(t, claudeMax, groups["claude-max"]["desc"], "input must not be mutated")
+	assert.Equal(t, claudeMaxUltra, groups["claude-max-ultra"]["desc"], "input must not be mutated")
+}
+
 func TestLocalizeNoticeLeavesUnknownSourceUntouched(t *testing.T) {
 	t.Parallel()
 	const edited = "administrator changed this notice"
