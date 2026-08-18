@@ -62,10 +62,10 @@ declare global {
 
 function readEnvRevision(): string | undefined {
   try {
-    const env = (
-      import.meta as unknown as { env?: Record<string, string | undefined> }
-    ).env
-    const raw = env?.VITE_REACT_APP_VERSION
+    // Keep the property access static so Rsbuild can replace it at compile
+    // time. Reading import.meta.env through a cast leaves the value undefined
+    // in the production bundle and silently falls back to `0000`.
+    const raw = import.meta.env.VITE_REACT_APP_VERSION
     if (typeof raw === 'string' && raw.length > 0) return raw
   } catch {
     // import.meta may be unavailable in some test environments.
