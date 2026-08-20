@@ -6,7 +6,10 @@ import (
 
 var defaultCacheRatio = map[string]float64{
 	// Gemini 3.7 Flash cache-read/input ratio: Ɍ0.075 / Ɍ0.75.
-	"gemini-3.7-flash":                    0.1,
+	"gemini-3.7-flash": 0.1,
+	// DeepSeek V4 peak cache-hit/input ratios: Flash Ɍ0.10 / Ɍ3, Pro Ɍ0.30 / Ɍ9.
+	"deepseek-v4-flash":                   0.1 / 3,
+	"deepseek-v4-pro":                     0.3 / 9,
 	"gemini-3-flash-preview":              0.1,
 	"gemini-3-pro-preview":                0.1,
 	"gemini-3.1-pro-preview":              0.1,
@@ -42,8 +45,8 @@ var defaultCacheRatio = map[string]float64{
 	"glm-5.3":                             0.25,
 	"grok-4.5":                            0.25,
 	"grok-4.6":                            0.25,
-	"deepseek-chat":                       0.25,
-	"deepseek-reasoner":                   0.25,
+	"deepseek-chat":                       0.1 / 3,
+	"deepseek-reasoner":                   0.1 / 3,
 	"deepseek-coder":                      0.25,
 	"claude-3-sonnet-20240229":            0.1,
 	"claude-3-opus-20240229":              0.1,

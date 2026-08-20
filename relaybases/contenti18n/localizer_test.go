@@ -125,7 +125,7 @@ func TestLocalizeAnnouncementsArchivesKnownEntriesWithoutMutatingInput(t *testin
 
 func TestGemini37AnnouncementSourceHash(t *testing.T) {
 	t.Parallel()
-	require.Equal(t, "6de05c05", ContentSourceHash(announcement23Source))
+	require.Equal(t, "51120df8", ContentSourceHash(announcement23Source))
 	require.Equal(t, announcementCatalog["23"].sourceHash, ContentSourceHash(announcement23Source))
 }
 

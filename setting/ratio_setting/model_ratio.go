@@ -27,6 +27,10 @@ var defaultModelRatio = map[string]float64{
 	// Gemini 3.7 Flash introductory standard input price: Ɍ0.75 / MTok.
 	// New API's ratio base is Ɍ2 / MTok, so 0.75 / 2 = 0.375.
 	"gemini-3.7-flash": 0.375,
+	// DeepSeek V4 peak input prices: Flash Ɍ3 / MTok, Pro Ɍ9 / MTok.
+	// New API's ratio base is Ɍ2 / MTok.
+	"deepseek-v4-flash": 3.0 / 2,
+	"deepseek-v4-pro":   9.0 / 2,
 	//"midjourney":                50,
 	"gpt-4-gizmo-*":                             15,
 	"gpt-4o-gizmo-*":                            2.5,
@@ -244,9 +248,10 @@ var defaultModelRatio = map[string]float64{
 	"command-r-plus":         1.5,
 	"command-r-08-2024":      0.075,
 	"command-r-plus-08-2024": 1.25,
-	"deepseek-chat":          0.27 / 2,
-	"deepseek-coder":         0.27 / 2,
-	"deepseek-reasoner":      0.55 / 2, // 0.55 / 1k tokens
+	// Deprecated DeepSeek compatibility aliases map to V4 Flash peak rates.
+	"deepseek-chat":     3.0 / 2,
+	"deepseek-coder":    0.27 / 2,
+	"deepseek-reasoner": 3.0 / 2,
 	// Perplexity online 模型对搜索额外收费，有需要应自行调整，此处不计入搜索费用
 	"llama-3-sonar-small-32k-chat":   0.2 / 1000 * USD,
 	"llama-3-sonar-small-32k-online": 0.2 / 1000 * USD,
@@ -335,14 +340,17 @@ var completionRatioMap = types.NewRWMap[string, float64]()
 var defaultCompletionRatio = map[string]float64{
 	// Gemini 3.7 Flash output/input ratio: Ɍ3.75 / Ɍ0.75.
 	"gemini-3.7-flash": 5,
-	"gpt-4-gizmo-*":    2,
-	"gpt-4o-gizmo-*":   3,
-	"gpt-4-all":        2,
-	"gpt-image-1":      8,
-	"glm-5.2":          3.5,
-	"glm-5.3":          3.5,
-	"grok-4.5":         3,
-	"grok-4.6":         3,
+	// DeepSeek V4 peak output/input ratios: Flash Ɍ9 / Ɍ3, Pro Ɍ27 / Ɍ9.
+	"deepseek-v4-flash": 3,
+	"deepseek-v4-pro":   3,
+	"gpt-4-gizmo-*":     2,
+	"gpt-4o-gizmo-*":    3,
+	"gpt-4-all":         2,
+	"gpt-image-1":       8,
+	"glm-5.2":           3.5,
+	"glm-5.3":           3.5,
+	"grok-4.5":          3,
+	"grok-4.6":          3,
 }
 
 // InitRatioSettings initializes all model related settings maps

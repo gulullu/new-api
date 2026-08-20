@@ -38,3 +38,12 @@ func TestGemini37FlashDefaults(t *testing.T) {
 	require.Equal(t, 5.0, defaultCompletionRatio["gemini-3.7-flash"])
 	require.Equal(t, 0.1, defaultCacheRatio["gemini-3.7-flash"])
 }
+
+func TestDeepSeekV4PeakDefaults(t *testing.T) {
+	require.Equal(t, 1.5, defaultModelRatio["deepseek-v4-flash"])
+	require.Equal(t, 4.5, defaultModelRatio["deepseek-v4-pro"])
+	require.Equal(t, 3.0, defaultCompletionRatio["deepseek-v4-flash"])
+	require.Equal(t, 3.0, defaultCompletionRatio["deepseek-v4-pro"])
+	require.InDelta(t, 0.1/3, defaultCacheRatio["deepseek-v4-flash"], 1e-15)
+	require.InDelta(t, 0.3/9, defaultCacheRatio["deepseek-v4-pro"], 1e-15)
+}
