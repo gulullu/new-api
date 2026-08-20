@@ -24,6 +24,9 @@ const (
 // 1 === ￥0.014 / 1k tokens
 
 var defaultModelRatio = map[string]float64{
+	// Gemini 3.7 Flash introductory standard input price: Ɍ0.75 / MTok.
+	// New API's ratio base is Ɍ2 / MTok, so 0.75 / 2 = 0.375.
+	"gemini-3.7-flash": 0.375,
 	//"midjourney":                50,
 	"gpt-4-gizmo-*":                             15,
 	"gpt-4o-gizmo-*":                            2.5,
@@ -330,14 +333,16 @@ var modelRatioMap = types.NewRWMap[string, float64]()
 var completionRatioMap = types.NewRWMap[string, float64]()
 
 var defaultCompletionRatio = map[string]float64{
-	"gpt-4-gizmo-*":  2,
-	"gpt-4o-gizmo-*": 3,
-	"gpt-4-all":      2,
-	"gpt-image-1":    8,
-	"glm-5.2":        3.5,
-	"glm-5.3":        3.5,
-	"grok-4.5":       3,
-	"grok-4.6":       3,
+	// Gemini 3.7 Flash output/input ratio: Ɍ3.75 / Ɍ0.75.
+	"gemini-3.7-flash": 5,
+	"gpt-4-gizmo-*":    2,
+	"gpt-4o-gizmo-*":   3,
+	"gpt-4-all":        2,
+	"gpt-image-1":      8,
+	"glm-5.2":          3.5,
+	"glm-5.3":          3.5,
+	"grok-4.5":         3,
+	"grok-4.6":         3,
 }
 
 // InitRatioSettings initializes all model related settings maps

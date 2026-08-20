@@ -32,3 +32,9 @@ func TestGLM53DefaultsMatchGLM52Pricing(t *testing.T) {
 	assert.Equal(t, 3.5, defaultCompletionRatio["glm-5.3"])
 	assert.Equal(t, 0.25, defaultCacheRatio["glm-5.3"])
 }
+
+func TestGemini37FlashDefaults(t *testing.T) {
+	require.Equal(t, 0.375, defaultModelRatio["gemini-3.7-flash"])
+	require.Equal(t, 5.0, defaultCompletionRatio["gemini-3.7-flash"])
+	require.Equal(t, 0.1, defaultCacheRatio["gemini-3.7-flash"])
+}

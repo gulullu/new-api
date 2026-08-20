@@ -5,6 +5,8 @@ import (
 )
 
 var defaultCacheRatio = map[string]float64{
+	// Gemini 3.7 Flash cache-read/input ratio: Ɍ0.075 / Ɍ0.75.
+	"gemini-3.7-flash":                    0.1,
 	"gemini-3-flash-preview":              0.1,
 	"gemini-3-pro-preview":                0.1,
 	"gemini-3.1-pro-preview":              0.1,

@@ -123,6 +123,12 @@ func TestLocalizeAnnouncementsArchivesKnownEntriesWithoutMutatingInput(t *testin
 	assert.Equal(t, raw, items[0]["content"])
 }
 
+func TestGemini37AnnouncementSourceHash(t *testing.T) {
+	t.Parallel()
+	require.Equal(t, "6de05c05", ContentSourceHash(announcement23Source))
+	require.Equal(t, announcementCatalog["23"].sourceHash, ContentSourceHash(announcement23Source))
+}
+
 func TestLocalizeAnnouncementsKeepsAdministratorEditsAndUnknownContent(t *testing.T) {
 	t.Parallel()
 	items := []map[string]any{

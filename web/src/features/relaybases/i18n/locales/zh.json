@@ -244,6 +244,7 @@
       "gemini-3.6-flash-high": "Gemini 3.6 Flash 高推理路由，适合复杂编程、智能体执行以及多模态与空间推理。",
       "gemini-3.6-flash-medium": "Gemini 3.6 Flash 中推理路由，在速度与智能之间取得平衡，适合通用智能体和多模态任务。",
       "gemini-3.6-flash-low": "Gemini 3.6 Flash 低推理路由，适合低延迟智能体循环和高频多模态任务。",
+      "gemini-3.7-flash": "Gemini 3.7 Flash，Google 最新的 Flash 模型，面向复杂编程、智能体工作流与多模态推理，支持 low、medium 和 high 三档推理等级。",
       "gpt-5.3-codex-spark": "GPT-5.3 Codex Spark，面向快速代码编辑和重构的低延迟编码模型。",
       "gpt-5.4": "GPT-5.4，适合复杂代码、长上下文和专业工作的前沿通用推理模型。",
       "gpt-5.4-mini": "GPT-5.4 mini，面向高吞吐任务的高性价比推理模型。",

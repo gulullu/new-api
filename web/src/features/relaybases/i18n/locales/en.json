@@ -244,6 +244,7 @@
       "gemini-3.6-flash-high": "Gemini 3.6 Flash high-thinking route for complex coding, agentic execution, and multimodal and spatial reasoning.",
       "gemini-3.6-flash-medium": "Gemini 3.6 Flash medium-thinking route, balancing speed and intelligence for general agentic and multimodal tasks.",
       "gemini-3.6-flash-low": "Gemini 3.6 Flash low-thinking route for low-latency agentic loops and high-volume multimodal tasks.",
+      "gemini-3.7-flash": "Gemini 3.7 Flash, Google's latest Flash model for complex coding, agentic workflows, and multimodal reasoning, with low, medium, and high thinking levels.",
       "gpt-5.3-codex-spark": "GPT-5.3 Codex Spark, low-latency coding for quick edits and refactors.",
       "gpt-5.4": "GPT-5.4, frontier general reasoning for complex code and long context.",
       "gpt-5.4-mini": "GPT-5.4 mini, cost-efficient reasoning for high-throughput tasks.",
