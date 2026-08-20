@@ -343,6 +343,9 @@ var defaultCompletionRatio = map[string]float64{
 	// DeepSeek V4 peak output/input ratios: Flash Ɍ9 / Ɍ3, Pro Ɍ27 / Ɍ9.
 	"deepseek-v4-flash": 3,
 	"deepseek-v4-pro":   3,
+	// Deprecated DeepSeek compatibility aliases map to V4 Flash peak rates.
+	"deepseek-chat":     3,
+	"deepseek-reasoner": 3,
 	"gpt-4-gizmo-*":     2,
 	"gpt-4o-gizmo-*":    3,
 	"gpt-4-all":         2,
