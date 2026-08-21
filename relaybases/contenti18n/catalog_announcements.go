@@ -24,6 +24,8 @@ func announcement(sourceHash, en, zhCN, zhTW, fr, ja, ru, vi string) localizedLe
 
 const announcement23Source = "## 新模型与价格更新 · Gemini 3.7 Flash / DeepSeek V4\n\n`gemini-3.7-flash` 已在 gemini-lite 分组上线，支持 1,048,576 Token 上下文、65,536 Token 最大输出，以及 low / medium（默认）/ high 推理等级。\n\nGemini 3.7 Flash 当前基础优惠价（截至 2026-12-31）：输入 Ɍ0.75、输出 Ɍ3.75、缓存读取 Ɍ0.075 / MTok；gemini-lite 当前 0.8x，有效价格为 Ɍ0.60 / Ɍ3.00 / Ɍ0.06。\n\nDeepSeek V4 已按最新官方高峰价统一：Flash 输入（缓存命中）Ɍ0.10、输入（缓存未命中）Ɍ3、输出 Ɍ9；Pro 输入（缓存命中）Ɍ0.30、输入（缓存未命中）Ɍ9、输出 Ɍ27 / MTok。平台不采用低峰优惠；open-models 既有 0.7x 分组倍率仍适用。最终以模型广场和控制台账单为准。"
 
+const announcement24Source = "## Codex CLI / App 149 兼容说明\n\n149 版本调用 Responses API 可能出现 `401 Unauthorized: Invalid token`。在 `config.toml` 的 `[model_providers.<provider>]` 段加入 `requires_openai_auth = true`，保存并重启客户端。无需修改 API Key、模型或接口地址。\n\n---\n\n## Codex CLI / App 149 Notice\n\nVersion 149 may return `401 Unauthorized: Invalid token` for Responses API. Add `requires_openai_auth = true` to `[model_providers.<provider>]` in `config.toml`, save, and restart. No API key, model, or endpoint change is required."
+
 // An archived ID alone is not sufficient: administrators can reuse or edit an
 // existing row. Only the exact historical source is hidden.
 var archivedAnnouncementSourceHashes = map[string]string{
@@ -36,6 +38,16 @@ var archivedAnnouncementSourceHashes = map[string]string{
 }
 
 var announcementCatalog = map[string]localizedLeaf{
+	"24": announcement(
+		"b2090888",
+		"## Codex CLI / App 149 Notice\n\nVersion 149 may return `401 Unauthorized: Invalid token` for Responses API. Add `requires_openai_auth = true` to `[model_providers.<provider>]` in `config.toml`, save, and restart. No API key, model, or endpoint change is required.",
+		"## Codex CLI / App 149 兼容说明\n\n149 版本调用 Responses API 可能出现 `401 Unauthorized: Invalid token`。在 `config.toml` 的 `[model_providers.<provider>]` 段加入 `requires_openai_auth = true`，保存并重启客户端。无需修改 API Key、模型或接口地址。",
+		"## Codex CLI / App 149 相容說明\n\n149 版本呼叫 Responses API 可能出現 `401 Unauthorized: Invalid token`。請在 `config.toml` 的 `[model_providers.<provider>]` 區段加入 `requires_openai_auth = true`，儲存並重新啟動用戶端。無需修改 API Key、模型或端點。",
+		"## Compatibilité Codex CLI / App 149\n\nLa version 149 peut renvoyer `401 Unauthorized: Invalid token` pour les requêtes Responses API. Ajoutez `requires_openai_auth = true` dans la section `[model_providers.<provider>]` de `config.toml`, puis enregistrez et redémarrez. Aucune modification de clé API, de modèle ou de point de terminaison n’est nécessaire.",
+		"## Codex CLI / App 149 の互換性について\n\nバージョン149では Responses API の呼び出し時に `401 Unauthorized: Invalid token` が返ることがあります。`config.toml` の `[model_providers.<provider>]` セクションに `requires_openai_auth = true` を追加し、保存して再起動してください。APIキー、モデル、エンドポイントの変更は不要です。",
+		"## Совместимость Codex CLI / App 149\n\nВ версии 149 при запросах к Responses API может появиться `401 Unauthorized: Invalid token`. Добавьте `requires_openai_auth = true` в секцию `[model_providers.<provider>]` файла `config.toml`, сохраните файл и перезапустите клиент. Менять API-ключ, модель или endpoint не требуется.",
+		"## Tương thích Codex CLI / App 149\n\nPhiên bản 149 có thể trả về `401 Unauthorized: Invalid token` khi gọi Responses API. Hãy thêm `requires_openai_auth = true` vào phần `[model_providers.<provider>]` trong `config.toml`, lưu và khởi động lại. Không cần đổi API key, model hoặc endpoint.",
+	),
 	"23": announcement(
 		"51120df8",
 		"## New model and pricing update · Gemini 3.7 Flash / DeepSeek V4\n\n`gemini-3.7-flash` is now available in gemini-lite, with a 1,048,576-token context window, up to 65,536 output tokens, and low / medium (default) / high thinking levels.\n\nGemini 3.7 Flash base promotional pricing through December 31, 2026: input Ɍ0.75, output Ɍ3.75, cache reads Ɍ0.075 / MTok. At the current gemini-lite 0.8x multiplier, effective prices are Ɍ0.60 / Ɍ3.00 / Ɍ0.06.\n\nDeepSeek V4 is aligned with the latest official peak rates: Flash input (cache hit) Ɍ0.10, input (cache miss) Ɍ3, output Ɍ9; Pro input (cache hit) Ɍ0.30, input (cache miss) Ɍ9, output Ɍ27 / MTok. RelayBases does not apply off-peak pricing; the existing open-models 0.7x group multiplier remains in effect. The Model Marketplace and console bill are authoritative.",
