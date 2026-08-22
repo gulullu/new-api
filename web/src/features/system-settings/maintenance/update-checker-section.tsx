@@ -41,6 +41,13 @@ type UpdateCheckerSectionProps = {
   startTime?: number | null
 }
 
+// RelayBases appends a deployment suffix to the upstream New API version.
+// Compare the upstream-compatible portion so a custom build of rc.25 is not
+// incorrectly reported as a new upstream release of rc.25.
+export function normalizeReleaseVersion(value: string): string {
+  return value.trim().replace(/-relaybases(?:[.-].*)?$/i, '')
+}
+
 export function UpdateCheckerSection({
   currentVersion,
   startTime,
@@ -75,7 +82,11 @@ export function UpdateCheckerSection({
         throw new Error(t('Unexpected release payload'))
       }
 
-      if (currentVersion && data.tag_name === currentVersion) {
+      if (
+        currentVersion &&
+        normalizeReleaseVersion(data.tag_name) ===
+          normalizeReleaseVersion(currentVersion)
+      ) {
         toast.success(
           t('You are running the latest version ({{version}}).', {
             version: data.tag_name,
