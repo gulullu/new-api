@@ -29,6 +29,7 @@ import type {
   ManageUserAction,
   ManageUserQuotaPayload,
   ApiResponse,
+  SuspiciousLoginIP,
 } from './types'
 
 // ============================================================================
@@ -126,6 +127,30 @@ export async function manageUser(
   action: ManageUserAction
 ): Promise<ApiResponse<Partial<User>>> {
   const res = await api.post('/api/user/manage', { id, action })
+  return res.data
+}
+
+export async function batchDisableUsers(
+  ids: number[]
+): Promise<ApiResponse<{ requested: number; disabled: number }>> {
+  const res = await api.post('/api/user/manage/batch-disable', { ids })
+  return res.data
+}
+
+export async function getSuspiciousLoginIPs(): Promise<
+  ApiResponse<SuspiciousLoginIP[]>
+> {
+  const res = await api.get('/api/user/ip-summary', {
+    params: { min_users: 2, limit: 500 },
+  })
+  return res.data
+}
+
+export async function updateIPBlacklist(
+  ip: string,
+  blocked: boolean
+): Promise<ApiResponse<{ ip: string; blocked: boolean }>> {
+  const res = await api.put('/api/user/ip-blacklist', { ip, blocked })
   return res.data
 }
 

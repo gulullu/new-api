@@ -80,6 +80,36 @@ type Log struct {
 	Other             string `json:"other"`
 }
 
+type LoginIPSummary struct {
+	IP        string `json:"ip" gorm:"column:ip"`
+	UserCount int64  `json:"user_count" gorm:"column:user_count"`
+	LastSeen  int64  `json:"last_seen" gorm:"column:last_seen"`
+}
+
+// GetSuspiciousLoginIPs returns source IPs used by at least minUsers distinct
+// accounts. It only reads successful-login audit records.
+func GetSuspiciousLoginIPs(minUsers, limit int) ([]LoginIPSummary, error) {
+	if LOG_DB == nil {
+		return []LoginIPSummary{}, nil
+	}
+	if minUsers < 2 {
+		minUsers = 2
+	}
+	if limit <= 0 || limit > 1000 {
+		limit = 1000
+	}
+	var summaries []LoginIPSummary
+	err := LOG_DB.Model(&Log{}).
+		Select("ip, COUNT(DISTINCT user_id) AS user_count, MAX(created_at) AS last_seen").
+		Where("type = ? AND ip <> ''", LogTypeLogin).
+		Group("ip").
+		Having("COUNT(DISTINCT user_id) >= ?", minUsers).
+		Order("user_count DESC, last_seen DESC").
+		Limit(limit).
+		Scan(&summaries).Error
+	return summaries, err
+}
+
 // don't use iota, avoid change log type value
 const (
 	LogTypeUnknown = 0

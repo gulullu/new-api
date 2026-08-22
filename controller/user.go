@@ -262,6 +262,9 @@ func Register(c *gin.Context) {
 	}
 	affCode := user.AffCode // this code is the inviter's code, not the user's own code
 	inviterId, _ := model.GetUserIdByAffCode(affCode)
+	if !middleware.RegistrationRateLimit(c) || !middleware.RegistrationInviteRateLimit(c, inviterId) {
+		return
+	}
 	cleanUser := model.User{
 		Username:    user.Username,
 		Password:    user.Password,
@@ -366,6 +369,151 @@ func SearchUsers(c *gin.Context) {
 	pageInfo.SetItems(users)
 	common.ApiSuccess(c, pageInfo)
 	return
+}
+
+type suspiciousLoginIP struct {
+	model.LoginIPSummary
+	Blocked bool `json:"blocked"`
+}
+
+func GetSuspiciousLoginIPs(c *gin.Context) {
+	minUsers := 2
+	if value, err := strconv.Atoi(c.DefaultQuery("min_users", "2")); err == nil && value >= 2 {
+		minUsers = value
+	}
+	limit := 500
+	if value, err := strconv.Atoi(c.DefaultQuery("limit", "500")); err == nil && value > 0 && value <= 1000 {
+		limit = value
+	}
+	summaries, err := model.GetSuspiciousLoginIPs(minUsers, limit)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	items := make([]suspiciousLoginIP, 0, len(summaries))
+	for _, summary := range summaries {
+		items = append(items, suspiciousLoginIP{
+			LoginIPSummary: summary,
+			Blocked:        common.IsIPBlocked(summary.IP),
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "", "data": items})
+}
+
+type ipBlacklistRequest struct {
+	IP      string `json:"ip"`
+	Blocked bool   `json:"blocked"`
+}
+
+func UpdateIPBlacklist(c *gin.Context) {
+	var req ipBlacklistRequest
+	if err := common.DecodeJson(c.Request.Body, &req); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	normalized, ok := common.NormalizeIP(req.IP)
+	if !ok {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	common.OptionMapRWMutex.RLock()
+	raw := common.OptionMap[common.BlockedIPsOptionKey]
+	common.OptionMapRWMutex.RUnlock()
+	blockedIPs := common.ParseBlockedIPs(raw)
+	set := make(map[string]struct{}, len(blockedIPs)+1)
+	for _, ip := range blockedIPs {
+		set[ip] = struct{}{}
+	}
+	if req.Blocked {
+		set[normalized] = struct{}{}
+	} else {
+		delete(set, normalized)
+	}
+	next := make([]string, 0, len(set))
+	for ip := range set {
+		next = append(next, ip)
+	}
+	value, err := common.MarshalBlockedIPs(next)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	if err := model.UpdateOption(common.BlockedIPsOptionKey, value); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	action := "remove"
+	if req.Blocked {
+		action = "add"
+	}
+	recordManageAudit(c, "security.ip_blacklist", map[string]interface{}{
+		"ip": normalized, "action": action,
+	})
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "", "data": gin.H{
+		"ip": normalized, "blocked": req.Blocked,
+	}})
+}
+
+type batchDisableUsersRequest struct {
+	IDs []int `json:"ids"`
+}
+
+func BatchDisableUsers(c *gin.Context) {
+	var req batchDisableUsersRequest
+	if err := common.DecodeJson(c.Request.Body, &req); err != nil || len(req.IDs) == 0 || len(req.IDs) > 500 {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	ids := make([]int, 0, len(req.IDs))
+	seen := make(map[int]struct{}, len(req.IDs))
+	for _, id := range req.IDs {
+		if id <= 0 {
+			common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+			return
+		}
+		if _, exists := seen[id]; !exists {
+			seen[id] = struct{}{}
+			ids = append(ids, id)
+		}
+	}
+	var users []*model.User
+	if err := model.DB.Unscoped().Where("id IN ?", ids).Find(&users).Error; err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	if len(users) != len(ids) {
+		common.ApiErrorI18n(c, i18n.MsgUserNotExists)
+		return
+	}
+	myRole := c.GetInt("role")
+	for _, user := range users {
+		if user.DeletedAt.Valid {
+			continue
+		}
+		if user.Role == common.RoleRootUser || !canManageTargetRole(myRole, user.Role) {
+			common.ApiErrorI18n(c, i18n.MsgUserNoPermissionHigherLevel)
+			return
+		}
+	}
+	disabledCount := 0
+	for _, user := range users {
+		if user.DeletedAt.Valid || user.Status == common.UserStatusDisabled {
+			continue
+		}
+		user.Status = common.UserStatusDisabled
+		if err := user.Update(false); err != nil {
+			common.ApiError(c, err)
+			return
+		}
+		if err := model.InvalidateUserTokensCache(user.Id); err != nil {
+			common.SysLog(fmt.Sprintf("failed to invalidate tokens cache for user %d: %s", user.Id, err.Error()))
+		}
+		disabledCount++
+	}
+	recordManageAudit(c, "user.batch_disable", map[string]interface{}{"count": disabledCount})
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "", "data": gin.H{
+		"requested": len(ids), "disabled": disabledCount,
+	}})
 }
 
 func canManageTargetRole(myRole int, targetRole int) bool {

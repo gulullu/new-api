@@ -37,6 +37,11 @@ return {1, count, ttl}
 
 var inMemoryRateLimiter common.InMemoryRateLimiter
 
+// ErrRegistrationRateLimited is returned by OAuth account creation after the
+// limiter has already written and aborted the response. Callers must stop
+// without writing a second response.
+var ErrRegistrationRateLimited = errors.New("registration rate limit exceeded")
+
 var defNext = func(c *gin.Context) {
 	c.Next()
 }
@@ -155,6 +160,66 @@ func rateLimitFactory(maxRequestNum int, duration int64, mark string) func(c *gi
 	return func(c *gin.Context) {
 		memoryRateLimiter(c, maxRequestNum, duration, mark)
 	}
+}
+
+// checkRegistrationRateLimit consumes one new-account slot. It is called only
+// after request validation and after confirming that a new account is needed,
+// so existing OAuth logins do not consume the allowance.
+func checkRegistrationRateLimit(c *gin.Context, key, memoryKey string, maxRequestNum int, duration int64) bool {
+	if common.RedisEnabled {
+		allowed, _, ttlSeconds, err := redisFixedWindowTake(c.Request.Context(), key, maxRequestNum, duration)
+		if err != nil {
+			logger.LogError(c.Request.Context(), fmt.Sprintf("registration rate limit check failed (key=%s): %v", key, err))
+			c.Status(http.StatusInternalServerError)
+			c.Abort()
+			return false
+		}
+		if !allowed {
+			writeRateLimited(c, ttlSeconds)
+			return false
+		}
+		return true
+	}
+
+	inMemoryRateLimiter.Init(common.RateLimitKeyExpirationDuration)
+	if !inMemoryRateLimiter.Request(memoryKey, maxRequestNum, duration) {
+		writeRateLimited(c, duration)
+		return false
+	}
+	return true
+}
+
+// RegistrationRateLimit limits new accounts per client IP in a 24-hour
+// window. The controller calls it after validation, not as a route middleware,
+// so malformed requests and existing OAuth logins are not counted.
+func RegistrationRateLimit(c *gin.Context) bool {
+	if !common.RegistrationRateLimitEnable {
+		return true
+	}
+	clientIP := c.ClientIP()
+	return checkRegistrationRateLimit(
+		c,
+		redisIPRateLimitKey("REG", clientIP),
+		"REG:"+clientIP,
+		common.RegistrationRateLimitNum,
+		common.RegistrationRateLimitDuration,
+	)
+}
+
+// RegistrationInviteRateLimit limits new accounts created with one inviter's
+// affiliate code. This closes the simple IP-rotation bypass while retaining a
+// separate, configurable allowance for normal referral use.
+func RegistrationInviteRateLimit(c *gin.Context, inviterID int) bool {
+	if !common.RegistrationRateLimitEnable || inviterID <= 0 {
+		return true
+	}
+	return checkRegistrationRateLimit(
+		c,
+		redisUserRateLimitKey("REG-AFF", inviterID),
+		fmt.Sprintf("REG-AFF:user:%d", inviterID),
+		common.RegistrationInviteRateLimitNum,
+		common.RegistrationInviteRateLimitDuration,
+	)
 }
 
 func GlobalWebRateLimit() func(c *gin.Context) {

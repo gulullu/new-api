@@ -5383,6 +5383,19 @@
     "Amount due": "Montant dû",
     "Checkout amount": "Montant du paiement",
     "Payment currency unavailable": "Devise du paiement indisponible",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Filter by username, name, email, or IP...": "Filtrer par nom d’utilisateur, nom, e-mail ou IP...",
+    "Suspicious IPs": "IP suspects",
+    "No suspicious IPs found": "Aucune IP suspecte trouvée",
+    "Filter users by this IP": "Filtrer les utilisateurs par cette IP",
+    "Add IP to blacklist": "Ajouter l’IP à la liste noire",
+    "IP added to blacklist": "IP ajoutée à la liste noire",
+    "IP removed from blacklist": "IP retirée de la liste noire",
+    "Failed to update IP blacklist": "Échec de la mise à jour de la liste noire IP",
+    "Batch disable": "Désactivation groupée",
+    "Disable selected users?": "Désactiver les utilisateurs sélectionnés ?",
+    "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "Leur accès à la connexion et à l’API sera immédiatement révoqué, mais leurs données et leur historique d’audit seront conservés.",
+    "Disabled {{count}} users": "{{count}} utilisateurs désactivés",
+    "Failed to disable users": "Échec de la désactivation des utilisateurs"
   }
 }

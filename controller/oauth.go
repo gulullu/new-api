@@ -206,6 +206,12 @@ func HandleOAuth(c *gin.Context) {
 			common.ApiErrorI18n(c, i18n.MsgUserRegisterDisabled)
 		case *OAuthEmailAlreadyTakenError:
 			common.ApiErrorI18n(c, i18n.MsgUserEmailAlreadyTaken)
+		case error:
+			if errors.Is(err, middleware.ErrRegistrationRateLimited) {
+				// The limiter already wrote and aborted the response.
+				return
+			}
+			common.ApiError(c, err)
 		default:
 			common.ApiError(c, err)
 		}
@@ -365,6 +371,9 @@ func findOrCreateOAuthUser(c *gin.Context, provider oauth.Provider, oauthUser *o
 	inviterId := 0
 	if affiliateCode != "" {
 		inviterId, _ = model.GetUserIdByAffCode(affiliateCode)
+	}
+	if !middleware.RegistrationRateLimit(c) || !middleware.RegistrationInviteRateLimit(c, inviterId) {
+		return nil, middleware.ErrRegistrationRateLimited
 	}
 
 	// Use transaction to ensure user creation and OAuth binding are atomic

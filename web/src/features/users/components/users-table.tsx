@@ -43,6 +43,7 @@ import type { User, UserSortBy } from '../types'
 import { DataTableBulkActions } from './data-table-bulk-actions'
 import { useUsersColumns } from './users-columns'
 import { useUsers } from './users-provider'
+import { SuspiciousIPToolbar } from './suspicious-ip-toolbar'
 
 const route = getRouteApi('/_authenticated/users/')
 
@@ -215,8 +216,9 @@ export function UsersTable() {
       skeletonKeyPrefix='users-skeleton'
       applyHeaderSize
       toolbarProps={{
-        searchPlaceholder: t('Filter by username, name or email...'),
+        searchPlaceholder: t('Filter by username, name, email, or IP...'),
         searchDebounceMs: 500,
+        leftActions: <SuspiciousIPToolbar table={table} />,
         filters: [
           {
             columnId: 'status',

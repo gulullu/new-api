@@ -110,6 +110,13 @@ export interface GetUsersResponse {
   }
 }
 
+export interface SuspiciousLoginIP {
+  ip: string
+  user_count: number
+  last_seen: number
+  blocked: boolean
+}
+
 export interface SearchUsersParams {
   keyword?: string
   group?: string

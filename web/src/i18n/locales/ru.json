@@ -5383,6 +5383,19 @@
     "Amount due": "Сумма к оплате",
     "Checkout amount": "Сумма заказа",
     "Payment currency unavailable": "Валюта платежа недоступна",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Filter by username, name, email, or IP...": "Фильтр по имени пользователя, имени, почте или IP...",
+    "Suspicious IPs": "Подозрительные IP",
+    "No suspicious IPs found": "Подозрительные IP не найдены",
+    "Filter users by this IP": "Фильтровать пользователей по этому IP",
+    "Add IP to blacklist": "Добавить IP в чёрный список",
+    "IP added to blacklist": "IP добавлен в чёрный список",
+    "IP removed from blacklist": "IP удалён из чёрного списка",
+    "Failed to update IP blacklist": "Не удалось обновить чёрный список IP",
+    "Batch disable": "Массовое отключение",
+    "Disable selected users?": "Отключить выбранных пользователей?",
+    "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "Доступ к входу и API будет немедленно отозван, но записи пользователей и история аудита сохранятся.",
+    "Disabled {{count}} users": "Отключено пользователей: {{count}}",
+    "Failed to disable users": "Не удалось отключить пользователей"
   }
 }

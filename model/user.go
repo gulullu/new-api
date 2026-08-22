@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
@@ -453,19 +454,35 @@ func SearchUsers(keyword string, group string, role *int, status *int, startIdx 
 	// 构建基础查询
 	query := tx.Unscoped().Model(&User{})
 
-	// 构建搜索条件
-	likeCondition := "username LIKE ? OR email LIKE ? OR display_name LIKE ?"
-	likeArgs := []interface{}{"%" + keyword + "%", "%" + keyword + "%", "%" + keyword + "%"}
+	// Exact IPv4/IPv6 searches are resolved against successful-login audit
+	// records, which are stored separately from users.
+	if parsedIP := net.ParseIP(strings.TrimSpace(keyword)); parsedIP != nil {
+		var userIDs []int
+		if LOG_DB == nil {
+			query = query.Where("1 = 0")
+		} else if err := LOG_DB.Model(&Log{}).
+			Where("type = ? AND ip = ?", LogTypeLogin, parsedIP.String()).
+			Distinct("user_id").Pluck("user_id", &userIDs).Error; err != nil {
+			tx.Rollback()
+			return nil, 0, err
+		} else if len(userIDs) == 0 {
+			query = query.Where("1 = 0")
+		} else {
+			query = query.Where("id IN ?", userIDs)
+		}
+	} else {
+		likeCondition := "username LIKE ? OR email LIKE ? OR display_name LIKE ?"
+		likeArgs := []interface{}{"%" + keyword + "%", "%" + keyword + "%", "%" + keyword + "%"}
 
-	// 尝试将关键字转换为整数ID
-	keywordInt, err := strconv.Atoi(keyword)
-	if err == nil {
-		// 如果是数字，同时搜索ID和其他字段
-		likeCondition = "id = ? OR " + likeCondition
-		likeArgs = append([]interface{}{keywordInt}, likeArgs...)
+		// 尝试将关键字转换为整数ID
+		keywordInt, err := strconv.Atoi(keyword)
+		if err == nil {
+			// 如果是数字，同时搜索ID和其他字段
+			likeCondition = "id = ? OR " + likeCondition
+			likeArgs = append([]interface{}{keywordInt}, likeArgs...)
+		}
+		query = query.Where("("+likeCondition+")", likeArgs...)
 	}
-
-	query = query.Where("("+likeCondition+")", likeArgs...)
 	if group != "" {
 		query = query.Where(commonGroupCol+" = ?", group)
 	}

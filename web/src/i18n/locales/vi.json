@@ -5383,6 +5383,19 @@
     "Amount due": "Số tiền phải trả",
     "Checkout amount": "Số tiền thanh toán",
     "Payment currency unavailable": "Không có thông tin tiền tệ thanh toán",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Filter by username, name, email, or IP...": "Lọc theo tên người dùng, tên, email hoặc IP...",
+    "Suspicious IPs": "IP đáng ngờ",
+    "No suspicious IPs found": "Không tìm thấy IP đáng ngờ",
+    "Filter users by this IP": "Lọc người dùng theo IP này",
+    "Add IP to blacklist": "Thêm IP vào danh sách đen",
+    "IP added to blacklist": "Đã thêm IP vào danh sách đen",
+    "IP removed from blacklist": "Đã xóa IP khỏi danh sách đen",
+    "Failed to update IP blacklist": "Không thể cập nhật danh sách đen IP",
+    "Batch disable": "Vô hiệu hóa hàng loạt",
+    "Disable selected users?": "Vô hiệu hóa người dùng đã chọn?",
+    "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "Quyền đăng nhập và sử dụng API sẽ bị thu hồi ngay, nhưng hồ sơ và lịch sử kiểm toán vẫn được giữ lại.",
+    "Disabled {{count}} users": "Đã vô hiệu hóa {{count}} người dùng",
+    "Failed to disable users": "Không thể vô hiệu hóa người dùng"
   }
 }

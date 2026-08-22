@@ -5383,6 +5383,19 @@
     "Amount due": "支払予定額",
     "Checkout amount": "決済金額",
     "Payment currency unavailable": "支払い通貨を確認できません",
-    "Zoom": "ズーム"
+    "Zoom": "ズーム",
+    "Filter by username, name, email, or IP...": "ユーザー名、名前、メール、IP で絞り込み...",
+    "Suspicious IPs": "不審な IP",
+    "No suspicious IPs found": "不審な IP はありません",
+    "Filter users by this IP": "この IP でユーザーを絞り込む",
+    "Add IP to blacklist": "IP をブラックリストに追加",
+    "IP added to blacklist": "IP をブラックリストに追加しました",
+    "IP removed from blacklist": "IP をブラックリストから削除しました",
+    "Failed to update IP blacklist": "IP ブラックリストの更新に失敗しました",
+    "Batch disable": "一括無効化",
+    "Disable selected users?": "選択したユーザーを無効化しますか？",
+    "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "ログインと API の利用権限を直ちに取り消しますが、ユーザー情報と監査履歴は保持されます。",
+    "Disabled {{count}} users": "{{count}} 人のユーザーを無効化しました",
+    "Failed to disable users": "ユーザーの一括無効化に失敗しました"
   }
 }

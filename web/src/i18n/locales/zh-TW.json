@@ -5383,6 +5383,19 @@
     "Amount due": "應付金額",
     "Checkout amount": "結帳金額",
     "Payment currency unavailable": "幣種不可用",
-    "Zoom": "縮放"
+    "Zoom": "縮放",
+    "Filter by username, name, email, or IP...": "按使用者名稱、姓名、電子郵件或 IP 篩選...",
+    "Suspicious IPs": "可疑 IP",
+    "No suspicious IPs found": "未發現可疑 IP",
+    "Filter users by this IP": "按此 IP 篩選使用者",
+    "Add IP to blacklist": "將 IP 加入黑名單",
+    "IP added to blacklist": "IP 已加入黑名單",
+    "IP removed from blacklist": "IP 已移出黑名單",
+    "Failed to update IP blacklist": "更新 IP 黑名單失敗",
+    "Batch disable": "批次停用",
+    "Disable selected users?": "確定停用選取的使用者嗎？",
+    "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "這會立即撤銷這些使用者的登入與 API 使用權限，但會保留使用者記錄與稽核歷史。",
+    "Disabled {{count}} users": "已停用 {{count}} 位使用者",
+    "Failed to disable users": "批次停用使用者失敗"
   }
 }
