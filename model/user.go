@@ -458,10 +458,14 @@ func SearchUsers(keyword string, group string, role *int, status *int, startIdx 
 	// records, which are stored separately from users.
 	if parsedIP := net.ParseIP(strings.TrimSpace(keyword)); parsedIP != nil {
 		var userIDs []int
+		ipCandidates := []string{strings.TrimSpace(keyword)}
+		if canonical := parsedIP.String(); canonical != ipCandidates[0] {
+			ipCandidates = append(ipCandidates, canonical)
+		}
 		if LOG_DB == nil {
 			query = query.Where("1 = 0")
 		} else if err := LOG_DB.Model(&Log{}).
-			Where("type = ? AND ip = ?", LogTypeLogin, parsedIP.String()).
+			Where("type = ? AND ip IN ?", LogTypeLogin, ipCandidates).
 			Distinct("user_id").Pluck("user_id", &userIDs).Error; err != nil {
 			tx.Rollback()
 			return nil, 0, err
