@@ -130,12 +130,6 @@ func InitEnv() {
 	CriticalRateLimitNum = GetEnvOrDefault("CRITICAL_RATE_LIMIT", 20)
 	CriticalRateLimitDuration = int64(GetEnvOrDefault("CRITICAL_RATE_LIMIT_DURATION", 20*60))
 
-	RegistrationRateLimitEnable = GetEnvOrDefaultBool("REGISTRATION_RATE_LIMIT_ENABLE", true)
-	RegistrationRateLimitNum = GetEnvOrDefault("REGISTRATION_RATE_LIMIT", 5)
-	RegistrationRateLimitDuration = int64(GetEnvOrDefault("REGISTRATION_RATE_LIMIT_DURATION", 24*60*60))
-	RegistrationInviteRateLimitNum = GetEnvOrDefault("REGISTRATION_INVITE_RATE_LIMIT", 5)
-	RegistrationInviteRateLimitDuration = int64(GetEnvOrDefault("REGISTRATION_INVITE_RATE_LIMIT_DURATION", 24*60*60))
-
 	SearchRateLimitEnable = GetEnvOrDefaultBool("SEARCH_RATE_LIMIT_ENABLE", true)
 	SearchRateLimitNum = GetEnvOrDefault("SEARCH_RATE_LIMIT", 10)
 	SearchRateLimitDuration = int64(GetEnvOrDefault("SEARCH_RATE_LIMIT_DURATION", 60))

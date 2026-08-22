@@ -5386,6 +5386,7 @@
     "Zoom": "ズーム",
     "Filter by username, name, email, or IP...": "ユーザー名、名前、メール、IP で絞り込み...",
     "Suspicious IPs": "不審な IP",
+    "IPs shared by multiple user accounts": "複数のユーザーアカウントで共有されている IP",
     "No suspicious IPs found": "不審な IP はありません",
     "Filter users by this IP": "この IP でユーザーを絞り込む",
     "Add IP to blacklist": "IP をブラックリストに追加",

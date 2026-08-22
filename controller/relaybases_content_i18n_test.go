@@ -42,7 +42,7 @@ func TestGetStatusLocalizesConfiguredContentByExplicitLocale(t *testing.T) {
 	settings.ApiInfoEnabled = true
 	settings.AnnouncementsEnabled = false
 	settings.FAQEnabled = true
-	settings.ApiInfo = `[{"id":1,"route":"标准 API（兼容性优先）","description":"经 Cloudflare 加速；长时间同步请求可能超时。"}]`
+	settings.ApiInfo = `[{"id":1,"route":"标准","description":"经 Cloudflare 加速。"}]`
 	settings.FAQ = `[{"id":1,"question":"RelayBases 是什么？","answer":"RelayBases 是面向开发者的 <strong>AI 模型统一接入网关</strong>。你只需要一个 API Key，就能在 Codex、VSCode、Cursor、Chatbox 等各种客户端中调用 GPT-5.4、Claude Opus 4.6 等模型——不用分别注册多个平台、管理多套密钥，也不用处理不同协议的兼容问题。网关层会自动完成 <strong>OpenAI ↔ Anthropic 的双向协议转换</strong>。"}]`
 	common.OptionMap = map[string]string{}
 
@@ -62,7 +62,7 @@ func TestGetStatusLocalizesConfiguredContentByExplicitLocale(t *testing.T) {
 	require.True(t, payload.Success)
 	require.Len(t, payload.Data.APIInfo, 1)
 	require.Len(t, payload.Data.FAQ, 1)
-	assert.Equal(t, "API standard (compatibilité maximale)", payload.Data.APIInfo[0]["route"])
+	assert.Equal(t, "Standard", payload.Data.APIInfo[0]["route"])
 	assert.Equal(t, "Qu’est-ce que RelayBases ?", payload.Data.FAQ[0]["question"])
 	assert.Contains(t, payload.Data.FAQ[0]["answer"], "passerelle unifiée")
 	assert.Equal(t, "fr", response.Header().Get("Content-Language"))

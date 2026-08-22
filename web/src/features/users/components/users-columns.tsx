@@ -123,6 +123,20 @@ export function useUsersColumns(): ColumnDef<User>[] {
       meta: { mobileTitle: true },
     },
     {
+      accessorKey: 'last_login_ip',
+      header: t('Last Login IP'),
+      cell: ({ row }) => {
+        const ip = row.getValue('last_login_ip') as string | undefined
+        return ip ? (
+          <LongText className='max-w-[180px] font-mono text-sm'>{ip}</LongText>
+        ) : (
+          <span className='text-muted-foreground text-sm'>-</span>
+        )
+      },
+      size: 190,
+      meta: { mobileOrder: 25 },
+    },
+    {
       accessorKey: 'status',
       header: t('Status'),
       cell: ({ row }) => {
@@ -253,20 +267,6 @@ export function useUsersColumns(): ColumnDef<User>[] {
         )
       },
       size: 180,
-      meta: { mobileHidden: true },
-    },
-    {
-      accessorKey: 'last_login_ip',
-      header: t('Last Login IP'),
-      cell: ({ row }) => {
-        const ip = row.getValue('last_login_ip') as string | undefined
-        return ip ? (
-          <LongText className='max-w-[160px] font-mono text-sm'>{ip}</LongText>
-        ) : (
-          <span className='text-muted-foreground text-sm'>-</span>
-        )
-      },
-      size: 170,
       meta: { mobileHidden: true },
     },
     {

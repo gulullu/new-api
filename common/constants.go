@@ -124,6 +124,10 @@ var TelegramBotName = ""
 var QuotaForNewUser = 0
 var QuotaForInviter = 0
 var QuotaForInvitee = 0
+// RegistrationIPBonusCredits is granted once per normalized source IP. It is
+// converted to the current quota unit at claim time so the policy stays in
+// credits even if QuotaPerUnit changes.
+const RegistrationIPBonusCredits = 0.25
 var ChannelDisableThreshold = 5.0
 var AutomaticDisableChannelEnabled = false
 var AutomaticEnableChannelEnabled = false
@@ -207,15 +211,6 @@ var (
 	CriticalRateLimitEnable   bool
 	CriticalRateLimitNum            = 20
 	CriticalRateLimitDuration int64 = 20 * 60
-
-	// Registration limits are separate from the short critical request
-	// limiter. They protect the free initial quota from batch account creation
-	// while leaving normal login and API traffic unaffected.
-	RegistrationRateLimitEnable             bool
-	RegistrationRateLimitNum                = 5
-	RegistrationRateLimitDuration     int64 = 24 * 60 * 60
-	RegistrationInviteRateLimitNum          = 5
-	RegistrationInviteRateLimitDuration int64 = 24 * 60 * 60
 
 	UploadRateLimitNum            = 10
 	UploadRateLimitDuration int64 = 60

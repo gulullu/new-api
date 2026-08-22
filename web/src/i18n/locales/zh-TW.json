@@ -5386,6 +5386,7 @@
     "Zoom": "縮放",
     "Filter by username, name, email, or IP...": "按使用者名稱、姓名、電子郵件或 IP 篩選...",
     "Suspicious IPs": "可疑 IP",
+    "IPs shared by multiple user accounts": "被多個使用者帳號共用的 IP",
     "No suspicious IPs found": "未發現可疑 IP",
     "Filter users by this IP": "按此 IP 篩選使用者",
     "Add IP to blacklist": "將 IP 加入黑名單",

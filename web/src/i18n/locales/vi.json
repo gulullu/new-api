@@ -5386,6 +5386,7 @@
     "Zoom": "Zoom",
     "Filter by username, name, email, or IP...": "Lọc theo tên người dùng, tên, email hoặc IP...",
     "Suspicious IPs": "IP đáng ngờ",
+    "IPs shared by multiple user accounts": "IP được nhiều tài khoản người dùng dùng chung",
     "No suspicious IPs found": "Không tìm thấy IP đáng ngờ",
     "Filter users by this IP": "Lọc người dùng theo IP này",
     "Add IP to blacklist": "Thêm IP vào danh sách đen",

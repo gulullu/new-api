@@ -92,27 +92,27 @@ var faqCatalog = map[string]faqTranslation{
 
 var apiInfoCatalog = map[string]apiInfoTranslation{
 	"1": {
-		route: leaf("af3852b3", translations(
-			"Standard API (Best Compatibility)", "标准 API（兼容性优先）", "標準 API（相容性優先）", "API standard (compatibilité maximale)", "標準 API（互換性優先）", "Стандартный API (лучшая совместимость)", "API tiêu chuẩn (tương thích tốt nhất)",
+		route: leaf("b3399ee0", translations(
+			"Standard", "标准", "標準", "Standard", "標準", "Стандарт", "Tiêu chuẩn",
 		)),
-		description: leaf("b4298487", translations(
-			"Cloudflare-accelerated; long-running synchronous requests may time out.", "经 Cloudflare 加速；长时间同步请求可能超时。", "經 Cloudflare 加速；長時間同步請求可能逾時。", "Accéléré par Cloudflare ; les longues requêtes synchrones peuvent expirer.", "Cloudflare で高速化されています。長時間の同期リクエストはタイムアウトする場合があります。", "Ускоряется Cloudflare; длительные синхронные запросы могут завершиться по тайм-ауту.", "Được tăng tốc qua Cloudflare; yêu cầu đồng bộ chạy lâu có thể hết thời gian chờ.",
+		description: leaf("c2227d64", translations(
+			"Cloudflare accelerated.", "经 Cloudflare 加速。", "經 Cloudflare 加速。", "Accéléré par Cloudflare.", "Cloudflare で高速化。", "Ускорение через Cloudflare.", "Được tăng tốc qua Cloudflare.",
 		)),
 	},
 	"2": {
-		route: leaf("b2d90022", translations(
-			"RelayBases Media API endpoint for image and video tasks.", "RelayBases 媒体 API，供图片与视频任务使用。", "RelayBases 媒體 API，供圖片與影片任務使用。", "Point de terminaison RelayBases Media API pour les tâches d’image et de vidéo.", "画像・動画タスク向け RelayBases Media API エンドポイント。", "Эндпоинт RelayBases Media API для задач с изображениями и видео.", "Điểm cuối RelayBases Media API cho tác vụ hình ảnh và video.",
+		route: leaf("d504ab52", translations(
+			"Media", "媒体", "媒體", "Média", "メディア", "Медиа", "Media",
 		)),
-		description: leaf("5e7b9936", translations(
-			"Dedicated image and video API endpoint", "图片与视频专用 API 地址", "圖片與影片專用 API 位址", "Point de terminaison API dédié aux images et vidéos", "画像・動画専用 API エンドポイント", "Выделенный API-эндпоинт для изображений и видео", "Điểm cuối API riêng cho hình ảnh và video",
+		description: leaf("d1eca534", translations(
+			"For images and video.", "图片与视频专用。", "圖片與影片專用。", "Pour les images et les vidéos.", "画像・動画専用。", "Для изображений и видео.", "Dành riêng cho hình ảnh và video.",
 		)),
 	},
 	"3": {
-		route: leaf("3af25111", translations(
-			"US Direct API (Long Requests)", "美国直连 API（长请求优先）", "美國直連 API（長請求優先）", "API direct États-Unis (requêtes longues)", "米国直結 API（長時間リクエスト向け）", "Прямой API в США (длительные запросы)", "API kết nối trực tiếp tại Mỹ (yêu cầu dài)",
+		route: leaf("b40a3147", translations(
+			"Direct", "直连", "直連", "Direct", "直結", "Прямой", "Trực tiếp",
 		)),
-		description: leaf("9413fcb1", translations(
-			"Direct origin connection without Cloudflare proxy timeouts; it may be unreachable from some networks.", "直连源站，不受 Cloudflare 代理超时限制；部分网络环境可能无法访问。", "直連來源站，不受 Cloudflare Proxy 逾時限制；部分網路環境可能無法存取。", "Connexion directe à l’origine, sans délai d’expiration du proxy Cloudflare ; elle peut être inaccessible depuis certains réseaux.", "オリジンへ直接接続するため Cloudflare プロキシのタイムアウトを受けません。一部のネットワークからは到達できない場合があります。", "Прямое подключение к исходному серверу без тайм-аутов прокси Cloudflare; в некоторых сетях оно может быть недоступно.", "Kết nối trực tiếp đến máy chủ gốc, không bị giới hạn thời gian chờ của proxy Cloudflare; một số mạng có thể không truy cập được.",
+		description: leaf("f4b421fd", translations(
+			"Not subject to Cloudflare timeouts.", "不受 Cloudflare 超时限制。", "不受 Cloudflare 逾時限制。", "Non soumis aux délais d’expiration de Cloudflare.", "Cloudflare のタイムアウト対象外。", "Без ограничений тайм-аутов Cloudflare.", "Không bị giới hạn thời gian chờ của Cloudflare.",
 		)),
 	},
 }

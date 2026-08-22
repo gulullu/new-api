@@ -5386,6 +5386,7 @@
     "Zoom": "Zoom",
     "Filter by username, name, email, or IP...": "Filtrer par nom d’utilisateur, nom, e-mail ou IP...",
     "Suspicious IPs": "IP suspects",
+    "IPs shared by multiple user accounts": "IP partagées par plusieurs comptes utilisateur",
     "No suspicious IPs found": "Aucune IP suspecte trouvée",
     "Filter users by this IP": "Filtrer les utilisateurs par cette IP",
     "Add IP to blacklist": "Ajouter l’IP à la liste noire",

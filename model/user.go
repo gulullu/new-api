@@ -111,6 +111,9 @@ type User struct {
 	// LastLoginIP is populated for admin user-list responses from the login
 	// audit log. It is intentionally not persisted on the users table.
 	LastLoginIP      string                     `json:"last_login_ip,omitempty" gorm:"-"`
+	// RegistrationIP is request-scoped and used only while creating a new
+	// account to claim the one-time IP registration credit.
+	RegistrationIP   string                     `json:"-" gorm:"-"`
 	AuthVersion      int64                      `json:"-" gorm:"type:bigint;not null;default:1;column:auth_version"`
 	AdminPermissions map[string]map[string]bool `json:"admin_permissions,omitempty" gorm:"-:all"`
 	// QualifiedReferralInvitees is the distinct number of referred users with an
@@ -734,7 +737,11 @@ func (user *User) Insert(inviterId int) error {
 				return err
 			}
 			user.InviterId = inviterId
-			user.Quota = common.QuotaForNewUser
+			if user.RegistrationIP != "" {
+				user.Quota = 0
+			} else {
+				user.Quota = common.QuotaForNewUser
+			}
 			user.AffCode = common.GetRandomString(4)
 
 			// 初始化用户设置，包括默认的边栏配置
@@ -744,7 +751,20 @@ func (user *User) Insert(inviterId int) error {
 				user.SetSetting(defaultSetting)
 			}
 
-			return tx.Create(user).Error
+			if err := tx.Create(user).Error; err != nil {
+				return err
+			}
+			if user.RegistrationIP != "" {
+				bonus, claimed, err := claimRegistrationIPBonus(tx, user.RegistrationIP, user.Id)
+				if err != nil {
+					return err
+				}
+				if claimed {
+					user.Quota = bonus
+					return tx.Model(&User{}).Where("id = ?", user.Id).Update("quota", bonus).Error
+				}
+			}
+			return nil
 		})
 	}); err != nil {
 		return err
@@ -770,8 +790,8 @@ func (user *User) finishInsert(inviterId int) {
 		}
 	}
 
-	if common.QuotaForNewUser > 0 {
-		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(common.QuotaForNewUser)))
+	if user.Quota > 0 {
+		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(user.Quota)))
 	}
 	// Referral registration no longer grants quota. The inviter is rewarded
 	// only when this user completes their first qualifying real payment.
@@ -790,7 +810,11 @@ func (user *User) InsertWithTx(tx *gorm.DB, inviterId int) error {
 			return err
 		}
 		user.InviterId = inviterId
-		user.Quota = common.QuotaForNewUser
+		if user.RegistrationIP != "" {
+			user.Quota = 0
+		} else {
+			user.Quota = common.QuotaForNewUser
+		}
 		user.AffCode = common.GetRandomString(4)
 
 		// 初始化用户设置
@@ -799,7 +823,20 @@ func (user *User) InsertWithTx(tx *gorm.DB, inviterId int) error {
 			user.SetSetting(defaultSetting)
 		}
 
-		return tx.Create(user).Error
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+		if user.RegistrationIP != "" {
+			bonus, claimed, err := claimRegistrationIPBonus(tx, user.RegistrationIP, user.Id)
+			if err != nil {
+				return err
+			}
+			if claimed {
+				user.Quota = bonus
+				return tx.Model(&User{}).Where("id = ?", user.Id).Update("quota", bonus).Error
+			}
+		}
+		return nil
 	})
 }
 
@@ -819,8 +856,8 @@ func (user *User) FinalizeOAuthUserCreation(inviterId int) {
 		}
 	}
 
-	if common.QuotaForNewUser > 0 {
-		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(common.QuotaForNewUser)))
+	if user.Quota > 0 {
+		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(user.Quota)))
 	}
 	// Referral registration no longer grants quota. The inviter is rewarded
 	// only when this user completes their first qualifying real payment.
