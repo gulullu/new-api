@@ -24,9 +24,12 @@ const (
 // 1 === ￥0.014 / 1k tokens
 
 var defaultModelRatio = map[string]float64{
-	// Gemini 3.7 Flash introductory standard input price: Ɍ0.75 / MTok.
-	// New API's ratio base is Ɍ2 / MTok, so 0.75 / 2 = 0.375.
-	"gemini-3.7-flash": 0.375,
+	// Gemini 3.7 Flash high/low routes share the introductory input price:
+	// Ɍ0.75 / MTok. New API's ratio base is Ɍ2 / MTok, so 0.75 / 2 = 0.375.
+	// Keep the unsuffixed name as a compatibility alias for existing requests.
+	"gemini-3.7-flash":      0.375,
+	"gemini-3.7-flash-high": 0.375,
+	"gemini-3.7-flash-low":  0.375,
 	// DeepSeek V4 peak input prices: Flash Ɍ3 / MTok, Pro Ɍ9 / MTok.
 	// New API's ratio base is Ɍ2 / MTok.
 	"deepseek-v4-flash": 3.0 / 2,
@@ -338,8 +341,10 @@ var modelRatioMap = types.NewRWMap[string, float64]()
 var completionRatioMap = types.NewRWMap[string, float64]()
 
 var defaultCompletionRatio = map[string]float64{
-	// Gemini 3.7 Flash output/input ratio: Ɍ3.75 / Ɍ0.75.
-	"gemini-3.7-flash": 5,
+	// Gemini 3.7 Flash high/low output/input ratio: Ɍ3.75 / Ɍ0.75.
+	"gemini-3.7-flash":      5,
+	"gemini-3.7-flash-high": 5,
+	"gemini-3.7-flash-low":  5,
 	// DeepSeek V4 peak output/input ratios: Flash Ɍ9 / Ɍ3, Pro Ɍ27 / Ɍ9.
 	"deepseek-v4-flash": 3,
 	"deepseek-v4-pro":   3,
