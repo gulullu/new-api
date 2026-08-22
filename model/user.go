@@ -107,6 +107,9 @@ type User struct {
 	StripeCustomer   string                     `json:"stripe_customer" gorm:"type:varchar(64);column:stripe_customer;index"`
 	CreatedAt        int64                      `json:"created_at" gorm:"autoCreateTime;column:created_at"`
 	LastLoginAt      int64                      `json:"last_login_at" gorm:"default:0;column:last_login_at"`
+	// LastLoginIP is populated for admin user-list responses from the login
+	// audit log. It is intentionally not persisted on the users table.
+	LastLoginIP      string                     `json:"last_login_ip,omitempty" gorm:"-"`
 	AuthVersion      int64                      `json:"-" gorm:"type:bigint;not null;default:1;column:auth_version"`
 	AdminPermissions map[string]map[string]bool `json:"admin_permissions,omitempty" gorm:"-:all"`
 	// QualifiedReferralInvitees is the distinct number of referred users with an
@@ -426,6 +429,7 @@ func GetAllUsers(pageInfo *common.PageInfo, sortOptions ...UserSortOptions) (use
 	if err = tx.Commit().Error; err != nil {
 		return nil, 0, err
 	}
+	PopulateLastLoginIPs(users)
 
 	return users, total, nil
 }
@@ -499,6 +503,7 @@ func SearchUsers(keyword string, group string, role *int, status *int, startIdx 
 	if err = tx.Commit().Error; err != nil {
 		return nil, 0, err
 	}
+	PopulateLastLoginIPs(users)
 
 	return users, total, nil
 }

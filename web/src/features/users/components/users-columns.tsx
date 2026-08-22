@@ -256,6 +256,20 @@ export function useUsersColumns(): ColumnDef<User>[] {
       meta: { mobileHidden: true },
     },
     {
+      accessorKey: 'last_login_ip',
+      header: t('Last Login IP'),
+      cell: ({ row }) => {
+        const ip = row.getValue('last_login_ip') as string | undefined
+        return ip ? (
+          <LongText className='max-w-[160px] font-mono text-sm'>{ip}</LongText>
+        ) : (
+          <span className='text-muted-foreground text-sm'>-</span>
+        )
+      },
+      size: 170,
+      meta: { mobileHidden: true },
+    },
+    {
       id: 'actions',
       header: () => t('Actions'),
       cell: ({ row }) => <DataTableRowActions row={row} />,

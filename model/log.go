@@ -220,6 +220,75 @@ func RecordLoginLog(userId int, username string, content string, ip string, acti
 	}
 }
 
+// PopulateLastLoginIPs adds the most recent successful-login IP to a page of
+// users for the admin user list. Login IPs live in the audit log database, not
+// in the users table, so this keeps the user schema and authentication flow
+// unchanged. A log-store failure is deliberately non-fatal: the user list
+// remains usable and simply omits the optional IP values.
+func PopulateLastLoginIPs(users []*User) {
+	if LOG_DB == nil || len(users) == 0 {
+		return
+	}
+
+	ids := make([]int, 0, len(users))
+	for _, user := range users {
+		if user != nil && user.Id > 0 {
+			ids = append(ids, user.Id)
+		}
+	}
+	if len(ids) == 0 {
+		return
+	}
+
+	type latestLogin struct {
+		UserId    int   `gorm:"column:user_id"`
+		CreatedAt int64 `gorm:"column:latest_created_at"`
+	}
+	var latest []latestLogin
+	if err := LOG_DB.Model(&Log{}).
+		Select("user_id, MAX(created_at) AS latest_created_at").
+		Where("type = ? AND ip <> '' AND user_id IN ?", LogTypeLogin, ids).
+		Group("user_id").
+		Scan(&latest).Error; err != nil {
+		common.SysLog("failed to load latest user login IP timestamps: " + err.Error())
+		return
+	}
+	if len(latest) == 0 {
+		return
+	}
+
+	latestByUser := make(map[int]int64, len(latest))
+	timestamps := make([]int64, 0, len(latest))
+	for _, item := range latest {
+		latestByUser[item.UserId] = item.CreatedAt
+		timestamps = append(timestamps, item.CreatedAt)
+	}
+
+	var logs []Log
+	if err := LOG_DB.Model(&Log{}).
+		Select("user_id, created_at, ip").
+		Where("type = ? AND ip <> '' AND user_id IN ? AND created_at IN ?", LogTypeLogin, ids, timestamps).
+		Order("created_at desc").
+		Find(&logs).Error; err != nil {
+		common.SysLog("failed to load latest user login IPs: " + err.Error())
+		return
+	}
+
+	ipByUser := make(map[int]string, len(logs))
+	for _, log := range logs {
+		if latestByUser[log.UserId] == log.CreatedAt {
+			if _, exists := ipByUser[log.UserId]; !exists {
+				ipByUser[log.UserId] = log.Ip
+			}
+		}
+	}
+	for _, user := range users {
+		if user != nil {
+			user.LastLoginIP = ipByUser[user.Id]
+		}
+	}
+}
+
 // RecordOperationAuditLog 记录管理/高危操作审计日志（type=LogTypeManage）。
 // logUserId 为日志归属者，管理审计日志应归属实际操作者；目标资源/用户放入
 // action params。username 内部按 logUserId 查询。content 为英文兜底文本（供导出使用）。
