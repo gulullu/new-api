@@ -28,6 +28,7 @@ import { NoticeSection } from '../maintenance/notice-section'
 import { SidebarModulesSection } from '../maintenance/sidebar-modules-section'
 import type { SiteSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
+import { SiteAccessControlSection } from './site-access-control-section'
 
 const SITE_SECTIONS = [
   {
@@ -86,6 +87,11 @@ const SITE_SECTIONS = [
         />
       )
     },
+  },
+  {
+    id: 'access-control',
+    titleKey: 'Website access control',
+    build: () => <SiteAccessControlSection />,
   },
 ] as const
 

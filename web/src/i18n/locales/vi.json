@@ -5397,6 +5397,17 @@
     "Disable selected users?": "Vô hiệu hóa người dùng đã chọn?",
     "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "Quyền đăng nhập và sử dụng API sẽ bị thu hồi ngay, nhưng hồ sơ và lịch sử kiểm toán vẫn được giữ lại.",
     "Disabled {{count}} users": "Đã vô hiệu hóa {{count}} người dùng",
-    "Failed to disable users": "Không thể vô hiệu hóa người dùng"
+    "Failed to disable users": "Không thể vô hiệu hóa người dùng",
+    "Updated mainland website access policy to {{enabled}}": "Đã cập nhật chính sách truy cập website từ Trung Quốc đại lục thành {{enabled}}",
+    "Website access control": "Kiểm soát truy cập website",
+    "Block mainland China website access": "Chặn truy cập website từ Trung Quốc đại lục",
+    "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.": "Chỉ các trang web trên relaybases.com bị ảnh hưởng. Yêu cầu API, tuyến hình ảnh và callback thanh toán vẫn khả dụng.",
+    "Currently blocked for mainland China IPs.": "Hiện đang chặn IP từ Trung Quốc đại lục.",
+    "Currently allowed for mainland China IPs.": "Hiện đang cho phép IP từ Trung Quốc đại lục.",
+    "Policy unavailable; the Worker is keeping the block enabled.": "Không thể tải chính sách; Worker đang giữ trạng thái chặn.",
+    "Failed to load website access policy": "Không thể tải chính sách truy cập website",
+    "Failed to update website access policy": "Không thể cập nhật chính sách truy cập website",
+    "Mainland website access is blocked": "Đã chặn truy cập website từ Trung Quốc đại lục",
+    "Mainland website access is allowed": "Đã cho phép truy cập website từ Trung Quốc đại lục"
   }
 }

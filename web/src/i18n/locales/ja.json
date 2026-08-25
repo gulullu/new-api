@@ -5397,6 +5397,17 @@
     "Disable selected users?": "選択したユーザーを無効化しますか？",
     "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "ログインと API の利用権限を直ちに取り消しますが、ユーザー情報と監査履歴は保持されます。",
     "Disabled {{count}} users": "{{count}} 人のユーザーを無効化しました",
-    "Failed to disable users": "ユーザーの一括無効化に失敗しました"
+    "Failed to disable users": "ユーザーの一括無効化に失敗しました",
+    "Updated mainland website access policy to {{enabled}}": "中国本土からのウェブサイトアクセス・ポリシーを{{enabled}}に更新しました",
+    "Website access control": "ウェブサイトアクセス制御",
+    "Block mainland China website access": "中国本土からのウェブサイトアクセスをブロック",
+    "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.": "relaybases.com のウェブページのみが対象です。API リクエスト、画像ルート、決済コールバックは引き続き利用できます。",
+    "Currently blocked for mainland China IPs.": "現在、中国本土の IP はブロックされています。",
+    "Currently allowed for mainland China IPs.": "現在、中国本土の IP は許可されています。",
+    "Policy unavailable; the Worker is keeping the block enabled.": "ポリシーを利用できないため、Worker はブロックを有効なまま維持しています。",
+    "Failed to load website access policy": "ウェブサイトアクセス・ポリシーの読み込みに失敗しました",
+    "Failed to update website access policy": "ウェブサイトアクセス・ポリシーの更新に失敗しました",
+    "Mainland website access is blocked": "中国本土からのウェブサイトアクセスをブロックしました",
+    "Mainland website access is allowed": "中国本土からのウェブサイトアクセスを許可しました"
   }
 }

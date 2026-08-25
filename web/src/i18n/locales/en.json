@@ -5397,6 +5397,17 @@
     "Disable selected users?": "Disable selected users?",
     "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.",
     "Disabled {{count}} users": "Disabled {{count}} users",
-    "Failed to disable users": "Failed to disable users"
+    "Failed to disable users": "Failed to disable users",
+    "Updated mainland website access policy to {{enabled}}": "Updated mainland website access policy to {{enabled}}",
+    "Website access control": "Website access control",
+    "Block mainland China website access": "Block mainland China website access",
+    "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.": "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.",
+    "Currently blocked for mainland China IPs.": "Currently blocked for mainland China IPs.",
+    "Currently allowed for mainland China IPs.": "Currently allowed for mainland China IPs.",
+    "Policy unavailable; the Worker is keeping the block enabled.": "Policy unavailable; the Worker is keeping the block enabled.",
+    "Failed to load website access policy": "Failed to load website access policy",
+    "Failed to update website access policy": "Failed to update website access policy",
+    "Mainland website access is blocked": "Mainland website access is blocked",
+    "Mainland website access is allowed": "Mainland website access is allowed"
   }
 }

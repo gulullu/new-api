@@ -5397,6 +5397,17 @@
     "Disable selected users?": "Désactiver les utilisateurs sélectionnés ?",
     "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "Leur accès à la connexion et à l’API sera immédiatement révoqué, mais leurs données et leur historique d’audit seront conservés.",
     "Disabled {{count}} users": "{{count}} utilisateurs désactivés",
-    "Failed to disable users": "Échec de la désactivation des utilisateurs"
+    "Failed to disable users": "Échec de la désactivation des utilisateurs",
+    "Updated mainland website access policy to {{enabled}}": "Politique d’accès au site depuis la Chine continentale définie sur {{enabled}}",
+    "Website access control": "Contrôle d’accès au site",
+    "Block mainland China website access": "Bloquer l’accès au site depuis la Chine continentale",
+    "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.": "Seules les pages web de relaybases.com sont concernées. Les requêtes API, les routes d’images et les retours de paiement restent disponibles.",
+    "Currently blocked for mainland China IPs.": "Actuellement bloqué pour les IP de Chine continentale.",
+    "Currently allowed for mainland China IPs.": "Actuellement autorisé pour les IP de Chine continentale.",
+    "Policy unavailable; the Worker is keeping the block enabled.": "Politique indisponible ; le Worker maintient le blocage activé.",
+    "Failed to load website access policy": "Échec du chargement de la politique d’accès au site",
+    "Failed to update website access policy": "Échec de la mise à jour de la politique d’accès au site",
+    "Mainland website access is blocked": "Accès au site bloqué depuis la Chine continentale",
+    "Mainland website access is allowed": "Accès au site autorisé depuis la Chine continentale"
   }
 }

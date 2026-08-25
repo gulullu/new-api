@@ -5397,6 +5397,17 @@
     "Disable selected users?": "確定停用選取的使用者嗎？",
     "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "這會立即撤銷這些使用者的登入與 API 使用權限，但會保留使用者記錄與稽核歷史。",
     "Disabled {{count}} users": "已停用 {{count}} 位使用者",
-    "Failed to disable users": "批次停用使用者失敗"
+    "Failed to disable users": "批次停用使用者失敗",
+    "Updated mainland website access policy to {{enabled}}": "已將中國大陸網站存取策略更新為{{enabled}}",
+    "Website access control": "網站存取控制",
+    "Block mainland China website access": "封鎖中國大陸網站存取",
+    "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.": "僅影響 relaybases.com 的網站頁面。API 請求、圖片路由和付款回呼仍可用。",
+    "Currently blocked for mainland China IPs.": "目前已封鎖中國大陸 IP。",
+    "Currently allowed for mainland China IPs.": "目前允許中國大陸 IP。",
+    "Policy unavailable; the Worker is keeping the block enabled.": "設定不可用；Worker 正在維持封鎖狀態。",
+    "Failed to load website access policy": "載入網站存取策略失敗",
+    "Failed to update website access policy": "更新網站存取策略失敗",
+    "Mainland website access is blocked": "已封鎖中國大陸網站存取",
+    "Mainland website access is allowed": "已允許中國大陸網站存取"
   }
 }

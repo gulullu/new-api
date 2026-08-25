@@ -36,6 +36,34 @@ export async function getSystemOptions() {
   return res.data
 }
 
+export type SiteAccessPolicy = {
+  enabled: boolean
+  configured: boolean
+  degraded: boolean
+  updated_at?: number | null
+  updated_by?: number | null
+}
+
+type SiteAccessPolicyResponse = {
+  success: boolean
+  message: string
+  data?: SiteAccessPolicy
+}
+
+export async function getSiteAccessPolicy() {
+  const res = await api.get<SiteAccessPolicyResponse>('/api/site-access-policy', {
+    disableDuplicate: true,
+  })
+  return res.data
+}
+
+export async function updateSiteAccessPolicy(enabled: boolean) {
+  const res = await api.put<SiteAccessPolicyResponse>('/api/site-access-policy', {
+    enabled,
+  })
+  return res.data
+}
+
 export async function updateSystemOption(request: UpdateOptionRequest) {
   const res = await api.put<UpdateOptionResponse>('/api/option/', request)
   return res.data

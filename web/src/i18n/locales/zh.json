@@ -5397,6 +5397,17 @@
     "Disable selected users?": "确定禁用选中的用户吗？",
     "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "这会立即撤销这些用户的登录和 API 使用权限，但会保留用户记录与审计历史。",
     "Disabled {{count}} users": "已禁用 {{count}} 个用户",
-    "Failed to disable users": "批量禁用用户失败"
+    "Failed to disable users": "批量禁用用户失败",
+    "Updated mainland website access policy to {{enabled}}": "已将中国大陆网站访问策略更新为{{enabled}}",
+    "Website access control": "网站访问控制",
+    "Block mainland China website access": "屏蔽中国大陆网站访问",
+    "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.": "仅影响 relaybases.com 的网站页面。API 请求、图片路由和支付回调仍可用。",
+    "Currently blocked for mainland China IPs.": "当前已屏蔽中国大陆 IP。",
+    "Currently allowed for mainland China IPs.": "当前允许中国大陆 IP。",
+    "Policy unavailable; the Worker is keeping the block enabled.": "配置不可用；Worker 正在保持屏蔽状态。",
+    "Failed to load website access policy": "加载网站访问策略失败",
+    "Failed to update website access policy": "更新网站访问策略失败",
+    "Mainland website access is blocked": "已屏蔽中国大陆网站访问",
+    "Mainland website access is allowed": "已允许中国大陆网站访问"
   }
 }

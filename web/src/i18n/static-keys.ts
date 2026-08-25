@@ -106,6 +106,17 @@ export const STATIC_I18N_KEYS = [
   'Models',
   'Routing Reliability',
   'Maintenance',
+  'Website access control',
+  'Block mainland China website access',
+  'Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.',
+  'Currently blocked for mainland China IPs.',
+  'Currently allowed for mainland China IPs.',
+  'Policy unavailable; the Worker is keeping the block enabled.',
+  'Failed to load website access policy',
+  'Failed to update website access policy',
+  'Mainland website access is blocked',
+  'Mainland website access is allowed',
+  'Updated mainland website access policy to {{enabled}}',
 
   // System info
   'online',

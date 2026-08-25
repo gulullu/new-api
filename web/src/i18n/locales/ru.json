@@ -5397,6 +5397,17 @@
     "Disable selected users?": "Отключить выбранных пользователей?",
     "This will immediately revoke their ability to log in or use the API. Their records and audit history will be retained.": "Доступ к входу и API будет немедленно отозван, но записи пользователей и история аудита сохранятся.",
     "Disabled {{count}} users": "Отключено пользователей: {{count}}",
-    "Failed to disable users": "Не удалось отключить пользователей"
+    "Failed to disable users": "Не удалось отключить пользователей",
+    "Updated mainland website access policy to {{enabled}}": "Политика доступа к сайту из материкового Китая обновлена: {{enabled}}",
+    "Website access control": "Управление доступом к сайту",
+    "Block mainland China website access": "Заблокировать доступ к сайту из материкового Китая",
+    "Only website pages on relaybases.com are affected. API requests, image routes, and payment callbacks remain available.": "Изменяются только веб-страницы relaybases.com. API-запросы, маршруты изображений и платёжные callback-запросы остаются доступными.",
+    "Currently blocked for mainland China IPs.": "Сейчас IP-адреса материкового Китая заблокированы.",
+    "Currently allowed for mainland China IPs.": "Сейчас IP-адреса материкового Китая разрешены.",
+    "Policy unavailable; the Worker is keeping the block enabled.": "Политика недоступна; Worker сохраняет блокировку включённой.",
+    "Failed to load website access policy": "Не удалось загрузить политику доступа к сайту",
+    "Failed to update website access policy": "Не удалось обновить политику доступа к сайту",
+    "Mainland website access is blocked": "Доступ к сайту из материкового Китая заблокирован",
+    "Mainland website access is allowed": "Доступ к сайту из материкового Китая разрешён"
   }
 }
