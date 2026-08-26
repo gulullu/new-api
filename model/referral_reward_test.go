@@ -833,8 +833,8 @@ func TestReferralRewardWithholdsOverflowWithoutFailingPayment(t *testing.T) {
 	truncateTables(t)
 	createReferralRewardUsers(t, 5701, 5702)
 	require.NoError(t, DB.Model(&User{}).Where("id = ?", 5701).Updates(map[string]interface{}{
-		"aff_quota":   common.MaxQuota - 1,
-		"aff_history": common.MaxQuota - 1,
+		"aff_quota":   common.MaxWalletQuota - 1,
+		"aff_history": common.MaxWalletQuota - 1,
 	}).Error)
 	topUp := createReferralTopUp(t, 5702, "reward-overflow-payment", PaymentProviderEpay, common.TopUpStatusPending)
 	payment, err := NewVerifiedPayment("90", "CNY", "overflow-event", "overflow-payment", true)
@@ -847,8 +847,8 @@ func TestReferralRewardWithholdsOverflowWithoutFailingPayment(t *testing.T) {
 
 	var inviter User
 	require.NoError(t, DB.First(&inviter, 5701).Error)
-	assert.Equal(t, common.MaxQuota-1, inviter.AffQuota)
-	assert.Equal(t, common.MaxQuota-1, inviter.AffHistoryQuota)
+	assert.Equal(t, common.MaxWalletQuota-1, inviter.AffQuota)
+	assert.Equal(t, common.MaxWalletQuota-1, inviter.AffHistoryQuota)
 	assert.Zero(t, inviter.AffCount)
 
 	var claim ReferralRewardClaim
@@ -863,6 +863,74 @@ func TestReferralRewardWithholdsOverflowWithoutFailingPayment(t *testing.T) {
 	var claimCount int64
 	require.NoError(t, DB.Model(&ReferralRewardClaim{}).Where("invitee_id = ?", 5702).Count(&claimCount).Error)
 	assert.Equal(t, int64(1), claimCount)
+}
+
+func TestReferralRewardWalletOverflowDoesNotRollbackPayment(t *testing.T) {
+	oldQuotaPerUnit := common.QuotaPerUnit
+	common.QuotaPerUnit = 500000
+	t.Cleanup(func() { common.QuotaPerUnit = oldQuotaPerUnit })
+
+	truncateTables(t)
+	createReferralRewardUsers(t, 5711, 5712)
+	require.NoError(t, DB.Model(&User{}).Where("id = ?", 5711).Updates(map[string]interface{}{
+		"aff_quota":   common.MaxWalletQuota - 1,
+		"aff_history": common.MaxWalletQuota - 1,
+	}).Error)
+	topUp := createReferralTopUp(t, 5712, "reward-wallet-overflow-payment", PaymentProviderEpay, common.TopUpStatusPending)
+	payment, err := NewVerifiedPayment("200000", "CNY", "wallet-overflow-event", "wallet-overflow-payment", true)
+	require.NoError(t, err)
+	require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+
+	var updatedTopUp TopUp
+	require.NoError(t, DB.First(&updatedTopUp, topUp.Id).Error)
+	assert.Equal(t, common.TopUpStatusSuccess, updatedTopUp.Status)
+	var buyer User
+	require.NoError(t, DB.First(&buyer, 5712).Error)
+	assert.Equal(t, topUp.Amount*int64(common.QuotaPerUnit), int64(buyer.Quota))
+
+	var claim ReferralRewardClaim
+	require.NoError(t, DB.Where("invitee_id = ?", 5712).First(&claim).Error)
+	wantReward, err := common.WalletQuotaFromDecimalStrict(decimal.NewFromInt(200000).
+		Mul(decimal.NewFromInt(ReferralRewardBasisPoints)).
+		Div(decimal.NewFromInt(10000)).
+		Mul(decimal.NewFromFloat(common.QuotaPerUnit)).
+		Floor())
+	require.NoError(t, err)
+	assert.Equal(t, wantReward, claim.RewardQuota)
+	assert.Equal(t, ReferralRewardStatusWithheld, claim.Status)
+	var inviter User
+	require.NoError(t, DB.First(&inviter, 5711).Error)
+	assert.Equal(t, common.MaxWalletQuota-1, inviter.AffQuota)
+	assert.Equal(t, common.MaxWalletQuota-1, inviter.AffHistoryQuota)
+}
+
+func TestReferralRewardLargeWalletQuotaCanBeAwarded(t *testing.T) {
+	oldQuotaPerUnit := common.QuotaPerUnit
+	common.QuotaPerUnit = 500000
+	t.Cleanup(func() { common.QuotaPerUnit = oldQuotaPerUnit })
+
+	truncateTables(t)
+	createReferralRewardUsers(t, 5721, 5722)
+	topUp := createReferralTopUp(t, 5722, "reward-wallet-awarded-payment", PaymentProviderEpay, common.TopUpStatusPending)
+	payment, err := NewVerifiedPayment("200000", "CNY", "wallet-awarded-event", "wallet-awarded-payment", true)
+	require.NoError(t, err)
+	require.NoError(t, rechargeVerifiedEpayForTest(topUp.TradeNo, "alipay", "127.0.0.1", payment))
+
+	wantReward, err := common.WalletQuotaFromDecimalStrict(decimal.NewFromInt(200000).
+		Mul(decimal.NewFromInt(ReferralRewardBasisPoints)).
+		Div(decimal.NewFromInt(10000)).
+		Mul(decimal.NewFromFloat(common.QuotaPerUnit)).
+		Floor())
+	require.NoError(t, err)
+	var inviter User
+	require.NoError(t, DB.First(&inviter, 5721).Error)
+	assert.Equal(t, wantReward, inviter.AffQuota)
+	assert.Equal(t, wantReward, inviter.AffHistoryQuota)
+
+	var claim ReferralRewardClaim
+	require.NoError(t, DB.Where("invitee_id = ?", 5722).First(&claim).Error)
+	assert.Equal(t, wantReward, claim.RewardQuota)
+	assert.Equal(t, ReferralRewardStatusAwarded, claim.Status)
 }
 
 func TestReferralRewardReversalReclaimsTransferredQuotaAndIsIdempotent(t *testing.T) {

@@ -76,12 +76,12 @@ type ReferralRewardClaim struct {
 	PaidCurrency           string  `json:"paid_currency" gorm:"type:varchar(12)"`
 	Program                string  `json:"program" gorm:"type:varchar(24);not null;default:'standard';index"`
 	RateBasisPoints        int     `json:"rate_basis_points"`
-	RewardQuota            int     `json:"reward_quota"`
+	RewardQuota            int     `json:"reward_quota" gorm:"type:bigint"`
 	CommissionUsdMicros    int64   `json:"commission_usd_micros" gorm:"not null;default:0"`
 	PartnerSettlement      string  `json:"partner_settlement" gorm:"type:varchar(24);not null;default:'';index"`
 	PartnerAvailableAt     int64   `json:"partner_available_at" gorm:"not null;default:0;index"`
 	PartnerSettledAt       int64   `json:"partner_settled_at" gorm:"not null;default:0"`
-	ReversedQuota          int     `json:"reversed_quota" gorm:"default:0"`
+	ReversedQuota          int     `json:"reversed_quota" gorm:"type:bigint;default:0"`
 	Status                 string  `json:"status" gorm:"type:varchar(24);index"`
 	GatewayEventId         string  `json:"gateway_event_id" gorm:"type:varchar(255);index"`
 	GatewayPaymentId       string  `json:"gateway_payment_id" gorm:"type:varchar(255);index"`
@@ -552,16 +552,16 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 	if !rewardDecimal.IsPositive() {
 		return false, 0, 0, nil
 	}
-	rewardQuota, clamp := common.QuotaFromDecimalChecked(rewardDecimal)
-	if clamp != nil {
+	rewardQuota, err := common.WalletQuotaFromDecimalStrict(rewardDecimal)
+	if err != nil {
 		return false, 0, 0, errors.New("referral reward quota exceeds supported range")
 	}
 
 	rewardStatus := ReferralRewardStatusAwarded
 	if inviter.AffCount >= common.MaxQuota ||
-		inviter.AffQuota > common.MaxQuota-rewardQuota ||
-		inviter.AffHistoryQuota > common.MaxQuota-rewardQuota {
-		// Referral accounting must never overflow a 32-bit quota column or
+		inviter.AffQuota > common.MaxWalletQuota-rewardQuota ||
+		inviter.AffHistoryQuota > common.MaxWalletQuota-rewardQuota {
+		// Referral accounting must never overflow a wallet quota column or
 		// prevent the buyer's verified payment from completing. Preserve the
 		// exact entitlement in the immutable ledger for manual settlement.
 		rewardStatus = ReferralRewardStatusWithheld
@@ -683,9 +683,9 @@ func reverseReferralRewardClaimTx(tx *gorm.DB, where string, args []interface{},
 			remaining -= fromAffQuota
 
 			newQuota := int64(inviter.Quota) - int64(remaining)
-			if newQuota < int64(common.MinQuota) {
-				outcome.UnrecoveredQuota = int(int64(common.MinQuota) - newQuota)
-				newQuota = int64(common.MinQuota)
+			if newQuota < -int64(common.MaxWalletQuota) {
+				outcome.UnrecoveredQuota = int(-int64(common.MaxWalletQuota) - newQuota)
+				newQuota = -int64(common.MaxWalletQuota)
 			}
 
 			newAffHistory := inviter.AffHistoryQuota - claim.RewardQuota

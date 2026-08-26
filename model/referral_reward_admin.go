@@ -22,7 +22,8 @@ type AdminReferralRewardFilter struct {
 }
 
 // AdminReferralRewardSummary is a site-wide accounting snapshot. Quota totals
-// use int64 because they aggregate many int32-compatible reward rows.
+// use int64 because wallet-compatible reward rows may exceed the legacy
+// per-request int32 range.
 type AdminReferralRewardSummary struct {
 	TotalRecords        int64 `json:"total_records"`
 	AwardedRecords      int64 `json:"awarded_records"`

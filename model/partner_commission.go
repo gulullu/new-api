@@ -89,7 +89,7 @@ type PartnerWalletEntry struct {
 	AmountUsdMicros int64  `json:"amount_usd_micros" gorm:"not null"`
 	ClaimId         int    `json:"claim_id" gorm:"not null;default:0;index"`
 	WithdrawalId    int    `json:"withdrawal_id" gorm:"not null;default:0;index"`
-	QuotaAmount     int    `json:"quota_amount" gorm:"not null;default:0"`
+	QuotaAmount     int    `json:"quota_amount" gorm:"type:bigint;not null;default:0"`
 	UnitPriceUsd    string `json:"unit_price_usd,omitempty" gorm:"type:varchar(64);not null;default:''"`
 	IdempotencyKey  string `json:"-" gorm:"type:varchar(128);not null;uniqueIndex"`
 	CreatedAt       int64  `json:"created_at" gorm:"autoCreateTime;index"`
@@ -464,14 +464,14 @@ func TransferPartnerCommissionToQuota(userId int, amountUsdMicros int64, request
 		Div(unitPrice).
 		Mul(decimal.NewFromFloat(common.QuotaPerUnit)).
 		Floor()
-	quota, clamp := common.QuotaFromDecimalChecked(quotaDecimal)
-	if clamp != nil || quota <= 0 {
+	quota, err := common.WalletQuotaFromDecimalStrict(quotaDecimal)
+	if err != nil || quota <= 0 {
 		return 0, errors.New("partner balance transfer amount is unsupported")
 	}
 
 	transferredQuota := quota
 	idempotencyKey := fmt.Sprintf("partner-transfer:%d:%s", userId, requestId)
-	err := DB.Transaction(func(tx *gorm.DB) error {
+	err = DB.Transaction(func(tx *gorm.DB) error {
 		var user User
 		if err := lockForUpdate(tx).Where("id = ?", userId).First(&user).Error; err != nil {
 			return err
@@ -503,7 +503,7 @@ func TransferPartnerCommissionToQuota(userId int, amountUsdMicros int64, request
 		if wallet.AvailableUsdMicros < amountUsdMicros {
 			return errors.New("partner commission balance is insufficient")
 		}
-		if user.Quota > common.MaxQuota-quota {
+		if user.Quota > common.MaxWalletQuota-quota {
 			return errors.New("user quota exceeds supported range")
 		}
 		if err := tx.Model(&User{}).Where("id = ?", userId).Update("quota", gorm.Expr("quota + ?", quota)).Error; err != nil {
