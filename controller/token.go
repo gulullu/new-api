@@ -304,15 +304,17 @@ func AddToken(c *gin.Context) {
 			return
 		}
 	} else {
-		userID := c.GetInt("id")
-		userGroup, groupErr := getTokenRequestUserGroup(c)
-		if groupErr != nil {
-			common.ApiError(c, groupErr)
-			return
-		}
-		if token.Group != "" && !service.IsUserSelectableGroupForUser(userID, userGroup, token.Group) {
-			common.ApiError(c, fmt.Errorf("无权访问 %s 分组", token.Group))
-			return
+		if strings.EqualFold(token.Group, service.PrivatePartnerGroup) {
+			userID := c.GetInt("id")
+			userGroup, groupErr := getTokenRequestUserGroup(c)
+			if groupErr != nil {
+				common.ApiError(c, groupErr)
+				return
+			}
+			if !service.IsUserSelectableGroupForUser(userID, userGroup, token.Group) {
+				common.ApiError(c, fmt.Errorf("无权访问 %s 分组", token.Group))
+				return
+			}
 		}
 		token.CrossGroupRetry = false
 		_ = token.SetAutoGroups(nil)
@@ -394,7 +396,7 @@ func UpdateToken(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	if statusOnly == "" && token.Group != "" && token.Group != "auto" {
+	if statusOnly == "" && strings.EqualFold(token.Group, service.PrivatePartnerGroup) {
 		userGroup, groupErr := model.GetUserGroup(cleanToken.UserId, false)
 		if groupErr != nil {
 			common.ApiError(c, groupErr)
