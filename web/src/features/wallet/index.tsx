@@ -91,11 +91,6 @@ export function Wallet(props: WalletProps) {
   const [, setShowSubscriptionPanel] = useState(true)
 
   const { status } = useStatus()
-  const parsedUsdExchangeRate = Number(status?.usd_exchange_rate)
-  const usdExchangeRate =
-    Number.isFinite(parsedUsdExchangeRate) && parsedUsdExchangeRate > 0
-      ? parsedUsdExchangeRate
-      : undefined
   const { topupInfo, presetAmounts, loading: topupLoading } = useTopupInfo()
   const {
     amount: paymentAmount,
@@ -404,7 +399,6 @@ export function Wallet(props: WalletProps) {
         calculating={calculating}
         processing={processing || waffoProcessing || pancakeProcessing}
         discountRate={getDiscountRate()}
-        usdExchangeRate={usdExchangeRate}
         showRelayBasesVipPaymentWarning={shouldShowRelayBasesVipPaymentWarning(
           resolveRelayBasesVipPaymentUserGroup(
             user?.group,

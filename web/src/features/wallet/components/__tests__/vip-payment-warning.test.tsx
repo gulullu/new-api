@@ -164,7 +164,7 @@ async function renderPaymentDialog(options: {
   processing?: boolean
   showVipWarning: boolean
   onOpenChange?: (open: boolean) => void
-  usdExchangeRate?: number
+  discountRate?: number
   paymentMethod?: { name: string; type: string; icon?: string }
 }) {
   const container = document.createElement('div')
@@ -188,7 +188,7 @@ async function renderPaymentDialog(options: {
           }
           calculating={false}
           processing={options.processing ?? false}
-          usdExchangeRate={options.usdExchangeRate}
+          discountRate={options.discountRate}
           showRelayBasesVipPaymentWarning={options.showVipWarning}
         />
       </I18nextProvider>
@@ -320,7 +320,7 @@ describe('RelayBases VIP payment warning', () => {
     await i18n.changeLanguage('zh')
     const rendered = await renderPaymentDialog({
       showVipWarning: false,
-      usdExchangeRate: 7.2,
+      discountRate: 0.9,
     })
 
     const dialog = document.querySelector('[data-slot="alert-dialog-content"]')
@@ -330,7 +330,7 @@ describe('RelayBases VIP payment warning', () => {
     assert.match(paymentMethod, /支付宝/)
     assert.doesNotMatch(paymentMethod, /Stripe/)
     assert.ok(approximate)
-    assert.equal(approximate?.textContent, '约合￥20.52')
+    assert.equal(approximate?.textContent, '约合￥18.00')
     assert.doesNotMatch(approximate?.textContent ?? '', /¥￥/)
 
     await unmountPaymentDialog(rendered)

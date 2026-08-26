@@ -101,8 +101,10 @@ func formatWaffoPancakeAmount(payMoney float64) string {
 }
 
 func getWaffoPancakeBuyerEmail(user *model.User) string {
-	if user != nil && strings.TrimSpace(user.Email) != "" {
-		return user.Email
+	if user != nil {
+		if email := model.NormalizeEmail(user.Email); email != "" {
+			return email
+		}
 	}
 	return ""
 }

@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { SiAlipay, SiWechat } from 'react-icons/si'
 
 import {
   AlertDialog,
@@ -59,12 +60,11 @@ interface PaymentConfirmDialogProps {
   calculating: boolean
   processing: boolean
   discountRate?: number
-  usdExchangeRate?: number
   showRelayBasesVipPaymentWarning?: boolean
 }
 
-function formatApproximateCny(amountUsd: number, usdExchangeRate: number) {
-  const amount = amountUsd * usdExchangeRate
+function formatApproximateCny(topupAmount: number, discountRate: number) {
+  const amount = topupAmount * discountRate
   if (!Number.isFinite(amount) || amount <= 0) return null
   return new Intl.NumberFormat('zh-CN', {
     minimumFractionDigits: 2,
@@ -90,6 +90,21 @@ function getPaymentDisplayName(
   if (displayKind === 'alipay') return t('Alipay')
   if (displayKind === 'wechat') return t('WeChat Pay')
   return paymentMethod.name
+}
+
+function getPaymentDisplayIcon(
+  displayKind: ReturnType<typeof getRelayBasesPaymentDisplayKind>,
+  displayType: string | undefined,
+  icon: string | undefined,
+  displayName: string | undefined
+) {
+  if (displayKind === 'alipay') {
+    return <SiAlipay aria-hidden='true' className='h-4 w-4' />
+  }
+  if (displayKind === 'wechat') {
+    return <SiWechat aria-hidden='true' className='h-4 w-4' />
+  }
+  return getPaymentIcon(displayType, 'h-4 w-4', icon, displayName)
 }
 
 function getLegacyWaffoIcon(
@@ -129,7 +144,6 @@ export function PaymentConfirmDialog({
   calculating,
   processing,
   discountRate = DEFAULT_DISCOUNT_RATE,
-  usdExchangeRate,
   showRelayBasesVipPaymentWarning = false,
 }: PaymentConfirmDialogProps) {
   const { t } = useTranslation()
@@ -154,10 +168,11 @@ export function PaymentConfirmDialog({
   const approximateCny =
     !calculating &&
     isRelayBasesChineseLanguage(relayBasesLanguage) &&
-    typeof usdExchangeRate === 'number' &&
-    Number.isFinite(usdExchangeRate) &&
-    usdExchangeRate > 0
-      ? formatApproximateCny(paymentAmount, usdExchangeRate)
+    Number.isFinite(topupAmount) &&
+    topupAmount > 0 &&
+    Number.isFinite(discountRate) &&
+    discountRate > 0
+      ? formatApproximateCny(topupAmount, discountRate)
       : null
   const hasDiscount = discountRate > 0 && discountRate < 1 && paymentAmount > 0
   const originalAmount = hasDiscount ? paymentAmount / discountRate : 0
@@ -252,9 +267,9 @@ export function PaymentConfirmDialog({
                       paymentDisplayKind,
                       paymentDisplayName
                     ) ??
-                      getPaymentIcon(
+                      getPaymentDisplayIcon(
+                        paymentDisplayKind,
                         paymentDisplayType,
-                        'h-4 w-4',
                         paymentDisplayKind === null
                           ? paymentMethod?.icon
                           : undefined,

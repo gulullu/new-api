@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { SiAlipay, SiWechat } from 'react-icons/si'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -64,6 +65,22 @@ function getDisplayPaymentType(
   if (displayKind === 'alipay') return 'alipay'
   if (displayKind === 'wechat') return 'wxpay'
   return method.type
+}
+
+function getDisplayPaymentIcon(
+  displayKind: ReturnType<typeof getRelayBasesPaymentDisplayKind>,
+  displayType: string,
+  icon: string | undefined,
+  displayName: string,
+  className: string
+) {
+  if (displayKind === 'alipay') {
+    return <SiAlipay aria-hidden='true' className={className} />
+  }
+  if (displayKind === 'wechat') {
+    return <SiWechat aria-hidden='true' className={className} />
+  }
+  return getPaymentIcon(displayType, className, icon, displayName)
 }
 
 function getLegacyIcon(
@@ -130,11 +147,12 @@ export function RelayBasesPaymentMethodCard({
           {(displayKind === null
             ? getLegacyIcon(legacyIconSrc, displayName, 'h-4 w-4')
             : null) ??
-            getPaymentIcon(
+            getDisplayPaymentIcon(
+              displayKind,
               displayType,
-              'h-4 w-4',
               displayKind === null ? method.icon : undefined,
-              displayName
+              displayName,
+              'h-4 w-4'
             )}
         </span>
       )}

@@ -50,6 +50,12 @@ func getWaffoSDK() (*waffo.Waffo, error) {
 }
 
 func getWaffoUserEmail(user *model.User) string {
+	if user == nil {
+		return ""
+	}
+	if email := model.NormalizeEmail(user.Email); email != "" {
+		return email
+	}
 	return fmt.Sprintf("%d@examples.com", user.Id)
 }
 
