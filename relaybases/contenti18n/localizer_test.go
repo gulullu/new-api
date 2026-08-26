@@ -173,6 +173,19 @@ func TestLocalizeClaudeMaxGroupsUsesCurrentAdministratorDescriptions(t *testing.
 	assert.Equal(t, claudeMaxUltra, groups["claude-max-ultra"]["desc"], "input must not be mutated")
 }
 
+func TestLocalizePrivatePartnerGroupMatchesCodexPro(t *testing.T) {
+	t.Parallel()
+	const description = "GPT Pro 号池，适合高频生产环境使用，整体稳定性更高。"
+	groups := map[string]map[string]any{
+		"codex-pro": {"desc": description, "ratio": 2.75},
+		"parnter":   {"desc": description, "ratio": 2.75},
+	}
+
+	localized := LocalizeUserGroups(groups, LocaleJapanese)
+	assert.Equal(t, localized["codex-pro"]["desc"], localized["parnter"]["desc"])
+	assert.Equal(t, "本番向けの安定した GPT Pro プール。", localized["parnter"]["desc"])
+}
+
 func TestLocalizeNoticeLeavesUnknownSourceUntouched(t *testing.T) {
 	t.Parallel()
 	const edited = "administrator changed this notice"

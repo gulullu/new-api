@@ -35,6 +35,15 @@ type GroupRatioSetting struct {
 
 var groupRatioSetting GroupRatioSetting
 
+const privatePartnerGroup = "parnter"
+
+func canonicalGroupName(name string) string {
+	if name == privatePartnerGroup {
+		return "codex-pro"
+	}
+	return name
+}
+
 func init() {
 	groupSpecialUsableGroup := types.NewRWMap[string, map[string]string]()
 	groupSpecialUsableGroup.AddAll(defaultGroupSpecialUsableGroup)
@@ -60,11 +69,15 @@ func GetGroupRatioSetting() *GroupRatioSetting {
 }
 
 func GetGroupRatioCopy() map[string]float64 {
-	return groupRatioMap.ReadAll()
+	groups := groupRatioMap.ReadAll()
+	if ratio, ok := groups["codex-pro"]; ok {
+		groups[privatePartnerGroup] = ratio
+	}
+	return groups
 }
 
 func ContainsGroupRatio(name string) bool {
-	_, ok := groupRatioMap.Get(name)
+	_, ok := groupRatioMap.Get(canonicalGroupName(name))
 	return ok
 }
 
@@ -77,7 +90,7 @@ func UpdateGroupRatioByJSONString(jsonStr string) error {
 }
 
 func GetGroupRatio(name string) float64 {
-	ratio, ok := groupRatioMap.Get(name)
+	ratio, ok := groupRatioMap.Get(canonicalGroupName(name))
 	if !ok {
 		common.SysLog("group ratio not found: " + name)
 		return 1
@@ -86,11 +99,11 @@ func GetGroupRatio(name string) float64 {
 }
 
 func GetGroupGroupRatio(userGroup, usingGroup string) (float64, bool) {
-	gp, ok := groupGroupRatioMap.Get(userGroup)
+	gp, ok := groupGroupRatioMap.Get(canonicalGroupName(userGroup))
 	if !ok {
 		return -1, false
 	}
-	ratio, ok := gp[usingGroup]
+	ratio, ok := gp[canonicalGroupName(usingGroup)]
 	if !ok {
 		return -1, false
 	}

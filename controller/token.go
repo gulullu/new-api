@@ -103,7 +103,7 @@ func setTokenAutoGroups(c *gin.Context, token *model.Token, groups []string) boo
 			return false
 		}
 		seen[group] = struct{}{}
-		if !service.IsUserSelectableGroup(userGroup, group) {
+		if !service.IsUserSelectableGroupForUser(c.GetInt("id"), userGroup, group) {
 			common.ApiErrorI18n(c, i18n.MsgTokenAutoGroupsInvalid, map[string]any{"Group": group})
 			return false
 		}
@@ -169,7 +169,7 @@ func GetTokenAutoGroups(c *gin.Context) {
 		return
 	}
 	common.ApiSuccess(c, gin.H{
-		"groups":    service.GetUserAutoGroup(userGroup),
+		"groups":    service.GetUserAutoGroupForUser(c.GetInt("id"), userGroup),
 		"max_count": setting.GetMaxTokenAutoGroups(),
 	})
 }
@@ -304,6 +304,16 @@ func AddToken(c *gin.Context) {
 			return
 		}
 	} else {
+		userID := c.GetInt("id")
+		userGroup, groupErr := getTokenRequestUserGroup(c)
+		if groupErr != nil {
+			common.ApiError(c, groupErr)
+			return
+		}
+		if token.Group != "" && !service.IsUserSelectableGroupForUser(userID, userGroup, token.Group) {
+			common.ApiError(c, fmt.Errorf("无权访问 %s 分组", token.Group))
+			return
+		}
 		token.CrossGroupRetry = false
 		_ = token.SetAutoGroups(nil)
 	}
@@ -383,6 +393,17 @@ func UpdateToken(c *gin.Context) {
 	if err != nil {
 		common.ApiError(c, err)
 		return
+	}
+	if statusOnly == "" && token.Group != "" && token.Group != "auto" {
+		userGroup, groupErr := model.GetUserGroup(cleanToken.UserId, false)
+		if groupErr != nil {
+			common.ApiError(c, groupErr)
+			return
+		}
+		if !service.IsUserSelectableGroupForUser(cleanToken.UserId, userGroup, token.Group) {
+			common.ApiError(c, fmt.Errorf("无权访问 %s 分组", token.Group))
+			return
+		}
 	}
 	if token.Status == common.TokenStatusEnabled {
 		if cleanToken.Status == common.TokenStatusExpired && cleanToken.ExpiredTime <= common.GetTimestamp() && cleanToken.ExpiredTime != -1 {
