@@ -104,7 +104,7 @@ var (
 	ErrTopUpPaymentSnapshotConflict = errors.New("topup payment snapshot conflict")
 	ErrInvalidTopUpQuota            = errors.New("invalid top-up quota")
 	ErrTopUpQuotaLimitExceeded      = errors.New("top-up quota limit exceeded")
-	ErrWalletQuotaLimitExceeded = errors.New("wallet quota limit exceeded")
+	ErrWalletQuotaLimitExceeded     = errors.New("wallet quota limit exceeded")
 )
 
 func (topUp *TopUp) Insert() error {

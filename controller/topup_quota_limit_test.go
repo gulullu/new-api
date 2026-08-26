@@ -158,7 +158,7 @@ func TestRequestAmountRejectsTopUpThatWouldOverflowWallet(t *testing.T) {
 	ctx.Request = httptest.NewRequest(
 		http.MethodPost,
 		"/api/user/amount",
-		strings.NewReader(`{"amount":1}`),
+		strings.NewReader(fmt.Sprintf(`{"amount":%d}`, relayBasesMinimumTopup)),
 	)
 	ctx.Request.Header.Set("Content-Type", "application/json")
 
