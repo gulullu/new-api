@@ -26,6 +26,7 @@ export {
   formatRelayBasesUsd,
   formatRelayBasesUsdCompact,
   getRelayBasesCreditsDocsUrl,
+  getRelayBasesPaymentDisplayKind,
   getRelayBasesPaymentCopyKey,
   orderRelayBasesPaymentMethods,
 } from './policy'

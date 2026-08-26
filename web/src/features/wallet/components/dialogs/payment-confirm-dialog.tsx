@@ -35,8 +35,12 @@ import {
   formatRelayBasesCredits,
   formatRelayBasesUsd,
 } from '@/features/relaybases/wallet'
+import {
+  getRelayBasesPaymentDisplayKind,
+  isRelayBasesChineseLanguage,
+} from '@/features/relaybases/wallet/policy'
 
-import { DEFAULT_DISCOUNT_RATE } from '../../constants'
+import { DEFAULT_DISCOUNT_RATE, PAYMENT_TYPES } from '../../constants'
 import { getPaymentIcon } from '../../lib'
 import type { PaymentMethod } from '../../types'
 import {
@@ -55,7 +59,64 @@ interface PaymentConfirmDialogProps {
   calculating: boolean
   processing: boolean
   discountRate?: number
+  usdExchangeRate?: number
   showRelayBasesVipPaymentWarning?: boolean
+}
+
+function formatApproximateCny(amountUsd: number, usdExchangeRate: number) {
+  const amount = amountUsd * usdExchangeRate
+  if (!Number.isFinite(amount) || amount <= 0) return null
+  return new Intl.NumberFormat('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+function getPaymentDisplayType(
+  displayKind: ReturnType<typeof getRelayBasesPaymentDisplayKind>,
+  paymentType: string | undefined
+): string | undefined {
+  if (displayKind === 'alipay') return 'alipay'
+  if (displayKind === 'wechat') return 'wxpay'
+  return paymentType
+}
+
+function getPaymentDisplayName(
+  paymentMethod: PaymentMethod | undefined,
+  displayKind: ReturnType<typeof getRelayBasesPaymentDisplayKind>,
+  t: (key: string) => string
+) {
+  if (!paymentMethod) return undefined
+  if (displayKind === 'alipay') return t('Alipay')
+  if (displayKind === 'wechat') return t('WeChat Pay')
+  return paymentMethod.name
+}
+
+function getLegacyWaffoIcon(
+  paymentMethod: PaymentMethod | undefined,
+  displayKind: ReturnType<typeof getRelayBasesPaymentDisplayKind>,
+  displayName: string | undefined
+) {
+  const icon = paymentMethod?.icon?.trim()
+  if (
+    displayKind === null &&
+    paymentMethod?.type === PAYMENT_TYPES.WAFFO &&
+    icon &&
+    /^\/(?!\/)/.test(icon)
+  ) {
+    return (
+      <img
+        src={icon}
+        alt={displayName || paymentMethod.name}
+        title={displayName || paymentMethod.name}
+        className='h-4 w-4 object-contain'
+        loading='lazy'
+        decoding='async'
+        referrerPolicy='no-referrer'
+      />
+    )
+  }
+  return null
 }
 
 export function PaymentConfirmDialog({
@@ -68,12 +129,36 @@ export function PaymentConfirmDialog({
   calculating,
   processing,
   discountRate = DEFAULT_DISCOUNT_RATE,
+  usdExchangeRate,
   showRelayBasesVipPaymentWarning = false,
 }: PaymentConfirmDialogProps) {
   const { t } = useTranslation()
-  const { i18n: relayBasesI18n } = useTranslation(RELAYBASES_I18N_NAMESPACE)
+  const { i18n: relayBasesI18n, t: tRelayBases } = useTranslation(
+    RELAYBASES_I18N_NAMESPACE
+  )
   const relayBasesLanguage =
     relayBasesI18n.resolvedLanguage ?? relayBasesI18n.language
+  const paymentDisplayKind = getRelayBasesPaymentDisplayKind(
+    paymentMethod?.type ?? '',
+    relayBasesLanguage
+  )
+  const paymentDisplayName = getPaymentDisplayName(
+    paymentMethod,
+    paymentDisplayKind,
+    t
+  )
+  const paymentDisplayType = getPaymentDisplayType(
+    paymentDisplayKind,
+    paymentMethod?.type
+  )
+  const approximateCny =
+    !calculating &&
+    isRelayBasesChineseLanguage(relayBasesLanguage) &&
+    typeof usdExchangeRate === 'number' &&
+    Number.isFinite(usdExchangeRate) &&
+    usdExchangeRate > 0
+      ? formatApproximateCny(paymentAmount, usdExchangeRate)
+      : null
   const hasDiscount = discountRate > 0 && discountRate < 1 && paymentAmount > 0
   const originalAmount = hasDiscount ? paymentAmount / discountRate : 0
   const discountAmount = hasDiscount ? originalAmount - paymentAmount : 0
@@ -116,13 +201,28 @@ export function PaymentConfirmDialog({
               {calculating ? (
                 <Skeleton className='h-6 w-24' />
               ) : (
-                <div className='flex items-baseline gap-2'>
-                  <span className='text-2xl font-semibold'>
-                    {formatRelayBasesUsd(paymentAmount, relayBasesLanguage)}
-                  </span>
-                  {hasDiscount && (
-                    <span className='text-muted-foreground text-sm line-through'>
-                      {formatRelayBasesUsd(originalAmount, relayBasesLanguage)}
+                <div className='flex flex-col items-end gap-0.5'>
+                  <div className='flex items-baseline gap-2'>
+                    <span className='text-2xl font-semibold'>
+                      {formatRelayBasesUsd(paymentAmount, relayBasesLanguage)}
+                    </span>
+                    {hasDiscount && (
+                      <span className='text-muted-foreground text-sm line-through'>
+                        {formatRelayBasesUsd(
+                          originalAmount,
+                          relayBasesLanguage
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  {approximateCny && (
+                    <span
+                      data-payment-approx-cny
+                      className='text-muted-foreground text-xs font-normal'
+                    >
+                      {tRelayBases('wallet.payment.approxCny', {
+                        amount: approximateCny,
+                      })}
                     </span>
                   )}
                 </div>
@@ -146,13 +246,22 @@ export function PaymentConfirmDialog({
                   {t('Payment Method')}
                 </span>
                 <div className='flex items-center gap-2'>
-                  {getPaymentIcon(
-                    paymentMethod?.type,
-                    'h-4 w-4',
-                    paymentMethod?.icon,
-                    paymentMethod?.name
-                  )}
-                  <span className='font-medium'>{paymentMethod?.name}</span>
+                  <span title={paymentDisplayName} aria-hidden='true'>
+                    {getLegacyWaffoIcon(
+                      paymentMethod,
+                      paymentDisplayKind,
+                      paymentDisplayName
+                    ) ??
+                      getPaymentIcon(
+                        paymentDisplayType,
+                        'h-4 w-4',
+                        paymentDisplayKind === null
+                          ? paymentMethod?.icon
+                          : undefined,
+                        paymentDisplayName
+                      )}
+                  </span>
+                  <span className='font-medium'>{paymentDisplayName}</span>
                 </div>
               </div>
             </div>

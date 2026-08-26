@@ -58,7 +58,7 @@
     },
     "minimum": {
       "placeholder": "Minimum Ɍ{{amount}}",
-      "notice": "Minimum top-up: Ɍ{{amount}}. Payment providers charge a fixed fee on each successful transaction plus a percentage, so fees on very small top-ups can approach or exceed the amount paid. Thank you for understanding.",
+      "notice": "Minimum top-up: Ɍ{{amount}}. Fees on small top-ups can approach or exceed the payment amount, so this minimum applies. Thank you for understanding.",
       "card": "Minimum top-up: Ɍ{{amount}}. Increase the amount to continue."
     },
     "payment": {
@@ -66,7 +66,8 @@
       "waffo": "Secure card and local online checkout. Review the amount on Waffo before paying.",
       "generic": "Continue to pay with this provider.",
       "accessibleName": "Pay with {{name}}",
-      "action": "Pay now"
+      "action": "Pay now",
+      "approxCny": "Approx. ¥{{amount}}"
     },
     "creditsNotice": {
       "title": "What you receive after payment",

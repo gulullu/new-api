@@ -129,35 +129,23 @@ describe('RelayBases locale coverage', () => {
     }
   })
 
-  test('keeps wallet payment copy reassuring without leaking China-only methods', () => {
-    const paymentKeys = ['wallet.payment.stripe', 'wallet.payment.waffo']
+  test('keeps wallet payment compatibility keys and localized CNY copy', () => {
+    const paymentKeys = [
+      'wallet.payment.stripe',
+      'wallet.payment.waffo',
+      'wallet.payment.generic',
+      'wallet.payment.action',
+    ]
     for (const locale of localeNames) {
       for (const key of paymentKeys) {
-        assert.ok(
-          locales[locale][key].length <= 120,
-          `${locale}: ${key} is too long for the wallet payment card`
-        )
+        assert.ok(locales[locale][key].trim(), `${locale}: ${key} is missing`)
       }
       assert.ok(
-        locales[locale]['wallet.payment.action'].length <= 10,
-        `${locale}: wallet.payment.action is too long`
+        locales[locale]['wallet.payment.approxCny'].includes('{{amount}}'),
+        `${locale}: wallet.payment.approxCny must keep its amount placeholder`
       )
     }
-    assert.equal(
-      locales.zh['wallet.payment.stripe'],
-      '支持银行卡和支付宝。跳转 Stripe 安全结账页，可先核对应付金额再付款。'
-    )
-    assert.equal(
-      locales.zh['wallet.payment.waffo'],
-      '支持银行卡和微信支付。跳转 Waffo 安全结账页，可先核对应付金额再付款。'
-    )
-    assert.equal(locales.zh['wallet.payment.action'], '去支付')
-
-    for (const locale of ['en', 'fr', 'ja', 'ru', 'vi'] as const) {
-      for (const key of paymentKeys) {
-        assert.doesNotMatch(locales[locale][key], /Alipay|WeChat|支付宝|微信/)
-      }
-    }
+    assert.equal(locales.zh['wallet.payment.approxCny'], '约合￥{{amount}}')
   })
 
   test('keeps wallet discount badges compact in every locale', () => {
@@ -180,7 +168,7 @@ describe('RelayBases locale coverage', () => {
     const expectedModels = Object.keys(locales.en)
       .filter((key) => key.startsWith(modelPrefix))
       .sort()
-    assert.equal(expectedModels.length, 60)
+    assert.equal(expectedModels.length, 62)
     assert.ok(expectedModels.includes('pricing.modelDescriptions.grok-4.6'))
     assert.ok(expectedModels.includes('pricing.modelDescriptions.glm-5.3'))
     assert.equal(

@@ -58,7 +58,7 @@
     },
     "minimum": {
       "placeholder": "Minimum Ɍ{{amount}}",
-      "notice": "Recharge minimale : Ɍ{{amount}}. Les prestataires de paiement facturent des frais fixes sur chaque transaction réussie, auxquels s’ajoute un pourcentage ; pour une très petite recharge, ces frais peuvent approcher ou dépasser le montant payé. Merci de votre compréhension.",
+      "notice": "Recharge minimale : Ɍ{{amount}}. Les frais d’une petite recharge peuvent approcher ou dépasser le montant payé ; ce minimum s’applique donc. Merci de votre compréhension.",
       "card": "Recharge minimale : Ɍ{{amount}}. Augmentez le montant pour continuer."
     },
     "payment": {
@@ -66,7 +66,8 @@
       "waffo": "Paiement sécurisé par carte ou moyen local. Vérifiez le montant sur Waffo avant de payer.",
       "generic": "Poursuivre le paiement avec ce prestataire.",
       "accessibleName": "Payer avec {{name}}",
-      "action": "Payer"
+      "action": "Payer",
+      "approxCny": "Environ ¥{{amount}}"
     },
     "creditsNotice": {
       "title": "Ce que vous recevez après le paiement",

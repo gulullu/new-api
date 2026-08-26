@@ -53,33 +53,47 @@ reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 describe('wallet payment icons', () => {
   after(() => domWindow.close())
 
-  for (const paymentType of ['waffo', 'waffo_pancake']) {
-    test(`keeps the bundled ${paymentType} brand mark when a configured icon is unusable`, async () => {
-      const container = document.createElement('div')
-      document.body.append(container)
-      const root = createRoot(container)
+  test('keeps the official Waffo icon behavior', async () => {
+    const standardContainer = document.createElement('div')
+    document.body.append(standardContainer)
+    const standardRoot = createRoot(standardContainer)
 
-      await act(async () => {
-        root.render(getPaymentIcon(paymentType, 'size-5', 'LuGlobe2', 'Waffo'))
-      })
-
-      const darkLogo = container.querySelector(
-        'img[src="/waffo-logo-dark.svg"]'
-      )
-      const lightLogo = container.querySelector(
-        'img[src="/waffo-logo-light.svg"]'
-      )
-      assert.ok(darkLogo)
-      assert.ok(lightLogo)
-      assert.equal(darkLogo.getAttribute('alt'), '')
-      assert.equal(lightLogo.getAttribute('alt'), '')
-      assert.equal(darkLogo.getAttribute('aria-hidden'), 'true')
-      assert.equal(lightLogo.getAttribute('aria-hidden'), 'true')
-
-      await act(async () => root.unmount())
-      container.remove()
+    await act(async () => {
+      standardRoot.render(getPaymentIcon('waffo', 'size-5', undefined, 'Waffo'))
     })
-  }
+    assert.ok(standardContainer.querySelector('svg'))
+    assert.equal(
+      standardContainer.querySelector('img[src="/waffo-logo-dark.svg"]'),
+      null
+    )
+
+    const pancakeContainer = document.createElement('div')
+    document.body.append(pancakeContainer)
+    const pancakeRoot = createRoot(pancakeContainer)
+
+    await act(async () => {
+      pancakeRoot.render(
+        getPaymentIcon('waffo_pancake', 'size-5', undefined, 'Waffo')
+      )
+    })
+    const darkLogo = pancakeContainer.querySelector(
+      'img[src="/waffo-logo-dark.svg"]'
+    )
+    const lightLogo = pancakeContainer.querySelector(
+      'img[src="/waffo-logo-light.svg"]'
+    )
+    assert.ok(darkLogo)
+    assert.ok(lightLogo)
+    assert.equal(darkLogo.getAttribute('alt'), 'Waffo')
+    assert.equal(lightLogo.getAttribute('alt'), 'Waffo')
+
+    await act(async () => {
+      standardRoot.unmount()
+      pancakeRoot.unmount()
+    })
+    standardContainer.remove()
+    pancakeContainer.remove()
+  })
 
   test('keeps configured icon precedence for non-Waffo payment methods', async () => {
     const container = document.createElement('div')

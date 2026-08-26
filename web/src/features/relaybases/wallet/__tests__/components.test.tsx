@@ -21,6 +21,8 @@ import { after, describe, test } from 'node:test'
 
 import { Window } from 'happy-dom'
 
+import mainEn from '../../../../i18n/locales/en.json'
+import mainZhCN from '../../../../i18n/locales/zh.json'
 import type { TopupInfo } from '../../../wallet/types'
 import en from '../../i18n/locales/en.json'
 import zhCN from '../../i18n/locales/zh.json'
@@ -66,9 +68,10 @@ const i18n = createInstance()
 await i18n.use(initReactI18next).init({
   lng: 'zhCN',
   fallbackLng: 'en',
+  nsSeparator: false,
   resources: {
-    en: { relaybases: en },
-    zhCN: { relaybases: zhCN },
+    en: { translation: mainEn.translation, relaybases: en },
+    zhCN: { translation: mainZhCN.translation, relaybases: zhCN },
   },
 })
 
@@ -82,6 +85,7 @@ async function renderWalletComponents(
   selectedPaymentType?: string,
   paymentLoading: string | null = null
 ) {
+  await i18n.changeLanguage('zhCN')
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
@@ -113,6 +117,7 @@ async function renderWalletComponents(
 }
 
 async function renderLegacyWaffoSelection() {
+  await i18n.changeLanguage('en')
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
@@ -170,56 +175,33 @@ async function unmount(
 describe('RelayBases wallet components', () => {
   after(() => domWindow.close())
 
-  test('orders gateways and exposes Chinese channel guidance', async () => {
+  test('uses official buttons with Chinese gateway display names and icons', async () => {
     const rendered = await renderWalletComponents(20)
     const buttons = [...rendered.container.querySelectorAll('button')]
 
     assert.equal(buttons.length, 2)
-    assert.match(buttons[0]?.getAttribute('aria-label') ?? '', /Stripe/)
-    assert.match(buttons[1]?.getAttribute('aria-label') ?? '', /Waffo Pancake/)
-    assert.match(buttons[0]?.textContent ?? '', /支付宝/)
-    assert.match(buttons[1]?.textContent ?? '', /微信支付/)
+    const alipayButton = buttons.find(
+      (button) => button.getAttribute('aria-label') === '支付宝'
+    )
+    const wechatButton = buttons.find(
+      (button) => button.getAttribute('aria-label') === '微信支付'
+    )
+    assert.ok(alipayButton)
+    assert.ok(wechatButton)
+    assert.match(alipayButton.textContent ?? '', /支付宝/)
+    assert.match(wechatButton.textContent ?? '', /微信支付/)
+    assert.ok(alipayButton.querySelector('svg'), 'Alipay icon is rendered')
+    assert.ok(wechatButton.querySelector('svg'), 'WeChat icon is rendered')
+    assert.equal(alipayButton.querySelector('[title="支付宝"]') !== null, true)
     assert.equal(
-      buttons.every((button) => button.textContent?.includes('去支付')),
+      wechatButton.querySelector('[title="微信支付"]') !== null,
       true
     )
-    assert.match(
-      buttons[0]?.textContent ?? '',
-      /银行卡和支付宝。跳转 Stripe 安全结账页，可先核对应付金额再付款。/
-    )
-    assert.match(
-      buttons[1]?.textContent ?? '',
-      /银行卡和微信支付。跳转 Waffo 安全结账页，可先核对应付金额再付款。/
-    )
-    assert.ok(
-      buttons[1]?.querySelector('img[src="/waffo-logo-light.svg"]'),
-      'Waffo uses the bundled dark brand mark on the light theme shell'
-    )
-    assert.ok(
-      buttons[1]?.querySelector('img[src="/waffo-logo-dark.svg"]'),
-      'Waffo keeps a light brand mark available for the dark theme shell'
-    )
-    assert.match(buttons[0]?.className ?? '', /rounded-lg/)
-    assert.match(buttons[0]?.className ?? '', /min-h-\[104px\]/)
-    assert.match(buttons[1]?.className ?? '', /min-h-\[104px\]/)
+    assert.match(alipayButton.className ?? '', /rounded-lg/)
+    assert.match(alipayButton.className ?? '', /min-h-14/)
+    assert.match(wechatButton.className ?? '', /min-h-14/)
     assert.equal(
-      buttons[0]
-        ?.querySelector('svg.text-\\[\\#1677FF\\]')
-        ?.getAttribute('class')
-        ?.includes('size-[22px]'),
-      true
-    )
-    assert.equal(
-      buttons[1]
-        ?.querySelector('svg.text-\\[\\#07C160\\]')
-        ?.getAttribute('class')
-        ?.includes('size-[22px]'),
-      true
-    )
-    assert.equal(
-      buttons.every((button) =>
-        button.querySelector('span.bg-primary.text-primary-foreground')
-      ),
+      buttons.every((button) => !button.textContent?.includes('去支付')),
       true
     )
 
@@ -240,7 +222,7 @@ describe('RelayBases wallet components', () => {
     assert.doesNotMatch(buttons[1]?.className ?? '', /ring-slate-900\/15/)
     assert.equal(buttons[1]?.querySelector('svg.lucide-check'), null)
     assert.equal(
-      buttons.every((button) => button.textContent?.includes('去支付')),
+      buttons.every((button) => !button.textContent?.includes('去支付')),
       true
     )
 
@@ -256,12 +238,22 @@ describe('RelayBases wallet components', () => {
       true
     )
     assert.equal(
-      buttons.every((button) => button.textContent?.includes('最低充值 Ɍ20')),
+      buttons.every((button) => button.textContent?.includes('最低： 20')),
       true
     )
     assert.equal(
-      buttons.every((button) =>
-        button.className.includes('disabled:opacity-100')
+      buttons.every((button) => button.title?.includes('最低充值金额：20')),
+      true
+    )
+    const tooltipTriggers = [
+      ...rendered.container.querySelectorAll(
+        '[data-base-ui-tooltip-trigger][tabindex="0"]'
+      ),
+    ]
+    assert.equal(tooltipTriggers.length, 2)
+    assert.equal(
+      tooltipTriggers.every((trigger) =>
+        trigger.getAttribute('aria-label')?.includes('最低充值金额：20')
       ),
       true
     )
@@ -311,7 +303,7 @@ describe('RelayBases wallet components', () => {
     await unmount({ container, root })
   })
 
-  test('keeps the selected legacy Waffo submethod emphasized after quoting', async () => {
+  test('keeps legacy Waffo submethods as official actions after quoting', async () => {
     const rendered = await renderLegacyWaffoSelection()
     const channelA = rendered.container.querySelector(
       'button[aria-label*="Channel A"]'
@@ -323,7 +315,7 @@ describe('RelayBases wallet components', () => {
     assert.equal(channelA?.getAttribute('aria-pressed'), null)
     assert.equal(channelB?.getAttribute('aria-pressed'), null)
     assert.equal(channelB?.querySelector('svg.lucide-check'), null)
-    assert.equal(channelB?.textContent?.includes('去支付'), true)
+    assert.equal(channelB?.textContent?.includes('Channel B'), true)
 
     await unmount(rendered)
   })

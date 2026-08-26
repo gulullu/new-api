@@ -16,23 +16,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ChevronRight, Loader2 } from 'lucide-react'
-import { useId } from 'react'
+import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { SiAlipay, SiStripe, SiWechat } from 'react-icons/si'
 
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 import { getPaymentIcon } from '../../wallet/lib'
 import type { PaymentMethod } from '../../wallet/types'
-import { RELAYBASES_I18N_NAMESPACE } from '../i18n/manifest'
 import {
-  getRelayBasesChinesePaymentHint,
-  getRelayBasesPaymentCopyKey,
-  getRelayBasesPaymentGridClass,
+  getRelayBasesPaymentDisplayKind,
   getRelayBasesPaymentMethodInteractionKey,
-  orderRelayBasesPaymentMethods,
 } from './policy'
 
 interface RelayBasesPaymentMethodCardProps {
@@ -40,56 +39,55 @@ interface RelayBasesPaymentMethodCardProps {
   minimum: number
   topupAmount: number
   loading: boolean
+  /** Waffo's legacy method catalog uses root-relative image paths. */
+  legacyIconSrc?: string
+  /** Retained for callers that still pass selection state; official buttons do not act as tabs. */
   selected?: boolean
   paymentBusy: boolean
   onSelect: () => void
 }
 
-type RelayBasesPaymentBrand = 'stripe' | 'waffo' | 'generic'
-
-function getRelayBasesPaymentBrand(
-  paymentType: string
-): RelayBasesPaymentBrand {
-  if (paymentType === 'stripe') return 'stripe'
-  if (paymentType === 'waffo' || paymentType === 'waffo_pancake') {
-    return 'waffo'
-  }
-  return 'generic'
+function getDisplayName(
+  method: Pick<PaymentMethod, 'name' | 'type'>,
+  displayKind: ReturnType<typeof getRelayBasesPaymentDisplayKind>,
+  t: (key: string) => string
+): string {
+  if (displayKind === 'alipay') return t('Alipay')
+  if (displayKind === 'wechat') return t('WeChat Pay')
+  return method.name
 }
 
-function RelayBasesPaymentBrandIcon(props: {
-  brand: RelayBasesPaymentBrand
-  method: PaymentMethod
-}) {
-  if (props.brand === 'stripe') {
-    return <SiStripe aria-hidden='true' className='size-7 text-white' />
-  }
+function getDisplayPaymentType(
+  method: Pick<PaymentMethod, 'type'>,
+  displayKind: ReturnType<typeof getRelayBasesPaymentDisplayKind>
+): string {
+  if (displayKind === 'alipay') return 'alipay'
+  if (displayKind === 'wechat') return 'wxpay'
+  return method.type
+}
 
-  if (props.brand === 'waffo') {
+function getLegacyIcon(
+  iconSrc: string | undefined,
+  name: string,
+  className: string
+) {
+  const value = iconSrc?.trim()
+  if (!value) return null
+  if (/^\/(?!\/)/.test(value)) {
     return (
-      <>
-        <img
-          src='/waffo-logo-light.svg'
-          alt=''
-          aria-hidden='true'
-          className='block size-8 object-contain dark:hidden'
-        />
-        <img
-          src='/waffo-logo-dark.svg'
-          alt=''
-          aria-hidden='true'
-          className='hidden size-8 object-contain dark:block'
-        />
-      </>
+      <img
+        src={value}
+        alt={name}
+        title={name}
+        className={className}
+        style={{ objectFit: 'contain' }}
+        loading='lazy'
+        decoding='async'
+        referrerPolicy='no-referrer'
+      />
     )
   }
-
-  return getPaymentIcon(
-    props.method.type,
-    'size-7',
-    props.method.icon,
-    props.method.name
-  )
+  return null
 }
 
 export function RelayBasesPaymentMethodCard({
@@ -97,111 +95,84 @@ export function RelayBasesPaymentMethodCard({
   minimum,
   topupAmount,
   loading,
-  selected = false,
+  legacyIconSrc,
   paymentBusy,
   onSelect,
 }: RelayBasesPaymentMethodCardProps) {
-  const descriptionId = useId()
-  const { t, i18n } = useTranslation(RELAYBASES_I18N_NAMESPACE)
-  const belowMinimum = topupAmount < minimum
+  const { t, i18n } = useTranslation()
+  const language = i18n.resolvedLanguage ?? i18n.language
+  const displayKind = getRelayBasesPaymentDisplayKind(method.type, language)
+  const displayName = getDisplayName(method, displayKind, t)
+  const displayType = getDisplayPaymentType(method, displayKind)
+  const belowMinimum = minimum > topupAmount
   const disabled = belowMinimum || paymentBusy
-  const copyKey = getRelayBasesPaymentCopyKey(method.type)
-  const description = belowMinimum
-    ? t('wallet.minimum.card', { amount: minimum })
-    : t(copyKey)
-  const channelHint = belowMinimum
-    ? null
-    : getRelayBasesChinesePaymentHint(
-        method.type,
-        i18n.resolvedLanguage ?? i18n.language
-      )
-  const accessibleName = t('wallet.payment.accessibleName', {
-    name: method.name,
-  })
-  const actionLabel = t('wallet.payment.action')
-  const brand = getRelayBasesPaymentBrand(method.type)
-  const selectedAvailable = !belowMinimum && selected
-
-  return (
+  const disabledReason = belowMinimum
+    ? t('Minimum topup amount: {{amount}}', { amount: minimum })
+    : undefined
+  const disabledLabel = belowMinimum ? `${t('Minimum:')} ${minimum}` : undefined
+  const button = (
     <Button
       type='button'
       variant='outline'
       onClick={onSelect}
       disabled={disabled}
       aria-busy={loading}
+      title={disabledReason}
       aria-label={
-        belowMinimum ? `${accessibleName}. ${description}` : accessibleName
+        disabledReason ? `${displayName}. ${disabledReason}` : displayName
       }
-      aria-describedby={descriptionId}
-      title={belowMinimum ? description : undefined}
-      className={cn(
-        'group relative grid h-auto min-h-[104px] w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center justify-start gap-x-3 gap-y-2 overflow-hidden rounded-lg border border-border/80 bg-background px-4 py-4 text-left whitespace-normal shadow-sm shadow-black/[0.025] transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:bg-primary/[0.035] hover:shadow-md hover:shadow-black/[0.045] focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 disabled:translate-y-0 disabled:cursor-not-allowed sm:min-h-[86px] sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:py-3.5',
-        selectedAvailable && 'border-primary/45 bg-primary/[0.04]',
-        loading &&
-          'border-primary/55 bg-primary/[0.05] shadow-md shadow-black/[0.04] disabled:opacity-100',
-        !loading && paymentBusy && 'disabled:opacity-55',
-        belowMinimum &&
-          'border-muted bg-muted/35 text-muted-foreground shadow-none ring-0 hover:translate-y-0 hover:border-muted hover:bg-muted/35 hover:shadow-none disabled:opacity-100'
-      )}
+      className='min-h-14 w-full min-w-0 justify-start gap-2 rounded-lg px-3 py-2 text-left'
     >
-      <span
-        aria-hidden='true'
-        className={cn(
-          'flex size-12 shrink-0 items-center justify-center rounded-lg border shadow-sm transition-transform duration-200 group-hover:scale-[1.03]',
-          brand === 'stripe' &&
-            'border-[#635BFF] bg-[#635BFF] shadow-[0_5px_14px_-8px_rgba(99,91,255,0.95)]',
-          brand === 'waffo' &&
-            'border-border/80 bg-muted/70 dark:border-white/15 dark:bg-white/10',
-          brand === 'generic' && 'bg-background border-border'
-        )}
-      >
-        <RelayBasesPaymentBrandIcon brand={brand} method={method} />
-      </span>
-
-      <span className='flex min-w-0 flex-col items-start gap-1.5'>
-        <span className='text-foreground w-full text-sm font-semibold break-words sm:text-[15px]'>
-          {method.name}
+      {loading ? (
+        <Loader2 className='h-4 w-4 animate-spin' />
+      ) : (
+        <span title={displayName} aria-hidden='true'>
+          {(displayKind === null
+            ? getLegacyIcon(legacyIconSrc, displayName, 'h-4 w-4')
+            : null) ??
+            getPaymentIcon(
+              displayType,
+              'h-4 w-4',
+              displayKind === null ? method.icon : undefined,
+              displayName
+            )}
         </span>
-        <span
-          id={descriptionId}
-          className='text-muted-foreground flex max-w-full items-start gap-1.5 text-xs leading-[1.35rem] font-normal'
-        >
-          {channelHint === 'alipay' && (
-            <SiAlipay
-              aria-hidden='true'
-              className='mt-0.5 size-[22px] shrink-0 text-[#1677FF]'
-            />
-          )}
-          {channelHint === 'wechat' && (
-            <SiWechat
-              aria-hidden='true'
-              className='mt-0.5 size-[22px] shrink-0 text-[#07C160]'
-            />
-          )}
-          <span>{description}</span>
-        </span>
-      </span>
-
-      <span
-        aria-hidden='true'
-        className={cn(
-          'col-span-2 inline-flex h-8 w-full shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors sm:col-span-1 sm:w-auto',
-          belowMinimum
-            ? 'bg-muted text-muted-foreground'
-            : 'bg-primary text-primary-foreground group-hover:bg-primary/90',
-          loading && 'bg-primary text-primary-foreground'
-        )}
-      >
-        {loading ? (
-          <Loader2 className='size-3.5 animate-spin' />
-        ) : (
-          <>
-            <span>{actionLabel}</span>
-            <ChevronRight className='size-3.5 transition-transform group-hover:translate-x-0.5' />
-          </>
+      )}
+      <span className='flex min-w-0 flex-col items-start gap-0.5'>
+        <span className='max-w-full truncate'>{displayName}</span>
+        {disabledLabel && (
+          <span className='text-muted-foreground max-w-full truncate text-[11px] leading-4 font-normal'>
+            {disabledLabel}
+          </span>
         )}
       </span>
     </Button>
+  )
+
+  return belowMinimum ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <span
+              className='block w-full'
+              tabIndex={0}
+              aria-disabled='true'
+              aria-label={
+                disabledReason
+                  ? `${displayName}. ${disabledReason}`
+                  : displayName
+              }
+            >
+              {button}
+            </span>
+          }
+        />
+        <TooltipContent>{disabledReason}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : (
+    button
   )
 }
 
@@ -210,6 +181,7 @@ interface RelayBasesPaymentMethodGridProps {
   baseMinimum: number
   topupAmount: number
   paymentLoading: string | null
+  /** Retained for API compatibility; official buttons do not expose selection state. */
   selectedPaymentMethod?: PaymentMethod | null
   onSelect: (method: PaymentMethod) => void
 }
@@ -219,26 +191,32 @@ export function RelayBasesPaymentMethodGrid({
   baseMinimum,
   topupAmount,
   paymentLoading,
-  selectedPaymentMethod,
   onSelect,
 }: RelayBasesPaymentMethodGridProps) {
-  const orderedMethods = orderRelayBasesPaymentMethods(methods)
+  const seenKeys = new Map<string, number>()
+  const keyedMethods = methods.map((method) => {
+    const minimum = Math.max(method.min_topup ?? 0, baseMinimum)
+    const interactionKey = getRelayBasesPaymentMethodInteractionKey(method)
+    const occurrence = seenKeys.get(interactionKey) ?? 0
+    seenKeys.set(interactionKey, occurrence + 1)
+
+    return {
+      method,
+      minimum,
+      interactionKey,
+      key: `${interactionKey}-${occurrence}`,
+    }
+  })
 
   return (
-    <div className={getRelayBasesPaymentGridClass(orderedMethods.length)}>
-      {orderedMethods.map((method) => (
+    <div className='grid grid-cols-2 gap-1.5 sm:gap-3 lg:grid-cols-3'>
+      {keyedMethods.map(({ method, minimum, interactionKey, key }) => (
         <RelayBasesPaymentMethodCard
-          key={`${method.type}-${method.name}`}
+          key={key}
           method={method}
-          minimum={Math.max(method.min_topup ?? 0, baseMinimum)}
+          minimum={minimum}
           topupAmount={topupAmount}
-          loading={
-            paymentLoading === getRelayBasesPaymentMethodInteractionKey(method)
-          }
-          selected={
-            selectedPaymentMethod?.type === method.type &&
-            selectedPaymentMethod.name === method.name
-          }
+          loading={paymentLoading === interactionKey}
           paymentBusy={paymentLoading !== null}
           onSelect={() => onSelect(method)}
         />

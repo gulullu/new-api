@@ -58,7 +58,7 @@
     },
     "minimum": {
       "placeholder": "最低 Ɍ{{amount}}",
-      "notice": "最低儲值 Ɍ{{amount}}。支付管道會對每筆成功交易收取固定手續費，並另加按金額計算的費用；小額儲值的手續費可能接近甚至超過支付金額，因此設置此最低限額。感謝理解。",
+      "notice": "最低儲值 Ɍ{{amount}}。小額儲值的手續費可能接近甚至超過支付金額，因此設定此最低限額。感謝理解。",
       "card": "最低儲值 Ɍ{{amount}}，請調整金額後繼續。"
     },
     "payment": {
@@ -66,7 +66,8 @@
       "waffo": "支援銀行卡和微信支付。跳轉 Waffo 安全結帳頁，可先核對應付金額再付款。",
       "generic": "前往所選管道完成付款。",
       "accessibleName": "使用{{name}}支付",
-      "action": "付款"
+      "action": "付款",
+      "approxCny": "約合￥{{amount}}"
     },
     "creditsNotice": {
       "title": "儲值後獲得 API Credits",

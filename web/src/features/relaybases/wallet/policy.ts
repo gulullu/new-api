@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { toIntlLocale } from '@/i18n/languages'
 
 import type { PaymentMethod } from '../../wallet/types'
+import { toRelayBasesLocaleCode } from '../i18n/manifest'
 
 export const RELAYBASES_CREDITS_DOCS_URL =
   'https://site.relaybases.com/usage-doc.html'
@@ -34,14 +35,8 @@ const PAYMENT_ORDER = new Map([
 ])
 
 export function isRelayBasesChineseLanguage(language?: string | null): boolean {
-  if (!language) return false
-  const normalized = language.replaceAll('_', '-').toLowerCase()
-  return (
-    normalized === 'zh' ||
-    normalized.startsWith('zh-') ||
-    normalized === 'zhcn' ||
-    normalized === 'zhtw'
-  )
+  const locale = toRelayBasesLocaleCode(language)
+  return locale === 'zhCN' || locale === 'zhTW'
 }
 
 export function orderRelayBasesPaymentMethods(
@@ -91,7 +86,12 @@ export function getRelayBasesPaymentCopyKey(
 
 export type RelayBasesChinesePaymentHint = 'alipay' | 'wechat' | null
 
-export function getRelayBasesChinesePaymentHint(
+/**
+ * Returns the payment channel that should replace the gateway label in the
+ * Chinese wallet UI.  Stripe and Waffo are still sent to the backend using
+ * their original payment types; this value is presentation-only.
+ */
+export function getRelayBasesPaymentDisplayKind(
   paymentType: string,
   language?: string | null
 ): RelayBasesChinesePaymentHint {
@@ -101,6 +101,13 @@ export function getRelayBasesChinesePaymentHint(
     return 'wechat'
   }
   return null
+}
+
+export function getRelayBasesChinesePaymentHint(
+  paymentType: string,
+  language?: string | null
+): RelayBasesChinesePaymentHint {
+  return getRelayBasesPaymentDisplayKind(paymentType, language)
 }
 
 function numberFormatter(

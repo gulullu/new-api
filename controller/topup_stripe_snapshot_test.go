@@ -19,6 +19,43 @@ func TestStripeCheckoutPaymentSnapshotUsesLineItemMinorUnitRounding(t *testing.T
 	assert.Equal(t, "USD", payment.Currency)
 }
 
+func TestStripeCheckoutPaymentMethodTypesAreLocaleScoped(t *testing.T) {
+	tests := []struct {
+		name   string
+		locale string
+		want   []string
+	}{
+		{name: "simplified Chinese", locale: "zhCN", want: []string{"alipay"}},
+		{name: "traditional Chinese", locale: "zhTW", want: []string{"alipay"}},
+		{name: "BCP 47 Chinese", locale: "zh-CN", want: []string{"alipay"}},
+		{name: "traditional BCP 47 Chinese", locale: "zh-Hant-TW", want: []string{"alipay"}},
+		{name: "unsupported Chinese-looking tag", locale: "zh-unknown", want: nil},
+		{name: "English keeps dashboard methods", locale: "en"},
+		{name: "other language keeps dashboard methods", locale: "fr"},
+		{name: "empty locale keeps dashboard methods", locale: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := stripeCheckoutPaymentMethodTypesForLocale(tt.locale)
+			if len(tt.want) == 0 {
+				if actual != nil {
+					t.Fatalf("expected nil payment method types, got %#v", actual)
+				}
+				return
+			}
+			if len(actual) != len(tt.want) {
+				t.Fatalf("expected %d payment method types, got %#v", len(tt.want), actual)
+			}
+			for i, want := range tt.want {
+				if actual[i] == nil || *actual[i] != want {
+					t.Fatalf("payment method type %d: expected %q, got %#v", i, want, actual[i])
+				}
+			}
+		})
+	}
+}
+
 func TestStripePayMoneyUsesCapturedUnitPrice(t *testing.T) {
 	originalUnitPrice := setting.StripeUnitPrice
 	originalQuotaDisplayType := operation_setting.GetGeneralSetting().QuotaDisplayType

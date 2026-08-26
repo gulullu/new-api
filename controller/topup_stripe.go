@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	appI18n "github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting"
@@ -119,7 +120,16 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	reference := fmt.Sprintf("new-api-ref-%d-%d-%s", user.Id, time.Now().UnixMilli(), randstr.String(4))
 	referenceId := "ref_" + common.Sha1([]byte(reference))
 
-	checkout, err := genStripeLink(referenceId, user.StripeCustomer, user.Email, payMoney, unitPrice, req.SuccessURL, req.CancelURL)
+	checkout, err := genStripeLinkForLocale(
+		referenceId,
+		user.StripeCustomer,
+		user.Email,
+		payMoney,
+		unitPrice,
+		req.SuccessURL,
+		req.CancelURL,
+		appI18n.GetLangFromContext(c),
+	)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Stripe 创建 Checkout Session 失败 user_id=%d trade_no=%s amount=%d error=%q", id, referenceId, req.Amount, err.Error()))
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
@@ -444,6 +454,54 @@ type stripeCheckoutResult struct {
 // Returns the checkout session URL and the exact amount/currency sent to
 // Stripe, or an error if the session creation fails.
 func genStripeLink(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string) (stripeCheckoutResult, error) {
+	return genStripeLinkWithPaymentMethodTypes(
+		referenceId,
+		customerId,
+		email,
+		payMoney,
+		configuredUnitPrice,
+		successURL,
+		cancelURL,
+		nil,
+	)
+}
+
+// genStripeLinkForLocale keeps the existing Stripe gateway request unchanged
+// while constraining one-time Checkout to Alipay for Chinese-language users.
+// Non-Chinese requests pass nil payment method types and continue to use the
+// payment methods configured in Stripe Dashboard.
+func genStripeLinkForLocale(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, locale string) (stripeCheckoutResult, error) {
+	return genStripeLinkWithPaymentMethodTypes(
+		referenceId,
+		customerId,
+		email,
+		payMoney,
+		configuredUnitPrice,
+		successURL,
+		cancelURL,
+		stripeCheckoutPaymentMethodTypesForLocale(locale),
+	)
+}
+
+func stripeCheckoutPaymentMethodTypesForLocale(locale string) []*string {
+	if !isChinesePaymentLocale(locale) {
+		return nil
+	}
+	return stripe.StringSlice([]string{"alipay"})
+}
+
+func isChinesePaymentLocale(locale string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(locale, "_", "-")))
+	switch normalized {
+	case "zh", "zh-cn", "zhcn", "zh-hans", "zh-hans-cn",
+		"zh-tw", "zhtw", "zh-hant", "zh-hant-tw", "zh-hk", "zh-mo":
+		return true
+	default:
+		return false
+	}
+}
+
+func genStripeLinkWithPaymentMethodTypes(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, paymentMethodTypes []*string) (stripeCheckoutResult, error) {
 	if !strings.HasPrefix(setting.StripeApiSecret, "sk_") && !strings.HasPrefix(setting.StripeApiSecret, "rk_") {
 		return stripeCheckoutResult{}, fmt.Errorf("无效的Stripe API密钥")
 	}
@@ -514,6 +572,9 @@ func genStripeLink(referenceId string, customerId string, email string, payMoney
 		},
 		Mode:                stripe.String(string(stripe.CheckoutSessionModePayment)),
 		AllowPromotionCodes: stripe.Bool(setting.StripePromotionCodesEnabled),
+	}
+	if len(paymentMethodTypes) > 0 {
+		params.PaymentMethodTypes = paymentMethodTypes
 	}
 
 	if "" == customerId {

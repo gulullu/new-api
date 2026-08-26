@@ -58,7 +58,7 @@
     },
     "minimum": {
       "placeholder": "最低 Ɍ{{amount}}",
-      "notice": "最低充值 Ɍ{{amount}}。支付渠道会对每笔成功交易收取固定手续费，并另加按金额计算的费用；小额充值的手续费可能接近甚至超过支付金额，因此设置此最低限额。感谢理解。",
+      "notice": "最低充值 Ɍ{{amount}}。小额充值的手续费可能接近甚至超过支付金额，因此设置此最低限额。感谢理解。",
       "card": "最低充值 Ɍ{{amount}}，请调整金额后继续。"
     },
     "payment": {
@@ -66,7 +66,8 @@
       "waffo": "支持银行卡和微信支付。跳转 Waffo 安全结账页，可先核对应付金额再付款。",
       "generic": "跳转所选渠道完成付款。",
       "accessibleName": "使用{{name}}支付",
-      "action": "去支付"
+      "action": "去支付",
+      "approxCny": "约合￥{{amount}}"
     },
     "creditsNotice": {
       "title": "充值后获得 API Credits",

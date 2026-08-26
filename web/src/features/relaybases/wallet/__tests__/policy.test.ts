@@ -26,6 +26,7 @@ import {
   formatRelayBasesUsdCompact,
   getRelayBasesChinesePaymentHint,
   getRelayBasesCreditsDocsUrl,
+  getRelayBasesPaymentDisplayKind,
   getRelayBasesPaymentCopyKey,
   getRelayBasesPaymentGridClass,
   getRelayBasesPaymentMethodInteractionKey,
@@ -39,6 +40,7 @@ describe('RelayBases wallet policy', () => {
     assert.equal(isRelayBasesChineseLanguage('zhCN'), true)
     assert.equal(isRelayBasesChineseLanguage('zhTW'), true)
     assert.equal(isRelayBasesChineseLanguage('zh-TW'), true)
+    assert.equal(isRelayBasesChineseLanguage('zh-unknown'), false)
     assert.equal(isRelayBasesChineseLanguage('en'), false)
   })
 
@@ -102,6 +104,21 @@ describe('RelayBases wallet policy', () => {
       'wechat'
     )
     assert.equal(getRelayBasesChinesePaymentHint('stripe', 'en'), null)
+  })
+
+  test('maps only Stripe and Waffo gateway visuals to Chinese payment brands', () => {
+    assert.equal(getRelayBasesPaymentDisplayKind('stripe', 'zhCN'), 'alipay')
+    assert.equal(
+      getRelayBasesPaymentDisplayKind('waffo_pancake', 'zhTW'),
+      'wechat'
+    )
+    assert.equal(getRelayBasesPaymentDisplayKind('waffo', 'zh-CN'), 'wechat')
+    assert.equal(getRelayBasesPaymentDisplayKind('alipay', 'zhCN'), null)
+    assert.equal(getRelayBasesPaymentDisplayKind('stripe', 'en'), null)
+    assert.equal(
+      getRelayBasesPaymentDisplayKind('waffo_pancake', 'zh-unknown'),
+      null
+    )
   })
 
   test('formats credits and payment money with explicit units', () => {

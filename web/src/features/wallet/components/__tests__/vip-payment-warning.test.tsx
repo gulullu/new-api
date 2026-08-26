@@ -52,6 +52,7 @@ for (const key of domGlobals) {
 
 type LocaleResource = {
   translation: Record<string, string>
+  relaybases?: Record<string, unknown>
 }
 
 type SupportedLocale = 'en' | 'zh' | 'zh-TW' | 'fr' | 'ja' | 'ru' | 'vi'
@@ -81,6 +82,20 @@ const resources = Object.fromEntries(localeEntries) as Record<
   SupportedLocale,
   LocaleResource
 >
+const relayBasesEn = JSON.parse(
+  await readFile(
+    new URL('../../../relaybases/i18n/locales/en.json', import.meta.url),
+    'utf8'
+  )
+) as Record<string, unknown>
+const relayBasesZh = JSON.parse(
+  await readFile(
+    new URL('../../../relaybases/i18n/locales/zh.json', import.meta.url),
+    'utf8'
+  )
+) as Record<string, unknown>
+resources.en.relaybases = relayBasesEn
+resources.zh.relaybases = relayBasesZh
 
 const React = await import('react')
 const { act } = React
@@ -149,6 +164,8 @@ async function renderPaymentDialog(options: {
   processing?: boolean
   showVipWarning: boolean
   onOpenChange?: (open: boolean) => void
+  usdExchangeRate?: number
+  paymentMethod?: { name: string; type: string; icon?: string }
 }) {
   const container = document.createElement('div')
   document.body.append(container)
@@ -163,9 +180,15 @@ async function renderPaymentDialog(options: {
           onConfirm={() => undefined}
           topupAmount={20}
           paymentAmount={2.85}
-          paymentMethod={{ name: 'Stripe', type: PAYMENT_TYPES.STRIPE }}
+          paymentMethod={
+            options.paymentMethod ?? {
+              name: 'Stripe',
+              type: PAYMENT_TYPES.STRIPE,
+            }
+          }
           calculating={false}
           processing={options.processing ?? false}
+          usdExchangeRate={options.usdExchangeRate}
           showRelayBasesVipPaymentWarning={options.showVipWarning}
         />
       </I18nextProvider>
@@ -291,6 +314,53 @@ describe('RelayBases VIP payment warning', () => {
     assert.deepEqual(openChanges, [])
 
     await unmountPaymentDialog(rendered)
+  })
+
+  test('keeps Chinese payment branding and approximate CNY aligned in the confirmation dialog', async () => {
+    await i18n.changeLanguage('zh')
+    const rendered = await renderPaymentDialog({
+      showVipWarning: false,
+      usdExchangeRate: 7.2,
+    })
+
+    const dialog = document.querySelector('[data-slot="alert-dialog-content"]')
+    const paymentMethod = dialog?.textContent ?? ''
+    const approximate = dialog?.querySelector('[data-payment-approx-cny]')
+
+    assert.match(paymentMethod, /支付宝/)
+    assert.doesNotMatch(paymentMethod, /Stripe/)
+    assert.ok(approximate)
+    assert.equal(approximate?.textContent, '约合￥20.52')
+    assert.doesNotMatch(approximate?.textContent ?? '', /¥￥/)
+
+    await unmountPaymentDialog(rendered)
+
+    await i18n.changeLanguage('zh')
+    const waffo = await renderPaymentDialog({
+      showVipWarning: false,
+      paymentMethod: {
+        name: 'Waffo Pancake',
+        type: PAYMENT_TYPES.WAFFO_PANCAKE,
+      },
+    })
+    const waffoDialog = document.querySelector(
+      '[data-slot="alert-dialog-content"]'
+    )
+    assert.match(waffoDialog?.textContent ?? '', /微信支付/)
+    assert.doesNotMatch(waffoDialog?.textContent ?? '', /Waffo Pancake/)
+    await unmountPaymentDialog(waffo)
+
+    await i18n.changeLanguage('en')
+    const english = await renderPaymentDialog({ showVipWarning: false })
+    const englishDialog = document.querySelector(
+      '[data-slot="alert-dialog-content"]'
+    )
+    assert.match(englishDialog?.textContent ?? '', /Stripe/)
+    assert.equal(
+      englishDialog?.querySelector('[data-payment-approx-cny]'),
+      null
+    )
+    await unmountPaymentDialog(english)
   })
 
   test('shows clear support and continue choices without truncating copy', async () => {

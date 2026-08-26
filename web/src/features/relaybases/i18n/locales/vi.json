@@ -58,7 +58,7 @@
     },
     "minimum": {
       "placeholder": "Tối thiểu Ɍ{{amount}}",
-      "notice": "Mức nạp tối thiểu: Ɍ{{amount}}. Nhà cung cấp thanh toán thu một khoản phí cố định cho mỗi giao dịch thành công cùng với phí theo tỷ lệ phần trăm, vì vậy phí của khoản nạp quá nhỏ có thể gần bằng hoặc vượt quá số tiền thanh toán. Cảm ơn bạn đã thông cảm.",
+      "notice": "Mức nạp tối thiểu: Ɍ{{amount}}. Phí của khoản nạp nhỏ có thể gần bằng hoặc vượt số tiền thanh toán, nên chúng tôi đặt mức tối thiểu này. Cảm ơn bạn đã thông cảm.",
       "card": "Mức nạp tối thiểu: Ɍ{{amount}}. Hãy tăng số tiền để tiếp tục."
     },
     "payment": {
@@ -66,7 +66,8 @@
       "waffo": "Thanh toán an toàn bằng thẻ hoặc phương thức địa phương. Xem số tiền trên Waffo trước khi trả.",
       "generic": "Tiếp tục thanh toán qua nhà cung cấp đã chọn.",
       "accessibleName": "Thanh toán bằng {{name}}",
-      "action": "Thanh toán"
+      "action": "Thanh toán",
+      "approxCny": "Khoảng ¥{{amount}}"
     },
     "creditsNotice": {
       "title": "Bạn nhận được gì sau khi thanh toán",

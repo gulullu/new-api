@@ -32,6 +32,7 @@ import { RELAYBASES_I18N_NAMESPACE } from '@/features/relaybases/i18n/manifest'
 import {
   formatRelayBasesCredits,
   formatRelayBasesUsdCompact,
+  getRelayBasesPaymentDisplayKind,
   RelayBasesCreditsNotice,
   RelayBasesPaymentMethodCard,
   RelayBasesPaymentMethodGrid,
@@ -115,6 +116,10 @@ export function RechargeFormCard({
   )
   const relayBasesLanguage =
     relayBasesI18n.resolvedLanguage ?? relayBasesI18n.language
+  const waffoPaymentLabel =
+    getRelayBasesPaymentDisplayKind('waffo', relayBasesLanguage) === 'wechat'
+      ? t('WeChat Pay')
+      : t('Waffo Payment')
   const [localAmount, setLocalAmount] = useState(topupAmount.toString())
 
   useEffect(() => {
@@ -407,13 +412,13 @@ export function RechargeFormCard({
                 onWaffoMethodSelect && (
                   <div className='space-y-2.5 sm:space-y-3'>
                     <Label className='text-muted-foreground text-xs font-medium tracking-wider uppercase'>
-                      {t('Waffo Payment')}
+                      {waffoPaymentLabel}
                     </Label>
-                    <div className='grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3'>
+                    <div className='grid grid-cols-2 gap-1.5 sm:gap-3 lg:grid-cols-3'>
                       {waffoPayMethods?.map((method, index) => {
                         const loadingKey = `waffo-${index}`
                         const methodKey = `${method.payMethodType ?? 'unknown'}-${method.payMethodName ?? method.name}`
-                        const waffoMin = waffoMinTopup || 0
+                        const waffoMin = Math.max(waffoMinTopup || 0, minTopup)
                         return (
                           <RelayBasesPaymentMethodCard
                             key={methodKey}
@@ -423,6 +428,7 @@ export function RechargeFormCard({
                               icon: method.icon,
                               min_topup: waffoMin,
                             }}
+                            legacyIconSrc={method.icon}
                             minimum={waffoMin}
                             topupAmount={topupAmount}
                             loading={paymentLoading === loadingKey}
