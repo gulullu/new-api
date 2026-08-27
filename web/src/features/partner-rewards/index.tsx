@@ -79,11 +79,11 @@ export function PartnerRules() {
   return (
     <details
       open
-      className='group bg-muted/20 overflow-hidden rounded-xl border'
+      className='group bg-muted/20 overflow-hidden rounded-2xl border'
     >
-      <summary className='hover:bg-muted/40 flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 font-medium transition-colors [&::-webkit-details-marker]:hidden'>
+      <summary className='hover:bg-muted/40 flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 font-medium transition-colors [&::-webkit-details-marker]:hidden'>
         <span className='flex items-center gap-2.5'>
-          <span className='bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg'>
+          <span className='bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl'>
             <ShieldCheck className='size-4' aria-hidden='true' />
           </span>
           {t('partner.rules.title')}
@@ -93,16 +93,16 @@ export function PartnerRules() {
           aria-hidden='true'
         />
       </summary>
-      <ul className='grid gap-2 border-t px-4 py-4 text-sm sm:grid-cols-2'>
+      <ul className='bg-background/35 grid gap-x-6 gap-y-1 border-t px-3 py-3 text-sm sm:grid-cols-2 sm:px-4 sm:py-4'>
         {rules.map((rule, index) => (
           <li
             key={rule}
-            className='bg-background/75 ring-border/60 flex items-start gap-3 rounded-lg p-3 leading-6 ring-1'
+            className='hover:bg-background/70 flex min-w-0 items-start gap-3 rounded-lg px-2.5 py-2.5 leading-6 transition-colors'
           >
-            <span className='bg-primary/10 text-primary mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold tabular-nums'>
+            <span className='border-primary/30 bg-primary/5 text-primary mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold tabular-nums'>
               {String(index + 1).padStart(2, '0')}
             </span>
-            <span className='min-w-0'>{rule}</span>
+            <span className='text-foreground/80 min-w-0'>{rule}</span>
           </li>
         ))}
       </ul>
