@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowDownToLine,
   ArrowUpRight,
-  Check,
+  ChevronDown,
   Clock3,
   Copy,
   Crown,
@@ -73,23 +73,36 @@ function PartnerMetric({
   )
 }
 
-function PartnerRules() {
+export function PartnerRules() {
   const { t } = useTranslation(RELAYBASES_I18N_NAMESPACE)
   const rules = t('partner.rules.items', { returnObjects: true }) as string[]
   return (
-    <details className='group rounded-xl border px-4 py-3'>
-      <summary className='flex cursor-pointer list-none items-center justify-between gap-3 font-medium'>
-        <span className='flex items-center gap-2'>
-          <ShieldCheck className='text-primary size-4' />
+    <details
+      open
+      className='group bg-muted/20 overflow-hidden rounded-xl border'
+    >
+      <summary className='hover:bg-muted/40 flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 font-medium transition-colors [&::-webkit-details-marker]:hidden'>
+        <span className='flex items-center gap-2.5'>
+          <span className='bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg'>
+            <ShieldCheck className='size-4' aria-hidden='true' />
+          </span>
           {t('partner.rules.title')}
         </span>
-        <span className='text-muted-foreground group-open:rotate-45'>＋</span>
+        <ChevronDown
+          className='text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-180'
+          aria-hidden='true'
+        />
       </summary>
-      <ul className='text-muted-foreground mt-3 space-y-2 border-t pt-3 text-sm'>
-        {rules.map((rule) => (
-          <li key={rule} className='flex gap-2'>
-            <Check className='text-primary mt-0.5 size-4 shrink-0' />
-            <span>{rule}</span>
+      <ul className='grid gap-2 border-t px-4 py-4 text-sm sm:grid-cols-2'>
+        {rules.map((rule, index) => (
+          <li
+            key={rule}
+            className='bg-background/75 ring-border/60 flex items-start gap-3 rounded-lg p-3 leading-6 ring-1'
+          >
+            <span className='bg-primary/10 text-primary mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold tabular-nums'>
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <span className='min-w-0'>{rule}</span>
           </li>
         ))}
       </ul>
