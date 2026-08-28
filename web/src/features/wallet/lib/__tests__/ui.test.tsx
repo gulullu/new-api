@@ -53,18 +53,27 @@ reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 describe('wallet payment icons', () => {
   after(() => domWindow.close())
 
-  test('keeps the official Waffo icon behavior', async () => {
+  test('uses the bundled Waffo mark for both gateways', async () => {
     const standardContainer = document.createElement('div')
     document.body.append(standardContainer)
     const standardRoot = createRoot(standardContainer)
 
     await act(async () => {
-      standardRoot.render(getPaymentIcon('waffo', 'size-5', undefined, 'Waffo'))
+      standardRoot.render(
+        getPaymentIcon('waffo', 'size-5', 'legacy-card-icon', 'Waffo')
+      )
     })
-    assert.ok(standardContainer.querySelector('svg'))
+    assert.ok(
+      standardContainer.querySelector('img[src="/waffo-logo-dark.svg"]')
+    )
+    assert.ok(
+      standardContainer.querySelector('img[src="/waffo-logo-light.svg"]')
+    )
     assert.equal(
-      standardContainer.querySelector('img[src="/waffo-logo-dark.svg"]'),
-      null
+      standardContainer
+        .querySelector('img[src="/waffo-logo-dark.svg"]')
+        ?.getAttribute('alt'),
+      'Waffo'
     )
 
     const pancakeContainer = document.createElement('div')

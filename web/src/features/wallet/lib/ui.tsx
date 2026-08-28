@@ -55,6 +55,30 @@ function normalizeHttpIconUrl(raw: string | undefined | null): string | null {
   return url.toString()
 }
 
+function getWaffoBrandIcon(className: string, altName?: string): ReactNode {
+  // The W mark occupies only a narrow band of its 27px viewBox. Scaling the
+  // wrapper keeps the bundled mark visually comparable to the other payment
+  // icons at the same nominal size.
+  const alt = altName || i18next.t('Waffo')
+  return (
+    <span
+      className={`inline-flex items-center justify-center leading-none ${className}`}
+      style={{ transform: 'scale(2)' }}
+    >
+      <img
+        src='/waffo-logo-light.svg'
+        alt={alt}
+        className='block h-full w-full object-contain dark:hidden'
+      />
+      <img
+        src='/waffo-logo-dark.svg'
+        alt={alt}
+        className='hidden h-full w-full object-contain dark:block'
+      />
+    </span>
+  )
+}
+
 /**
  * Get payment method icon component
  *
@@ -68,6 +92,15 @@ export function getPaymentIcon(
   icon?: string,
   altName?: string
 ): ReactNode {
+  // Legacy Waffo configurations may contain obsolete icon identifiers (for
+  // example, lowercase names that ReactIconByName cannot resolve). Keep the
+  // gateway card branded in that case. The dedicated Waffo card renders a
+  // valid root-relative submethod image before reaching this helper, so those
+  // configured Card/Apple Pay/Google Pay assets remain unchanged.
+  if (paymentType === PAYMENT_TYPES.WAFFO) {
+    return getWaffoBrandIcon(className, altName)
+  }
+
   const iconValue = icon?.trim()
   const safeIconUrl = normalizeHttpIconUrl(iconValue)
   if (safeIconUrl) {
@@ -127,33 +160,9 @@ export function getPaymentIcon(
         />
       )
     case PAYMENT_TYPES.WAFFO:
-      return (
-        <CreditCard
-          className={className}
-          style={{ color: PAYMENT_ICON_COLORS[PAYMENT_TYPES.WAFFO] }}
-        />
-      )
+      return getWaffoBrandIcon(className, altName)
     case PAYMENT_TYPES.WAFFO_PANCAKE:
-      // The W glyph fills only ~40% of its viewBox vertically (wide and
-      // short letterform); scale(2) brings its rendered height in line
-      // with Stripe's S and Creem's Landmark.
-      return (
-        <span
-          className={`inline-flex items-center justify-center leading-none ${className}`}
-          style={{ transform: 'scale(2)' }}
-        >
-          <img
-            src='/waffo-logo-light.svg'
-            alt={altName || i18next.t('Waffo')}
-            className='block h-full w-full object-contain dark:hidden'
-          />
-          <img
-            src='/waffo-logo-dark.svg'
-            alt={altName || i18next.t('Waffo')}
-            className='hidden h-full w-full object-contain dark:block'
-          />
-        </span>
-      )
+      return getWaffoBrandIcon(className, altName)
     default:
       return <CreditCard className={className} />
   }

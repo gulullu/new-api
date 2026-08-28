@@ -154,7 +154,12 @@ async function renderLegacyWaffoSelection() {
           onRedeem={() => undefined}
           redeeming={false}
           enableWaffoTopup
-          waffoPayMethods={[{ name: 'Channel A' }, { name: 'Channel B' }]}
+          waffoPayMethods={[
+            // Older Waffo settings used lowercase identifiers that cannot be
+            // resolved by the async react-icons loader.
+            { name: 'Channel A', icon: 'credit-card' },
+            { name: 'Channel B' },
+          ]}
           waffoMinTopup={20}
           onWaffoMethodSelect={() => undefined}
         />
@@ -316,6 +321,18 @@ describe('RelayBases wallet components', () => {
     assert.equal(channelB?.getAttribute('aria-pressed'), null)
     assert.equal(channelB?.querySelector('svg.lucide-check'), null)
     assert.equal(channelB?.textContent?.includes('Channel B'), true)
+    assert.ok(
+      channelA?.querySelector('img[src="/waffo-logo-dark.svg"]'),
+      'invalid Waffo icon falls back to the bundled dark mark'
+    )
+    assert.ok(
+      channelA?.querySelector('img[src="/waffo-logo-light.svg"]'),
+      'invalid Waffo icon falls back to the bundled light mark'
+    )
+    assert.ok(
+      channelB?.querySelector('img[src="/waffo-logo-dark.svg"]'),
+      'missing Waffo icon uses the bundled mark'
+    )
 
     await unmount(rendered)
   })
