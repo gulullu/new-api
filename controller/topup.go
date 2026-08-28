@@ -3,9 +3,11 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -217,6 +219,19 @@ func getPayMoney(amount int64, group string) float64 {
 	payMoney := dAmount.Mul(dPrice).Mul(dTopupGroupRatio).Mul(dDiscount)
 
 	return payMoney.InexactFloat64()
+}
+
+// partnerSettlementUsdPerUnitSnapshot captures the USD value used to settle a
+// CNY payment into the Partner USD ledger. USD orders intentionally leave this
+// field empty because their verified amount is already denominated in USD.
+// Invalid configuration is also left empty so the callback can skip the
+// Partner commission safely and emit an operator-visible warning.
+func partnerSettlementUsdPerUnitSnapshot(currency string, usdPerUnit float64) string {
+	if !strings.EqualFold(strings.TrimSpace(currency), "CNY") ||
+		usdPerUnit <= 0 || math.IsNaN(usdPerUnit) || math.IsInf(usdPerUnit, 0) {
+		return ""
+	}
+	return decimal.NewFromFloat(usdPerUnit).String()
 }
 
 func getMinTopup() int64 {

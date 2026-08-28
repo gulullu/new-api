@@ -47,11 +47,17 @@ describe('Partner program contract', () => {
     assert.equal(partnerListCount([{ id: 1 }]), 1)
   })
 
-  test('publishes complete rules in all seven locales without fee copy', () => {
+  test('publishes polished rules copy in all seven locales without fee copy', () => {
     for (const [locale, resource] of Object.entries(locales)) {
       assert.equal(resource.partner.rules.items.length, 8, locale)
+      assert.equal(resource.partner.rules.labels.length, 8, locale)
+      assert.ok(resource.partner.rules.description.trim(), locale)
       assert.ok(
-        resource.partner.rules.items.every((rule) => rule.trim().length > 20),
+        resource.partner.rules.labels.every((label) => label.trim().length > 1),
+        locale
+      )
+      assert.ok(
+        resource.partner.rules.items.every((rule) => rule.trim().length > 10),
         locale
       )
       const copy = JSON.stringify(resource.partner)

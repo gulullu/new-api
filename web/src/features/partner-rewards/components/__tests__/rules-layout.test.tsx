@@ -109,19 +109,32 @@ describe('partner rules layout', () => {
     domWindow.close()
   })
 
-  test('starts expanded with numbered rule rows instead of repeated checkmarks', async () => {
+  test('starts expanded with icon-led rule cards and no numbered markers', async () => {
     const rendered = await renderRules()
     const details = rendered.container.querySelector('details')
     const rows = [...rendered.container.querySelectorAll('li')]
+    const labels = [
+      ...rendered.container.querySelectorAll('[data-partner-rule-label]'),
+    ]
+    const icons = [...rendered.container.querySelectorAll('li svg')]
 
     assert.ok(details)
     assert.equal(details.open, true)
     assert.equal(rows.length, 8)
-    assert.deepEqual(
-      rows.map((row) => row.querySelector('span')?.textContent),
-      ['01', '02', '03', '04', '05', '06', '07', '08']
+    assert.equal(labels.length, 8)
+    assert.equal(icons.length, 8)
+    assert.equal(
+      rows.some((row) => /^\d{1,2}$/.test(row.textContent?.trim() ?? '')),
+      false
     )
-    assert.equal(rendered.container.querySelectorAll('li svg').length, 0)
+    assert.equal(
+      new Set(labels.map((label) => label.textContent?.trim())).size,
+      8
+    )
+    assert.ok(
+      details.textContent?.includes(zhCN.partner.rules.description),
+      'Chinese rules description should be rendered'
+    )
 
     await unmountRules(rendered)
   })
@@ -132,10 +145,18 @@ describe('partner rules layout', () => {
       const rendered = await renderRules()
       const details = rendered.container.querySelector('details')
       const rows = rendered.container.querySelectorAll('li')
+      const labels = rendered.container.querySelectorAll(
+        '[data-partner-rule-label]'
+      )
 
       assert.ok(details, locale)
       assert.equal(details.open, true, locale)
       assert.equal(rows.length, 8, locale)
+      assert.equal(labels.length, 8, locale)
+      assert.ok(
+        [...labels].every((label) => label.textContent?.trim()),
+        locale
+      )
 
       await unmountRules(rendered)
     }

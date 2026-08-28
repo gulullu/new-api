@@ -82,7 +82,7 @@
     "hero": {
       "badge": "Partenaire RelayBases",
       "title": "Développez vos revenus à chaque parrainage réussi",
-      "description": "Recevez {{rate}} du montant réellement payé en USD pour chaque recharge réussie de vos invités.",
+      "description": "Gagnez {{rate}} sur chaque recharge réussie, selon le montant réellement payé. La devise d’origine est conservée ; les paiements hors USD utilisent le taux verrouillé lors du paiement.",
       "linkLabel": "Votre lien partenaire",
       "copyLink": "Copier le lien",
       "linkCopied": "Lien partenaire copié"
@@ -144,16 +144,27 @@
       "reversed": "Annulée"
     },
     "rules": {
-      "title": "Règles du programme",
+      "title": "Fonctionnement du programme partenaire",
+      "description": "L’essentiel pour comprendre vos commissions et vos versements.",
+      "labels": [
+        "Parrainages éligibles",
+        "Taux transparent",
+        "Activation",
+        "Règlement sous 7 jours",
+        "Utilisation au choix",
+        "Modes de versement",
+        "Vérification manuelle",
+        "Protection en cas de remboursement"
+      ],
       "items": [
-        "Chaque recharge réussie et confirmée d’un utilisateur inscrit via votre lien peut générer une commission.",
-        "Votre taux personnel apparaît sur cette page. La commission est calculée sur le montant réellement payé en USD et ne se cumule pas avec la récompense de parrainage standard.",
-        "Les commissions commencent après l’activation de l’accès Partenaire ; les paiements antérieurs ne sont pas recalculés.",
-        "Chaque commission est bloquée pendant 7 jours avant de devenir disponible.",
-        "Les commissions disponibles peuvent être converties en API Credits ou retirées. Le retrait minimum est de 20 USD.",
-        "Les retraits sont disponibles via Alipay ou USDT sur BNB Smart Chain (BEP-20). Vérifiez soigneusement les coordonnées avant l’envoi.",
-        "Une seule demande de retrait peut être en attente. RelayBases vérifie et traite manuellement chaque demande.",
-        "Les paiements remboursés ou contestés ne donnent pas droit à une commission. Celle-ci peut être annulée ou déduite des commissions futures."
+        "Un utilisateur inscrit via votre lien génère une commission après une recharge confirmée.",
+        "Votre taux est affiché ci-dessus. La commission suit le montant réellement payé ; les paiements hors USD utilisent le taux verrouillé au paiement.",
+        "Le calcul commence à l’activation de l’accès Partenaire ; les paiements antérieurs ne sont pas recalculés.",
+        "Chaque commission devient disponible après un délai de règlement de 7 jours.",
+        "Utilisez vos commissions pour des API Credits ou retirez-les ; le retrait minimum est de 20 USD.",
+        "Retirez via Alipay ou USDT sur BNB Smart Chain (BEP-20) ; vérifiez vos coordonnées avant l’envoi.",
+        "Une seule demande peut être en attente ; RelayBases vérifie et paie chaque demande manuellement.",
+        "Les paiements remboursés ou contestés ne génèrent aucune commission ; les montants associés peuvent être annulés ou compensés."
       ]
     },
     "admin": {

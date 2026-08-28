@@ -46,9 +46,10 @@ const (
 )
 
 var (
-	partnerBSCAddressPattern = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
-	partnerBSCTxHashPattern  = regexp.MustCompile(`^0x[0-9a-fA-F]{64}$`)
-	partnerRequestIDPattern  = regexp.MustCompile(`^[A-Za-z0-9_-]{16,96}$`)
+	partnerBSCAddressPattern        = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
+	partnerBSCTxHashPattern         = regexp.MustCompile(`^0x[0-9a-fA-F]{64}$`)
+	partnerRequestIDPattern         = regexp.MustCompile(`^[A-Za-z0-9_-]{16,96}$`)
+	errPartnerCommissionUnavailable = errors.New("partner commission unavailable")
 )
 
 // PartnerProfile is deliberately separate from User. An enabled row grants
@@ -158,14 +159,45 @@ func validatePartnerCommissionBasisPoints(value int) error {
 	return nil
 }
 
+// partnerCommissionUsdMicros preserves the historical helper signature for
+// callers that only have a USD payment. New settlement paths should call
+// partnerCommissionUsdMicrosForTopUp so CNY can use its order snapshot.
 func partnerCommissionUsdMicros(payment VerifiedPayment, basisPoints int) (int64, error) {
-	if !strings.EqualFold(strings.TrimSpace(payment.Currency), "USD") {
-		return 0, errors.New("partner commissions require USD settlement")
-	}
+	return partnerCommissionUsdMicrosForTopUp(nil, payment, basisPoints)
+}
+
+// partnerCommissionUsdMicrosForTopUp converts a verified payment into the USD micros
+// used by the Partner wallet. USD payments retain their existing one-to-one
+// path. CNY payments must carry the immutable order-level USD-per-unit
+// snapshot; a missing or malformed snapshot is deliberately reported as an
+// unavailable commission so the buyer's successful top-up is never blocked.
+func partnerCommissionUsdMicrosForTopUp(topUp *TopUp, payment VerifiedPayment, basisPoints int) (int64, error) {
 	if err := validatePartnerCommissionBasisPoints(basisPoints); err != nil {
 		return 0, err
 	}
-	amount := payment.Amount.
+
+	amountUsd := payment.Amount
+	switch strings.ToUpper(strings.TrimSpace(payment.Currency)) {
+	case "USD":
+		// USD settlement remains unchanged.
+	case "CNY":
+		if topUp == nil {
+			return 0, fmt.Errorf("%w: missing top-up snapshot", errPartnerCommissionUnavailable)
+		}
+		rawRate := strings.TrimSpace(topUp.PartnerSettlementUsdPerUnit)
+		if rawRate == "" {
+			return 0, fmt.Errorf("%w: missing USD settlement rate snapshot", errPartnerCommissionUnavailable)
+		}
+		rate, err := decimal.NewFromString(rawRate)
+		if err != nil || !rate.IsPositive() {
+			return 0, fmt.Errorf("%w: invalid USD settlement rate snapshot", errPartnerCommissionUnavailable)
+		}
+		amountUsd = payment.Amount.Mul(rate)
+	default:
+		return 0, fmt.Errorf("%w: unsupported payment currency %q", errPartnerCommissionUnavailable, payment.Currency)
+	}
+
+	amount := amountUsd.
 		Mul(decimal.NewFromInt(int64(basisPoints))).
 		Div(decimal.NewFromInt(10000)).
 		Mul(decimal.NewFromInt(1_000_000)).
@@ -234,9 +266,15 @@ func grantPartnerCommissionTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPayment
 	if tx == nil || topUp == nil || paymentState == nil || invitee == nil || inviter == nil || profile == nil || !profile.Enabled || profile.UserId != inviter.Id {
 		return false, 0, errors.New("missing partner commission context")
 	}
-	commissionMicros, err := partnerCommissionUsdMicros(payment, profile.CommissionBasisPoints)
+	commissionMicros, err := partnerCommissionUsdMicrosForTopUp(topUp, payment, profile.CommissionBasisPoints)
 	if err != nil {
 		common.SysError(fmt.Sprintf("skipped partner commission: inviter_id=%d topup_id=%d error=%q", inviter.Id, topUp.Id, err.Error()))
+		if errors.Is(err, errPartnerCommissionUnavailable) {
+			return false, 0, err
+		}
+		// Keep historical failure isolation for malformed Partner profile or
+		// arithmetic data: a bad commission record must not fail the buyer's
+		// verified top-up.
 		return false, 0, nil
 	}
 	if commissionMicros <= 0 {
@@ -252,7 +290,7 @@ func grantPartnerCommissionTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPayment
 		PaymentReferenceDigest: &paymentState.ReferenceDigest,
 		PaymentProvider:        topUp.PaymentProvider,
 		PaidAmount:             payment.Amount.String(),
-		PaidCurrency:           "USD",
+		PaidCurrency:           strings.ToUpper(strings.TrimSpace(payment.Currency)),
 		Program:                ReferralRewardProgramPartner,
 		RateBasisPoints:        profile.CommissionBasisPoints,
 		CommissionUsdMicros:    commissionMicros,

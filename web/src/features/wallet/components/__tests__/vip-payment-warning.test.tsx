@@ -387,9 +387,11 @@ describe('RelayBases VIP payment warning', () => {
 
     assert.ok(notice)
     assert.equal(notice.getAttribute('role'), 'note')
-    assert.equal(notice.textContent?.includes('VIP payment option'), true)
+    assert.equal(notice.textContent?.includes('VIP discount'), true)
     assert.equal(
-      notice.textContent?.includes('including any public discount'),
+      notice.textContent?.includes(
+        'This payment does not include your VIP discount.'
+      ),
       true
     )
     assert.equal(notice.querySelector('[class*="truncate"]'), null)
@@ -451,10 +453,9 @@ describe('RelayBases VIP payment warning', () => {
 
   test('provides complete translations in all supported locales', () => {
     const keys = [
-      'VIP payment option',
-      'Your account is eligible for the VIP 20% top-up discount. Because Stripe and Waffo use overseas payment channels with higher processing fees, this discount is not applied automatically.',
-      'Contact support to top up at the VIP rate. If you continue, you will pay the amount shown above, including any public discount already displayed, but without the VIP discount.',
-      'Contact support for the VIP discount',
+      'VIP discount',
+      'This payment does not include your VIP discount. Contact support for VIP pricing.',
+      'Contact support',
       'Continue payment',
     ]
 
@@ -473,10 +474,8 @@ describe('RelayBases VIP payment warning', () => {
       }
     }
 
-    assert.equal(
-      resources.zh.translation['Contact support for the VIP discount'],
-      '联系客服享受 8 折'
-    )
+    assert.equal(resources.zh.translation['Contact support'], '联系客服')
+    assert.equal(resources.zh.translation['VIP discount'], 'VIP 优惠')
     assert.equal(resources.zh.translation['Continue payment'], '继续支付')
     assert.deepEqual(
       Object.fromEntries(

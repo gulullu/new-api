@@ -82,7 +82,7 @@
     "hero": {
       "badge": "Đối tác RelayBases",
       "title": "Nhận hoa hồng từ mỗi lần nạp thành công",
-      "description": "Nhận {{rate}} trên số tiền USD thực trả cho mỗi lần nạp thành công của người dùng được bạn giới thiệu.",
+      "description": "Nhận {{rate}} cho mỗi lần nạp thành công theo số tiền thực trả. Giữ nguyên loại tiền gốc; khoản không phải USD dùng tỷ giá được chốt lúc thanh toán.",
       "linkLabel": "Liên kết đối tác của bạn",
       "copyLink": "Sao chép liên kết",
       "linkCopied": "Đã sao chép liên kết đối tác"
@@ -144,16 +144,27 @@
       "reversed": "Đã hủy"
     },
     "rules": {
-      "title": "Quy tắc Đối tác",
+      "title": "Cách hoạt động của chương trình Đối tác",
+      "description": "Tóm tắt cách tính, quyết toán và chi trả hoa hồng.",
+      "labels": [
+        "Giới thiệu hợp lệ",
+        "Tỷ lệ minh bạch",
+        "Bắt đầu khi kích hoạt",
+        "Quyết toán 7 ngày",
+        "Tùy chọn sử dụng",
+        "Phương thức rút tiền",
+        "Xét duyệt thủ công",
+        "Bảo vệ khi hoàn tiền"
+      ],
       "items": [
-        "Hoa hồng áp dụng cho mỗi lần nạp thành công đã xác nhận của người dùng đăng ký qua liên kết của bạn.",
-        "Tỷ lệ riêng được hiển thị trên trang này. Hoa hồng tính theo số tiền USD thực trả và không cộng dồn với thưởng giới thiệu thông thường.",
-        "Hoa hồng bắt đầu sau khi quyền Đối tác được bật; các khoản thanh toán trước đó không được tính lại.",
-        "Mỗi khoản hoa hồng có thời gian quyết toán 7 ngày trước khi khả dụng.",
-        "Hoa hồng khả dụng có thể đổi thành API Credits hoặc rút. Mức rút tối thiểu là 20 USD.",
-        "Hỗ trợ rút qua Alipay hoặc USDT trên BNB Smart Chain (BEP-20). Hãy kiểm tra kỹ thông tin trước khi gửi.",
-        "Mỗi lần chỉ có một yêu cầu rút đang chờ. RelayBases xét duyệt và xử lý thủ công từng yêu cầu.",
-        "Khoản thanh toán được hoàn hoặc bị tranh chấp không nhận hoa hồng. Hoa hồng liên quan có thể bị hủy hoặc trừ từ khoản tương lai."
+        "Người dùng đăng ký qua liên kết của bạn sẽ tạo hoa hồng sau khi nạp tiền được xác nhận.",
+        "Tỷ lệ riêng hiển thị ở trên. Hoa hồng tính theo số tiền thực trả; khoản không phải USD dùng tỷ giá được chốt lúc thanh toán.",
+        "Hoa hồng bắt đầu khi quyền Đối tác được bật; các khoản trước đó không tính lại.",
+        "Mỗi khoản hoa hồng khả dụng sau thời gian quyết toán 7 ngày.",
+        "Hoa hồng khả dụng có thể đổi thành API Credits hoặc rút; mức rút tối thiểu là 20 USD.",
+        "Hỗ trợ rút qua Alipay hoặc USDT trên BNB Smart Chain (BEP-20); hãy kiểm tra thông tin trước khi gửi.",
+        "Mỗi lần chỉ có một yêu cầu rút đang chờ; RelayBases xét duyệt và thanh toán thủ công.",
+        "Khoản thanh toán được hoàn hoặc bị tranh chấp không nhận hoa hồng; số tiền liên quan có thể bị hủy hoặc trừ vào khoản sau."
       ]
     },
     "admin": {

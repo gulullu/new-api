@@ -176,9 +176,9 @@ func CreateWaffoPancakeCNYProduct(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "success",
 			"data": gin.H{
-				"product_id": existing,
+				"product_id":   existing,
 				"product_name": "RelayBases API 充值（人民币）",
-				"created": false,
+				"created":      false,
 			},
 		})
 		return
@@ -218,9 +218,9 @@ func CreateWaffoPancakeCNYProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
 		"data": gin.H{
-			"product_id": productID,
+			"product_id":   productID,
 			"product_name": "RelayBases API 充值（人民币）",
-			"created": true,
+			"created":      true,
 		},
 	})
 }
@@ -483,6 +483,7 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		return
 	}
 	unitPrice := config.UnitPrice
+	partnerSettlementUnitPrice := setting.WaffoPancakeUnitPrice
 	payMoney := getWaffoPancakePayMoneyAtUnitPrice(req.Amount, group, unitPrice)
 	if payMoney < 0.01 {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
@@ -491,17 +492,18 @@ func RequestWaffoPancakePay(c *gin.Context) {
 
 	tradeNo := fmt.Sprintf("WAFFO_PANCAKE-%d-%d-%s", id, time.Now().UnixMilli(), randstr.String(6))
 	topUp := &model.TopUp{
-		UserId:            id,
-		Amount:            normalizeWaffoPancakeTopUpAmount(req.Amount),
-		Money:             payMoney,
-		TradeNo:           tradeNo,
-		PaymentMethod:     model.PaymentMethodWaffoPancake,
-		PaymentProvider:   model.PaymentProviderWaffoPancake,
-		PaymentAmount:     formatWaffoPancakeAmount(payMoney),
-		PaymentCurrency:   config.Currency,
-		ReferralUnitPrice: decimal.NewFromFloat(unitPrice).String(),
-		CreateTime:        time.Now().Unix(),
-		Status:            common.TopUpStatusPending,
+		UserId:                      id,
+		Amount:                      normalizeWaffoPancakeTopUpAmount(req.Amount),
+		Money:                       payMoney,
+		TradeNo:                     tradeNo,
+		PaymentMethod:               model.PaymentMethodWaffoPancake,
+		PaymentProvider:             model.PaymentProviderWaffoPancake,
+		PaymentAmount:               formatWaffoPancakeAmount(payMoney),
+		PaymentCurrency:             config.Currency,
+		ReferralUnitPrice:           decimal.NewFromFloat(unitPrice).String(),
+		PartnerSettlementUsdPerUnit: partnerSettlementUsdPerUnitSnapshot(config.Currency, partnerSettlementUnitPrice),
+		CreateTime:                  time.Now().Unix(),
+		Status:                      common.TopUpStatusPending,
 	}
 	if err := topUp.Insert(); err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 创建充值订单失败 user_id=%d trade_no=%s amount=%d error=%q", id, tradeNo, req.Amount, err.Error()))

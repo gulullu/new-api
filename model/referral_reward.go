@@ -517,8 +517,27 @@ func grantPaidReferralRewardTx(tx *gorm.DB, topUp *TopUp, payment VerifiedPaymen
 				" invitee_id=" + decimal.NewFromInt(int64(invitee.Id)).String() +
 				" topup_id=" + decimal.NewFromInt(int64(topUp.Id)).String() +
 				" commission_usd_micros=" + decimal.NewFromInt(commissionUsdMicros).String())
+			return true, inviter.Id, 0, nil
 		}
-		return granted, inviter.Id, 0, err
+		if err != nil && !errors.Is(err, errPartnerCommissionUnavailable) {
+			return false, inviter.Id, 0, err
+		}
+		if errors.Is(err, errPartnerCommissionUnavailable) {
+			// A legacy/CNY order without a valid USD settlement snapshot must
+			// not make a successful payment silently lose all referral credit.
+			// Keep the buyer completion authoritative and continue through the
+			// normal first-payment referral path below.
+			common.SysError("partner commission unavailable; falling back to standard referral reward: inviter_id=" +
+				decimal.NewFromInt(int64(inviter.Id)).String() +
+				" topup_id=" + decimal.NewFromInt(int64(topUp.Id)).String() +
+				" provider=" + topUp.PaymentProvider +
+				" currency=" + strings.ToUpper(strings.TrimSpace(payment.Currency)))
+		} else {
+			// A valid Partner membership with a zero commission (for example a
+			// sub-cent payment) intentionally consumes the Partner branch and
+			// does not also award the standard referral reward.
+			return false, inviter.Id, 0, nil
+		}
 	}
 
 	// Standard referral rewards remain first-payment only. Partner rewards take

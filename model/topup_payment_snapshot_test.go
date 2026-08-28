@@ -85,6 +85,7 @@ func TestManualCompletionClearsQuoteAndVerifiedCallbackOnlyReconcilesSnapshot(t 
 	require.NotNil(t, manuallyCompleted)
 	assert.Empty(t, manuallyCompleted.PaymentAmount)
 	assert.Empty(t, manuallyCompleted.PaymentCurrency)
+	assert.Empty(t, manuallyCompleted.PartnerSettlementUsdPerUnit)
 
 	var credited User
 	require.NoError(t, DB.Select("quota").First(&credited, user.Id).Error)
@@ -248,6 +249,7 @@ func TestTopUpAutoMigrateAddsEmptyPaymentSnapshotToLegacyRows(t *testing.T) {
 	assert.True(t, db.Migrator().HasColumn(&TopUp{}, "payment_amount"))
 	assert.True(t, db.Migrator().HasColumn(&TopUp{}, "payment_currency"))
 	assert.True(t, db.Migrator().HasColumn(&TopUp{}, "referral_unit_price"))
+	assert.True(t, db.Migrator().HasColumn(&TopUp{}, "partner_settlement_usd_per_unit"))
 
 	var columns []struct {
 		Name         string `gorm:"column:name"`
@@ -256,17 +258,23 @@ func TestTopUpAutoMigrateAddsEmptyPaymentSnapshotToLegacyRows(t *testing.T) {
 	}
 	require.NoError(t, db.Raw("PRAGMA table_info(top_ups)").Scan(&columns).Error)
 	foundReferralUnitPrice := false
+	foundPartnerSettlementRate := false
 	for _, column := range columns {
-		if column.Name != "referral_unit_price" {
+		switch column.Name {
+		case "referral_unit_price":
+			foundReferralUnitPrice = true
+		case "partner_settlement_usd_per_unit":
+			foundPartnerSettlementRate = true
+		default:
 			continue
 		}
-		foundReferralUnitPrice = true
 		assert.Equal(t, 1, column.NotNull)
 		// SQLite accepts both single- and double-quoted empty string literals;
 		// GORM versions differ only in how they render the same DEFAULT ''.
 		assert.Contains(t, []string{"''", `""`}, column.DefaultValue)
 	}
 	assert.True(t, foundReferralUnitPrice)
+	assert.True(t, foundPartnerSettlementRate)
 
 	var migrated TopUp
 	require.NoError(t, db.First(&migrated, 1).Error)
@@ -275,4 +283,5 @@ func TestTopUpAutoMigrateAddsEmptyPaymentSnapshotToLegacyRows(t *testing.T) {
 	assert.Empty(t, migrated.PaymentAmount)
 	assert.Empty(t, migrated.PaymentCurrency)
 	assert.Empty(t, migrated.ReferralUnitPrice)
+	assert.Empty(t, migrated.PartnerSettlementUsdPerUnit)
 }

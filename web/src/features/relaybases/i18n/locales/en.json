@@ -82,7 +82,7 @@
     "hero": {
       "badge": "RelayBases Partner",
       "title": "Grow with every successful referral",
-      "description": "Earn {{rate}} of the actual USD amount paid on every successful top-up made by users you invite.",
+      "description": "Earn {{rate}} on each successful top-up, based on the amount actually paid. The original currency is retained; non-USD payments use the rate locked at checkout.",
       "linkLabel": "Your partner link",
       "copyLink": "Copy link",
       "linkCopied": "Partner link copied"
@@ -150,16 +150,27 @@
       "reversed": "Reversed"
     },
     "rules": {
-      "title": "Partner rules",
+      "title": "How the Partner program works",
+      "description": "A quick guide to earning, settlement, and payouts.",
+      "labels": [
+        "Qualified referrals",
+        "Fair rate",
+        "Starts when enabled",
+        "Seven-day settlement",
+        "Choose how to use it",
+        "Trusted payout methods",
+        "Manual review",
+        "Refund protection"
+      ],
       "items": [
-        "Commission applies to every confirmed successful top-up made by a user who registered through your link.",
-        "Your personal rate is shown on this page. Commission uses the actual USD amount paid and does not stack with the standard referral reward.",
-        "Partner commission starts after Partner access is enabled; earlier payments are not recalculated.",
-        "Each commission is held for 7 days before becoming available.",
-        "Available commission can be transferred to API Credits or withdrawn. The minimum withdrawal is USD 20.",
-        "Withdrawals support Alipay and USDT on BNB Smart Chain (BEP-20). Check payout details carefully before submitting.",
-        "Only one withdrawal request may be pending at a time. RelayBases reviews and processes each request manually.",
-        "Refunded or disputed payments do not earn commission. Related commission may be reversed or deducted from future commission."
+        "Users who join through your link and complete a confirmed top-up generate commission.",
+        "Your rate appears above. Commission follows the amount actually paid; non-USD payments use the conversion locked at checkout.",
+        "Commission starts when Partner access is enabled; earlier payments are not recalculated.",
+        "Each commission settles for 7 days before it becomes available.",
+        "Use available commission for API Credits or withdraw it; the minimum withdrawal is USD 20.",
+        "Withdraw via Alipay or USDT on BNB Smart Chain (BEP-20); check details before submitting.",
+        "Only one withdrawal can be pending; RelayBases reviews and pays each request manually.",
+        "Refunded or disputed payments earn no commission; related amounts may be reversed or offset later."
       ]
     },
     "admin": {

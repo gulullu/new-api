@@ -36,26 +36,21 @@ export function RelayBasesVipPaymentNotice() {
   return (
     <div
       role='note'
-      aria-label={t('VIP payment option')}
+      aria-label={t('VIP discount')}
       data-relaybases-vip-payment-warning
-      className='border-primary/20 bg-primary/5 min-w-0 rounded-lg border p-3'
+      className='border-primary/20 bg-primary/5 min-w-0 rounded-lg border px-3 py-2.5'
     >
       <div className='flex min-w-0 items-start gap-3'>
-        <div className='bg-primary/10 text-primary mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full'>
+        <div className='bg-primary/10 text-primary mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full'>
           <BadgePercent aria-hidden='true' className='size-4' />
         </div>
-        <div className='min-w-0 space-y-1.5'>
+        <div className='min-w-0 space-y-0.5'>
           <p className='text-sm font-semibold break-words whitespace-normal'>
-            {t('VIP payment option')}
+            {t('VIP discount')}
           </p>
-          <p className='text-muted-foreground text-sm leading-relaxed break-words whitespace-normal'>
+          <p className='text-muted-foreground text-xs leading-5 break-words whitespace-normal'>
             {t(
-              'Your account is eligible for the VIP 20% top-up discount. Because Stripe and Waffo use overseas payment channels with higher processing fees, this discount is not applied automatically.'
-            )}
-          </p>
-          <p className='text-sm leading-relaxed break-words whitespace-normal'>
-            {t(
-              'Contact support to top up at the VIP rate. If you continue, you will pay the amount shown above, including any public discount already displayed, but without the VIP discount.'
+              'This payment does not include your VIP discount. Contact support for VIP pricing.'
             )}
           </p>
         </div>
@@ -121,7 +116,7 @@ export function RelayBasesVipPaymentActions(
           props.onContactSupport()
         }}
       >
-        {t('Contact support for the VIP discount')}
+        {t('Contact support')}
         <ExternalLink aria-hidden='true' data-icon='inline-end' />
       </Button>
       <AlertDialogAction

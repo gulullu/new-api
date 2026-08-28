@@ -2,15 +2,20 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowDownToLine,
   ArrowUpRight,
+  BadgePercent,
   ChevronDown,
   Clock3,
+  ClipboardCheck,
   Copy,
   Crown,
   HandCoins,
+  Landmark,
   Link2,
   ShieldCheck,
   Sparkles,
+  UserRoundCheck,
   WalletCards,
+  Zap,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -73,38 +78,80 @@ function PartnerMetric({
   )
 }
 
+const PARTNER_RULE_ICONS = [
+  UserRoundCheck,
+  BadgePercent,
+  Zap,
+  Clock3,
+  WalletCards,
+  Landmark,
+  ClipboardCheck,
+  ShieldCheck,
+] as const
+
 export function PartnerRules() {
   const { t } = useTranslation(RELAYBASES_I18N_NAMESPACE)
   const rules = t('partner.rules.items', { returnObjects: true }) as string[]
+  const ruleLabels = t('partner.rules.labels', {
+    returnObjects: true,
+  }) as string[]
   return (
     <details
       open
-      className='group bg-muted/20 overflow-hidden rounded-2xl border'
+      className='group from-muted/35 via-background to-primary/[0.04] border-border/70 overflow-hidden rounded-2xl border bg-gradient-to-br shadow-sm'
     >
-      <summary className='hover:bg-muted/40 flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 font-medium transition-colors [&::-webkit-details-marker]:hidden'>
-        <span className='flex items-center gap-2.5'>
-          <span className='bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl'>
-            <ShieldCheck className='size-4' aria-hidden='true' />
+      <summary className='hover:bg-muted/35 focus-visible:ring-ring/50 flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:px-5 sm:py-4 [&::-webkit-details-marker]:hidden'>
+        <span className='flex min-w-0 items-center gap-3'>
+          <span className='from-primary/20 via-primary/10 text-primary ring-primary/20 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ring-1 ring-inset'>
+            <ShieldCheck className='size-[18px]' aria-hidden='true' />
           </span>
-          {t('partner.rules.title')}
+          <span className='min-w-0'>
+            <span className='text-foreground block font-semibold tracking-tight'>
+              {t('partner.rules.title')}
+            </span>
+            <span className='text-muted-foreground mt-0.5 block text-xs leading-5 sm:text-sm'>
+              {t('partner.rules.description')}
+            </span>
+          </span>
         </span>
         <ChevronDown
           className='text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-180'
           aria-hidden='true'
         />
       </summary>
-      <ul className='bg-background/35 grid gap-x-6 gap-y-1 border-t px-3 py-3 text-sm sm:grid-cols-2 sm:px-4 sm:py-4'>
-        {rules.map((rule, index) => (
-          <li
-            key={rule}
-            className='hover:bg-background/70 flex min-w-0 items-start gap-3 rounded-lg px-2.5 py-2.5 leading-6 transition-colors'
-          >
-            <span className='border-primary/30 bg-primary/5 text-primary mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold tabular-nums'>
-              {String(index + 1).padStart(2, '0')}
-            </span>
-            <span className='text-foreground/80 min-w-0'>{rule}</span>
-          </li>
-        ))}
+      <ul
+        data-partner-rules
+        className='bg-muted/10 grid gap-3 border-t p-3 sm:grid-cols-2 sm:gap-3.5 sm:p-4'
+      >
+        {rules.map((rule, index) => {
+          const Icon = PARTNER_RULE_ICONS[index] ?? ShieldCheck
+          return (
+            <li
+              key={rule}
+              data-partner-rule
+              className='group/rule border-border/60 bg-background/85 hover:border-primary/30 relative flex min-w-0 gap-3 rounded-xl border p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm'
+            >
+              <span className='from-primary/15 to-primary/5 text-primary ring-primary/20 mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ring-inset'>
+                <Icon className='size-4' aria-hidden='true' />
+              </span>
+              <span className='min-w-0'>
+                <span
+                  data-partner-rule-label
+                  className='text-foreground block text-sm font-semibold tracking-tight'
+                >
+                  {ruleLabels[index]}
+                </span>
+                <span className='text-muted-foreground mt-1 block text-[13px] leading-5'>
+                  {rule}
+                </span>
+              </span>
+              <span
+                aria-hidden='true'
+                className='bg-primary/25 absolute top-0 right-4 h-px w-10 opacity-0 transition-opacity group-hover/rule:opacity-100'
+              />
+            </li>
+          )
+        })}
       </ul>
     </details>
   )

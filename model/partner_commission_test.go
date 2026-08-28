@@ -6,10 +6,130 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
+	"github.com/shopspring/decimal"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestPartnerCommissionUsdMicrosConvertsCNYUsingOrderSnapshot(t *testing.T) {
+	tests := []struct {
+		name       string
+		topUp      *TopUp
+		payment    VerifiedPayment
+		wantMicros int64
+		wantError  string
+	}{
+		{
+			name:       "USD keeps the existing one to one path",
+			topUp:      &TopUp{},
+			payment:    VerifiedPayment{Amount: decimal.RequireFromString("20"), Currency: "USD"},
+			wantMicros: 6_000_000,
+		},
+		{
+			name:       "CNY uses the immutable USD per unit snapshot",
+			topUp:      &TopUp{PartnerSettlementUsdPerUnit: "0.15"},
+			payment:    VerifiedPayment{Amount: decimal.RequireFromString("20"), Currency: "CNY"},
+			wantMicros: 900_000,
+		},
+		{
+			name:      "missing CNY snapshot is unavailable",
+			topUp:     &TopUp{},
+			payment:   VerifiedPayment{Amount: decimal.RequireFromString("20"), Currency: "CNY"},
+			wantError: "partner commission unavailable",
+		},
+		{
+			name:      "malformed CNY snapshot is unavailable",
+			topUp:     &TopUp{PartnerSettlementUsdPerUnit: "not-a-rate"},
+			payment:   VerifiedPayment{Amount: decimal.RequireFromString("20"), Currency: "CNY"},
+			wantError: "partner commission unavailable",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := partnerCommissionUsdMicrosForTopUp(tt.topUp, tt.payment, PartnerDefaultCommissionBasisPoints)
+			if tt.wantError != "" {
+				require.ErrorContains(t, err, tt.wantError)
+				assert.Zero(t, actual)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantMicros, actual)
+		})
+	}
+}
+
+func TestPartnerCNYOrderWithoutSettlementSnapshotFallsBackToStandardReferral(t *testing.T) {
+	truncateTables(t)
+	createPartnerRewardUsers(t, 6051, 6052)
+	topUp := createReferralTopUp(t, 6052, "partner-cny-fallback", PaymentProviderEpay, common.TopUpStatusPending)
+	payment, err := NewVerifiedPayment("20", "CNY", "partner-cny-fallback-event", "partner-cny-fallback-payment", true)
+	require.NoError(t, err)
+	completeReferralTopUp(t, topUp, payment)
+
+	var claims []ReferralRewardClaim
+	require.NoError(t, DB.Where("inviter_id = ?", 6051).Find(&claims).Error)
+	require.Len(t, claims, 1)
+	assert.Equal(t, ReferralRewardProgramStandard, claims[0].Program)
+	assert.Equal(t, "CNY", claims[0].PaidCurrency)
+	assert.Equal(t, expectedReferralRewardQuota(t, "20"), claims[0].RewardQuota)
+
+	var partnerClaims []ReferralRewardClaim
+	require.NoError(t, DB.Where("inviter_id = ? AND program = ?", 6051, ReferralRewardProgramPartner).Find(&partnerClaims).Error)
+	assert.Empty(t, partnerClaims)
+}
+
+func TestPartnerCNYOrderUsesSettlementSnapshotAndKeepsOriginalPaymentCurrency(t *testing.T) {
+	truncateTables(t)
+	createPartnerRewardUsers(t, 6061, 6062)
+	topUp := createReferralTopUp(t, 6062, "partner-cny-snapshot", PaymentProviderEpay, common.TopUpStatusPending)
+	topUp.PartnerSettlementUsdPerUnit = "0.15"
+	require.NoError(t, topUp.Update())
+	payment, err := NewVerifiedPayment("20", "CNY", "partner-cny-snapshot-event", "partner-cny-snapshot-payment", true)
+	require.NoError(t, err)
+	completeReferralTopUp(t, topUp, payment)
+
+	var claim ReferralRewardClaim
+	require.NoError(t, DB.Where("top_up_id = ?", topUp.Id).First(&claim).Error)
+	assert.Equal(t, ReferralRewardProgramPartner, claim.Program)
+	assert.Equal(t, "20", claim.PaidAmount)
+	assert.Equal(t, "CNY", claim.PaidCurrency)
+	assert.Equal(t, int64(900_000), claim.CommissionUsdMicros)
+
+	var wallet PartnerWallet
+	require.NoError(t, DB.Where("user_id = ?", 6061).First(&wallet).Error)
+	assert.Equal(t, int64(900_000), wallet.PendingUsdMicros)
+}
+
+func TestPartnerCNYCommissionRefundReversesSnapshottedUsdMicros(t *testing.T) {
+	truncateTables(t)
+	createPartnerRewardUsers(t, 6071, 6072)
+	topUp := createReferralTopUp(t, 6072, "partner-cny-refund", PaymentProviderEpay, common.TopUpStatusPending)
+	topUp.PartnerSettlementUsdPerUnit = "0.15"
+	require.NoError(t, topUp.Update())
+	payment, err := NewVerifiedPayment("20", "CNY", "partner-cny-refund-event", "partner-cny-refund-payment", true)
+	require.NoError(t, err)
+	completeReferralTopUp(t, topUp, payment)
+
+	var claim ReferralRewardClaim
+	require.NoError(t, DB.Where("top_up_id = ?", topUp.Id).First(&claim).Error)
+	require.Equal(t, int64(900_000), claim.CommissionUsdMicros)
+
+	outcome, err := ReverseReferralRewardById(claim.Id, "partner-cny-refund-reversal", "payment refunded")
+	require.NoError(t, err)
+	require.True(t, outcome.Changed)
+	assert.Equal(t, int64(900_000), outcome.CommissionUsdMicros)
+
+	var wallet PartnerWallet
+	require.NoError(t, DB.Where("user_id = ?", 6071).First(&wallet).Error)
+	assert.Zero(t, wallet.PendingUsdMicros)
+	assert.Equal(t, int64(900_000), wallet.LifetimeReversedUsdMicros)
+
+	var reversed ReferralRewardClaim
+	require.NoError(t, DB.First(&reversed, claim.Id).Error)
+	assert.Equal(t, ReferralRewardStatusReversed, reversed.Status)
+}
 
 func createPartnerRewardUsers(t *testing.T, inviterID int, inviteeID int) {
 	t.Helper()

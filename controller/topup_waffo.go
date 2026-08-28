@@ -89,10 +89,14 @@ func formatWaffoAmount(amount float64, currency string) string {
 	return fmt.Sprintf("%.2f", amount)
 }
 
-// getWaffoPayMoney converts the user-facing amount to USD for Waffo payment.
-// Waffo only accepts USD, so this function handles the conversion from different
-// display types (USD/CNY/TOKENS) to the actual USD amount to charge.
+// getWaffoPayMoney converts the user-facing amount using Waffo's configured
+// unit price. The captured variant is used while creating an order so the
+// amount and Partner settlement snapshot share the same rate.
 func getWaffoPayMoney(amount float64, group string) float64 {
+	return getWaffoPayMoneyAtUnitPrice(amount, group, setting.WaffoUnitPrice)
+}
+
+func getWaffoPayMoneyAtUnitPrice(amount float64, group string, unitPrice float64) float64 {
 	originalAmount := amount
 	if operation_setting.GetQuotaDisplayType() == operation_setting.QuotaDisplayTypeTokens {
 		amount = amount / common.QuotaPerUnit
@@ -107,7 +111,7 @@ func getWaffoPayMoney(amount float64, group string) float64 {
 			discount = ds
 		}
 	}
-	return amount * setting.WaffoUnitPrice * topupGroupRatio * discount
+	return amount * unitPrice * topupGroupRatio * discount
 }
 
 type WaffoPayRequest struct {
@@ -210,7 +214,8 @@ func RequestWaffoPay(c *gin.Context) {
 	// resolvedPayMethodType/Name 为空时，Waffo 自动选择支付方式
 
 	group, _ := model.GetUserGroup(id, true)
-	payMoney := getWaffoPayMoney(float64(req.Amount), group)
+	unitPrice := setting.WaffoUnitPrice
+	payMoney := getWaffoPayMoneyAtUnitPrice(float64(req.Amount), group, unitPrice)
 	if payMoney < 0.01 {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
 		return
@@ -232,16 +237,17 @@ func RequestWaffoPay(c *gin.Context) {
 	// 创建本地订单
 	currency := getWaffoCurrency()
 	topUp := &model.TopUp{
-		UserId:          id,
-		Amount:          amount,
-		Money:           payMoney,
-		TradeNo:         merchantOrderId,
-		PaymentMethod:   model.PaymentMethodWaffo,
-		PaymentProvider: model.PaymentProviderWaffo,
-		PaymentAmount:   formatWaffoAmount(payMoney, currency),
-		PaymentCurrency: strings.ToUpper(strings.TrimSpace(currency)),
-		CreateTime:      time.Now().Unix(),
-		Status:          common.TopUpStatusPending,
+		UserId:                      id,
+		Amount:                      amount,
+		Money:                       payMoney,
+		TradeNo:                     merchantOrderId,
+		PaymentMethod:               model.PaymentMethodWaffo,
+		PaymentProvider:             model.PaymentProviderWaffo,
+		PaymentAmount:               formatWaffoAmount(payMoney, currency),
+		PaymentCurrency:             strings.ToUpper(strings.TrimSpace(currency)),
+		PartnerSettlementUsdPerUnit: partnerSettlementUsdPerUnitSnapshot(currency, unitPrice),
+		CreateTime:                  time.Now().Unix(),
+		Status:                      common.TopUpStatusPending,
 	}
 	if err := topUp.Insert(); err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo 创建充值订单失败 user_id=%d trade_no=%s amount=%d error=%q", id, merchantOrderId, req.Amount, err.Error()))

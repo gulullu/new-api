@@ -130,7 +130,7 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 		checkoutPayMoney = getStripePayMoneyAtUnitPrice(float64(req.Amount), user.Group, checkoutUnitPrice)
 	}
 
-	checkout, err := genStripeLinkForLocaleWithQuantity(
+	checkout, err := genStripeLinkForLocaleWithQuantityAndReferralUnitPrice(
 		referenceId,
 		user.StripeCustomer,
 		user.Email,
@@ -140,6 +140,7 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 		req.CancelURL,
 		req.Amount,
 		locale,
+		unitPrice,
 	)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Stripe 创建 Checkout Session 失败 user_id=%d trade_no=%s amount=%d error=%q", id, referenceId, req.Amount, err.Error()))
@@ -148,17 +149,18 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	}
 
 	topUp := &model.TopUp{
-		UserId:            id,
-		Amount:            req.Amount,
-		Money:             chargedMoney,
-		TradeNo:           referenceId,
-		PaymentMethod:     model.PaymentMethodStripe,
-		PaymentProvider:   model.PaymentProviderStripe,
-		PaymentAmount:     checkout.PaymentAmount,
-		PaymentCurrency:   checkout.PaymentCurrency,
-		ReferralUnitPrice: checkout.ReferralUnitPrice,
-		CreateTime:        time.Now().Unix(),
-		Status:            common.TopUpStatusPending,
+		UserId:                      id,
+		Amount:                      req.Amount,
+		Money:                       chargedMoney,
+		TradeNo:                     referenceId,
+		PaymentMethod:               model.PaymentMethodStripe,
+		PaymentProvider:             model.PaymentProviderStripe,
+		PaymentAmount:               checkout.PaymentAmount,
+		PaymentCurrency:             checkout.PaymentCurrency,
+		ReferralUnitPrice:           checkout.ReferralUnitPrice,
+		PartnerSettlementUsdPerUnit: partnerSettlementUsdPerUnitSnapshot(checkout.PaymentCurrency, unitPrice),
+		CreateTime:                  time.Now().Unix(),
+		Status:                      common.TopUpStatusPending,
 	}
 	err = topUp.Insert()
 	if err != nil {
@@ -450,6 +452,13 @@ type stripeCheckoutResult struct {
 	ReferralUnitPrice string
 }
 
+func stripeReferralUnitPriceSnapshot(unitPrice float64) string {
+	if unitPrice <= 0 || math.IsNaN(unitPrice) || math.IsInf(unitPrice, 0) {
+		return ""
+	}
+	return strconv.FormatFloat(unitPrice, 'f', -1, 64)
+}
+
 // genStripeLink generates a Stripe Checkout session URL for payment.
 // It creates a new checkout session with the specified parameters and returns the payment URL.
 //
@@ -488,7 +497,26 @@ func genStripeLinkForLocale(referenceId string, customerId string, email string,
 }
 
 func genStripeLinkForLocaleWithQuantity(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, locale string) (stripeCheckoutResult, error) {
-	return genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(
+	return genStripeLinkForLocaleWithQuantityAndReferralUnitPrice(
+		referenceId,
+		customerId,
+		email,
+		payMoney,
+		configuredUnitPrice,
+		successURL,
+		cancelURL,
+		quantity,
+		locale,
+		configuredUnitPrice,
+	)
+}
+
+// genStripeLinkForLocaleWithQuantityAndReferralUnitPrice keeps the checkout
+// currency price separate from the original USD unit price used by referral
+// accounting. Chinese Checkout intentionally uses CNY 1.00 per R, but the
+// TopUp snapshot must retain the captured USD rate (for example, 0.15).
+func genStripeLinkForLocaleWithQuantityAndReferralUnitPrice(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, locale string, referralUnitPrice float64) (stripeCheckoutResult, error) {
+	return genStripeLinkWithPaymentMethodTypesAndQuantityAndLocaleAndReferralUnitPrice(
 		referenceId,
 		customerId,
 		email,
@@ -499,6 +527,7 @@ func genStripeLinkForLocaleWithQuantity(referenceId string, customerId string, e
 		quantity,
 		stripeCheckoutPaymentMethodTypesForLocale(locale),
 		locale,
+		referralUnitPrice,
 	)
 }
 
@@ -532,6 +561,22 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 }
 
 func genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, paymentMethodTypes []*string, locale string) (stripeCheckoutResult, error) {
+	return genStripeLinkWithPaymentMethodTypesAndQuantityAndLocaleAndReferralUnitPrice(
+		referenceId,
+		customerId,
+		email,
+		payMoney,
+		configuredUnitPrice,
+		successURL,
+		cancelURL,
+		quantity,
+		paymentMethodTypes,
+		locale,
+		configuredUnitPrice,
+	)
+}
+
+func genStripeLinkWithPaymentMethodTypesAndQuantityAndLocaleAndReferralUnitPrice(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, paymentMethodTypes []*string, locale string, referralUnitPrice float64) (stripeCheckoutResult, error) {
 	if !strings.HasPrefix(setting.StripeApiSecret, "sk_") && !strings.HasPrefix(setting.StripeApiSecret, "rk_") {
 		return stripeCheckoutResult{}, fmt.Errorf("无效的Stripe API密钥")
 	}
@@ -580,7 +625,7 @@ func genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(referenceId string,
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 支付快照无效: %w", err)
 	}
-	lineItemUnitAmount, err := stripeCheckoutLineItemAmount(unitAmount, quantity)
+	lineItemBreakdown, err := stripeCheckoutLineItemBreakdown(unitAmount, quantity)
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 商品数量无效: %w", err)
 	}
@@ -588,7 +633,7 @@ func genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(referenceId string,
 	priceData := &stripe.CheckoutSessionLineItemPriceDataParams{
 		Currency:   stripe.String(checkoutCurrency),
 		Product:    stripe.String(configuredPrice.Product.ID),
-		UnitAmount: stripe.Int64(lineItemUnitAmount),
+		UnitAmount: stripe.Int64(lineItemBreakdown.unitAmount),
 	}
 	if configuredPrice.TaxBehavior != "" {
 		priceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
@@ -609,11 +654,25 @@ func genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(referenceId string,
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: priceData,
-				Quantity:  stripe.Int64(quantity),
+				Quantity:  stripe.Int64(lineItemBreakdown.quantity),
 			},
 		},
 		Mode:                stripe.String(string(stripe.CheckoutSessionModePayment)),
 		AllowPromotionCodes: stripe.Bool(setting.StripePromotionCodesEnabled),
+	}
+	if lineItemBreakdown.remainder > 0 {
+		remainderPriceData := &stripe.CheckoutSessionLineItemPriceDataParams{
+			Currency:   stripe.String(checkoutCurrency),
+			Product:    stripe.String(configuredPrice.Product.ID),
+			UnitAmount: stripe.Int64(lineItemBreakdown.remainder),
+		}
+		if configuredPrice.TaxBehavior != "" {
+			remainderPriceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
+		}
+		params.LineItems = append(params.LineItems, &stripe.CheckoutSessionLineItemParams{
+			PriceData: remainderPriceData,
+			Quantity:  stripe.Int64(1),
+		})
 	}
 	if len(paymentMethodTypes) > 0 {
 		params.PaymentMethodTypes = paymentMethodTypes
@@ -638,29 +697,44 @@ func genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(referenceId string,
 		URL:               result.URL,
 		PaymentAmount:     expectedPayment.PaidAmountForLog(),
 		PaymentCurrency:   expectedPayment.Currency,
-		ReferralUnitPrice: strconv.FormatFloat(configuredUnitPrice, 'f', -1, 64),
+		ReferralUnitPrice: stripeReferralUnitPriceSnapshot(referralUnitPrice),
 	}, nil
 }
 
-// stripeCheckoutLineItemAmount returns the integer per-unit amount required by
-// Stripe when Checkout quantity must remain equal to the purchased R amount.
-// The rounded total must be exactly divisible by that quantity; a remainder
-// line item would make the hosted product display misleading.
-func stripeCheckoutLineItemAmount(minorAmount int64, quantity int64) (int64, error) {
+// stripeCheckoutLineItemBreakdown preserves the exact rounded Checkout total
+// while exposing the requested credit count as the primary line-item quantity.
+// Stripe Checkout accepts integer minor-unit amounts only, so a remainder is
+// represented by a second same-product line item instead of changing the
+// total or using an unsupported decimal unit amount (for example, 286 cents
+// becomes 14 cents × 20 plus a 6-cent adjustment line).
+func stripeCheckoutLineItemBreakdown(minorAmount int64, quantity int64) (stripeCheckoutLineItemBreakdownResult, error) {
 	if minorAmount < 1 {
-		return 0, errors.New("invalid Stripe line item amount")
+		return stripeCheckoutLineItemBreakdownResult{}, errors.New("invalid Stripe line item amount")
 	}
 	if quantity < 1 {
-		return 0, errors.New("quantity must be positive")
-	}
-	if minorAmount%quantity != 0 {
-		return 0, fmt.Errorf("rounded total %d cents is not divisible by quantity %d", minorAmount, quantity)
+		return stripeCheckoutLineItemBreakdownResult{}, errors.New("quantity must be positive")
 	}
 	unitAmount := minorAmount / quantity
 	if unitAmount < 1 {
-		return 0, errors.New("Stripe unit amount must be positive")
+		// A total smaller than the requested quantity cannot have a positive
+		// integer per-unit amount while preserving that quantity. Keep the exact
+		// amount and use one line item rather than emitting a zero-cent price.
+		return stripeCheckoutLineItemBreakdownResult{
+			unitAmount: minorAmount,
+			quantity:   1,
+		}, nil
 	}
-	return unitAmount, nil
+	return stripeCheckoutLineItemBreakdownResult{
+		unitAmount: unitAmount,
+		quantity:   quantity,
+		remainder:  minorAmount % quantity,
+	}, nil
+}
+
+type stripeCheckoutLineItemBreakdownResult struct {
+	unitAmount int64
+	quantity   int64
+	remainder  int64
 }
 
 // stripeCheckoutPaymentSnapshot applies the same minor-unit rounding used by

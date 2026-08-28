@@ -30,6 +30,13 @@ type TopUp struct {
 	// value only makes an actual-paid referral calculation stable if an operator
 	// changes the live gateway price before the signed callback arrives.
 	ReferralUnitPrice string `json:"-" gorm:"column:referral_unit_price;type:varchar(64);not null;default:''"`
+	// PartnerSettlementUsdPerUnit snapshots the USD value of one payment unit
+	// for Partner commission settlement. It is intentionally separate from
+	// ReferralUnitPrice: the latter describes the gateway's referral-billing
+	// conversion, while this field is the immutable FX basis used when a CNY
+	// payment is credited to the USD Partner ledger. An empty value is retained
+	// for legacy orders and causes a CNY Partner commission to be skipped safely.
+	PartnerSettlementUsdPerUnit string `json:"-" gorm:"column:partner_settlement_usd_per_unit;type:varchar(64);not null;default:''"`
 	// ReferralPaymentVerified is set only by a signed, production payment
 	// callback. It distinguishes verified external payments from manual or
 	// sandbox completions when referral rewards are evaluated.
@@ -623,6 +630,7 @@ func ManualCompleteTopUp(tradeNo string, callerIp string) error {
 		// callback may safely reconcile the empty snapshot without crediting again.
 		topUp.PaymentAmount = ""
 		topUp.PaymentCurrency = ""
+		topUp.PartnerSettlementUsdPerUnit = ""
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
 		if err := tx.Save(topUp).Error; err != nil {

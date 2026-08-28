@@ -19,13 +19,35 @@ func TestStripeCheckoutPaymentSnapshotUsesLineItemMinorUnitRounding(t *testing.T
 	assert.Equal(t, "USD", payment.Currency)
 }
 
-func TestStripeCheckoutLineItemAmountRequiresExactPerUnitPrice(t *testing.T) {
-	unitAmount, err := stripeCheckoutLineItemAmount(300, 20)
-	require.NoError(t, err)
-	assert.Equal(t, int64(15), unitAmount)
+func TestStripeChineseCheckoutKeepsOriginalUsdReferralUnitPrice(t *testing.T) {
+	// Chinese Checkout uses CNY 1.00 per R for the hosted line item, while
+	// referral accounting must retain the captured USD rate from order creation.
+	assert.Equal(t, "0.15", stripeReferralUnitPriceSnapshot(0.15))
+	assert.NotEqual(t, stripeReferralUnitPriceSnapshot(1.0), stripeReferralUnitPriceSnapshot(0.15))
+}
 
-	_, err = stripeCheckoutLineItemAmount(286, 20)
-	assert.Error(t, err)
+func TestStripeCheckoutLineItemBreakdownPreservesTotalWithVisibleQuantity(t *testing.T) {
+	breakdown, err := stripeCheckoutLineItemBreakdown(286, 20)
+	require.NoError(t, err)
+	assert.Equal(t, int64(14), breakdown.unitAmount)
+	assert.Equal(t, int64(20), breakdown.quantity)
+	assert.Equal(t, int64(6), breakdown.remainder)
+	assert.Equal(t, int64(286), breakdown.unitAmount*breakdown.quantity+breakdown.remainder)
+
+	breakdown, err = stripeCheckoutLineItemBreakdown(300, 20)
+	require.NoError(t, err)
+	assert.Equal(t, int64(15), breakdown.unitAmount)
+	assert.Equal(t, int64(20), breakdown.quantity)
+	assert.Equal(t, int64(0), breakdown.remainder)
+	assert.Equal(t, int64(300), breakdown.unitAmount*breakdown.quantity+breakdown.remainder)
+}
+
+func TestStripeCheckoutLineItemBreakdownUsesOneLineForTinyTotals(t *testing.T) {
+	breakdown, err := stripeCheckoutLineItemBreakdown(5, 20)
+	require.NoError(t, err)
+	assert.Equal(t, int64(5), breakdown.unitAmount)
+	assert.Equal(t, int64(1), breakdown.quantity)
+	assert.Equal(t, int64(0), breakdown.remainder)
 }
 
 func TestStripeCheckoutLineItemAmountRejectsInvalidValues(t *testing.T) {
@@ -39,7 +61,7 @@ func TestStripeCheckoutLineItemAmountRejectsInvalidValues(t *testing.T) {
 		{name: "negative quantity", amount: 286, quantity: -1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := stripeCheckoutLineItemAmount(tc.amount, tc.quantity)
+			_, err := stripeCheckoutLineItemBreakdown(tc.amount, tc.quantity)
 			assert.Error(t, err)
 		})
 	}
@@ -77,6 +99,29 @@ func TestStripeCheckoutPaymentMethodTypesAreLocaleScoped(t *testing.T) {
 				if actual[i] == nil || *actual[i] != want {
 					t.Fatalf("payment method type %d: expected %q, got %#v", i, want, actual[i])
 				}
+			}
+		})
+	}
+}
+
+func TestPartnerSettlementUsdPerUnitSnapshotIsCNYOnlyAndFinite(t *testing.T) {
+	tests := []struct {
+		name     string
+		currency string
+		unitRate float64
+		want     string
+	}{
+		{name: "CNY captures USD basis", currency: "CNY", unitRate: 0.15, want: "0.15"},
+		{name: "case insensitive CNY", currency: " cny ", unitRate: 0.15, want: "0.15"},
+		{name: "USD does not need conversion snapshot", currency: "USD", unitRate: 0.15, want: ""},
+		{name: "zero rate is rejected", currency: "CNY", unitRate: 0, want: ""},
+		{name: "negative rate is rejected", currency: "CNY", unitRate: -0.15, want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if actual := partnerSettlementUsdPerUnitSnapshot(tt.currency, tt.unitRate); actual != tt.want {
+				t.Fatalf("expected snapshot %q, got %q", tt.want, actual)
 			}
 		})
 	}
