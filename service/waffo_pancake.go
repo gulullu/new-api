@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/QuantumNous/new-api/model"
@@ -283,6 +284,17 @@ func CreateWaffoPancakeCNYProduct(ctx context.Context, merchantID, privateKey, s
 	if storeID == "" {
 		return "", fmt.Errorf("store id is required to create a CNY product")
 	}
+	// The admin action is intentionally safe to retry.  Operators may have
+	// created the product manually in Pancake before pressing "+ Create" in
+	// new-api; query the bound store first and reuse the canonical product
+	// instead of minting a duplicate.
+	catalog, err := ListWaffoPancakeCatalog(ctx, merchantID, privateKey)
+	if err != nil {
+		return "", fmt.Errorf("check existing Waffo Pancake CNY product: %w", err)
+	}
+	if productID := findWaffoPancakeCNYProduct(catalog, storeID); productID != "" {
+		return productID, nil
+	}
 	client, err := newWaffoPancakeClientFromCreds(merchantID, privateKey)
 	if err != nil {
 		return "", err
@@ -314,6 +326,39 @@ func CreateWaffoPancakeCNYProduct(ctx context.Context, merchantID, privateKey, s
 		return "", fmt.Errorf("publish Waffo Pancake CNY product: %w", err)
 	}
 	return productID, nil
+}
+
+// findWaffoPancakeCNYProduct returns the active, canonical Chinese wallet
+// product in storeID.  The catalog endpoint intentionally exposes only the
+// fields needed by the admin selector, so the stable product name is the
+// identity key here; the store boundary prevents matching another catalog.
+func findWaffoPancakeCNYProduct(catalog *WaffoPancakeCatalog, storeID string) string {
+	if catalog == nil {
+		return ""
+	}
+	storeID = strings.TrimSpace(storeID)
+	for _, store := range catalog.Stores {
+		if strings.TrimSpace(store.ID) != storeID {
+			continue
+		}
+		for _, product := range store.OnetimeProducts {
+			if strings.TrimSpace(product.ID) == "" ||
+				strings.TrimSpace(product.Name) != defaultWaffoPancakeCNYProductName ||
+				!strings.EqualFold(strings.TrimSpace(product.Status), "active") {
+				continue
+			}
+			for _, price := range product.Prices {
+				if !strings.EqualFold(strings.TrimSpace(price.Currency), "CNY") {
+					continue
+				}
+				amount, err := strconv.ParseFloat(strings.TrimSpace(price.PriceInfo.Amount), 64)
+				if err == nil && amount == 1 {
+					return strings.TrimSpace(product.ID)
+				}
+			}
+		}
+	}
+	return ""
 }
 
 // CreateWaffoPancakePrimaryStore creates a Pancake Store using in-flight
@@ -472,9 +517,20 @@ func SaveWaffoPancakeConfig(ctx context.Context, merchantID, privateKey, returnU
 }
 
 type WaffoPancakeCatalogProduct struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Status string `json:"status"`
+	ID     string                       `json:"id"`
+	Name   string                       `json:"name"`
+	Status string                       `json:"status"`
+	Prices []WaffoPancakeCatalogPrice   `json:"prices"`
+}
+
+// WaffoPancakeCatalogPrice is the GraphQL representation of a product price.
+// It differs from the REST SDK's map-shaped pancake.Prices type.
+type WaffoPancakeCatalogPrice struct {
+	Currency  string `json:"currency"`
+	PriceInfo struct {
+		Amount      string `json:"amount"`
+		TaxCategory string `json:"taxCategory"`
+	} `json:"priceInfo"`
 }
 
 // WaffoPancakeCatalogStore nests its OnetimeProducts so the UI can render a
@@ -517,6 +573,7 @@ func ListWaffoPancakeCatalog(ctx context.Context, merchantID, privateKey string)
 					id
 					name
 					status
+					prices { currency priceInfo { amount taxCategory } }
 				}
 			}
 		}`,
