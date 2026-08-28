@@ -554,7 +554,7 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 支付快照无效: %w", err)
 	}
-	lineItemUnitAmount, lineItemUnitAmountDecimal, err := stripeCheckoutLineItemAmount(unitAmount, quantity)
+	lineItemBreakdown, err := stripeCheckoutLineItemBreakdown(unitAmount, quantity)
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 商品数量无效: %w", err)
 	}
@@ -562,10 +562,7 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 	priceData := &stripe.CheckoutSessionLineItemPriceDataParams{
 		Currency:   stripe.String(string(configuredPrice.Currency)),
 		Product:    stripe.String(configuredPrice.Product.ID),
-		UnitAmount: lineItemUnitAmount,
-	}
-	if lineItemUnitAmountDecimal != nil {
-		priceData.UnitAmountDecimal = stripe.Float64(*lineItemUnitAmountDecimal)
+		UnitAmount: stripe.Int64(lineItemBreakdown.unitAmount),
 	}
 	if configuredPrice.TaxBehavior != "" {
 		priceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
@@ -586,11 +583,25 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: priceData,
-				Quantity:  stripe.Int64(quantity),
+				Quantity:  stripe.Int64(lineItemBreakdown.quantity),
 			},
 		},
 		Mode:                stripe.String(string(stripe.CheckoutSessionModePayment)),
 		AllowPromotionCodes: stripe.Bool(setting.StripePromotionCodesEnabled),
+	}
+	if lineItemBreakdown.remainder > 0 {
+		remainderPriceData := &stripe.CheckoutSessionLineItemPriceDataParams{
+			Currency:   stripe.String(string(configuredPrice.Currency)),
+			Product:    stripe.String(configuredPrice.Product.ID),
+			UnitAmount: stripe.Int64(lineItemBreakdown.remainder),
+		}
+		if configuredPrice.TaxBehavior != "" {
+			remainderPriceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
+		}
+		params.LineItems = append(params.LineItems, &stripe.CheckoutSessionLineItemParams{
+			PriceData: remainderPriceData,
+			Quantity:  stripe.Int64(1),
+		})
 	}
 	if len(paymentMethodTypes) > 0 {
 		params.PaymentMethodTypes = paymentMethodTypes
@@ -619,27 +630,36 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 	}, nil
 }
 
-// stripeCheckoutLineItemAmount preserves the exact rounded Checkout total
-// while exposing the requested credit count as the line-item quantity. Stripe
-// accepts unit_amount_decimal in minor units, so non-divisible totals can be
-// represented without changing the amount charged (for example, 286 cents ÷
-// 20 credits = 14.3 cents per credit).
-func stripeCheckoutLineItemAmount(minorAmount int64, quantity int64) (*int64, *float64, error) {
+type stripeCheckoutLineItemBreakdownResult struct {
+	unitAmount int64
+	quantity   int64
+	remainder  int64
+}
+
+// stripeCheckoutLineItemBreakdown preserves the exact rounded Checkout total
+// while exposing the requested credit count as the primary line-item quantity.
+// Stripe payment-mode Checkout only accepts integer USD cents, so a remainder
+// is represented by a second same-product line item instead of a decimal
+// unit_amount (for example, 286 cents becomes 14 cents × 20 plus 6 cents).
+func stripeCheckoutLineItemBreakdown(minorAmount int64, quantity int64) (stripeCheckoutLineItemBreakdownResult, error) {
 	if minorAmount < 1 {
-		return nil, nil, errors.New("invalid Stripe line item amount")
+		return stripeCheckoutLineItemBreakdownResult{}, errors.New("invalid Stripe line item amount")
 	}
 	if quantity < 1 {
-		return nil, nil, errors.New("quantity must be positive")
+		return stripeCheckoutLineItemBreakdownResult{}, errors.New("quantity must be positive")
 	}
-	if minorAmount%quantity == 0 {
-		unitAmount := minorAmount / quantity
-		return &unitAmount, nil, nil
+	unitAmount := minorAmount / quantity
+	if unitAmount < 1 {
+		return stripeCheckoutLineItemBreakdownResult{
+			unitAmount: minorAmount,
+			quantity:   1,
+		}, nil
 	}
-	unitAmountDecimal := float64(minorAmount) / float64(quantity)
-	if math.IsNaN(unitAmountDecimal) || math.IsInf(unitAmountDecimal, 0) || unitAmountDecimal <= 0 {
-		return nil, nil, errors.New("invalid Stripe decimal line item amount")
-	}
-	return nil, &unitAmountDecimal, nil
+	return stripeCheckoutLineItemBreakdownResult{
+		unitAmount: unitAmount,
+		quantity:   quantity,
+		remainder:  minorAmount % quantity,
+	}, nil
 }
 
 // stripeCheckoutPaymentSnapshot applies the same minor-unit rounding used by

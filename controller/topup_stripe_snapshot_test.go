@@ -19,21 +19,21 @@ func TestStripeCheckoutPaymentSnapshotUsesLineItemMinorUnitRounding(t *testing.T
 	assert.Equal(t, "USD", payment.Currency)
 }
 
-func TestStripeCheckoutLineItemAmountPreservesTotalWithVisibleQuantity(t *testing.T) {
-	unitAmount, unitAmountDecimal, err := stripeCheckoutLineItemAmount(286, 20)
+func TestStripeCheckoutLineItemBreakdownPreservesTotalWithVisibleQuantity(t *testing.T) {
+	breakdown, err := stripeCheckoutLineItemBreakdown(286, 20)
 	require.NoError(t, err)
-	assert.Nil(t, unitAmount)
-	require.NotNil(t, unitAmountDecimal)
-	assert.InDelta(t, 14.3, *unitAmountDecimal, 0.0000001)
-	assert.InDelta(t, 286, *unitAmountDecimal*20, 0.0000001)
+	assert.Equal(t, int64(14), breakdown.unitAmount)
+	assert.Equal(t, int64(20), breakdown.quantity)
+	assert.Equal(t, int64(6), breakdown.remainder)
+	assert.Equal(t, int64(286), breakdown.unitAmount*breakdown.quantity+breakdown.remainder)
 }
 
-func TestStripeCheckoutLineItemAmountUsesIntegerUnitAmountWhenDivisible(t *testing.T) {
-	unitAmount, unitAmountDecimal, err := stripeCheckoutLineItemAmount(300, 20)
+func TestStripeCheckoutLineItemBreakdownUsesIntegerUnitAmountWhenDivisible(t *testing.T) {
+	breakdown, err := stripeCheckoutLineItemBreakdown(300, 20)
 	require.NoError(t, err)
-	require.NotNil(t, unitAmount)
-	assert.Equal(t, int64(15), *unitAmount)
-	assert.Nil(t, unitAmountDecimal)
+	assert.Equal(t, int64(15), breakdown.unitAmount)
+	assert.Equal(t, int64(20), breakdown.quantity)
+	assert.Equal(t, int64(0), breakdown.remainder)
 }
 
 func TestStripeCheckoutLineItemAmountRejectsInvalidValues(t *testing.T) {
@@ -47,7 +47,7 @@ func TestStripeCheckoutLineItemAmountRejectsInvalidValues(t *testing.T) {
 		{name: "negative quantity", amount: 286, quantity: -1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, err := stripeCheckoutLineItemAmount(tc.amount, tc.quantity)
+			_, err := stripeCheckoutLineItemBreakdown(tc.amount, tc.quantity)
 			assert.Error(t, err)
 		})
 	}
