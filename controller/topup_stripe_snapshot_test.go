@@ -19,6 +19,40 @@ func TestStripeCheckoutPaymentSnapshotUsesLineItemMinorUnitRounding(t *testing.T
 	assert.Equal(t, "USD", payment.Currency)
 }
 
+func TestStripeCheckoutLineItemAmountPreservesTotalWithVisibleQuantity(t *testing.T) {
+	unitAmount, unitAmountDecimal, err := stripeCheckoutLineItemAmount(286, 20)
+	require.NoError(t, err)
+	assert.Nil(t, unitAmount)
+	require.NotNil(t, unitAmountDecimal)
+	assert.InDelta(t, 14.3, *unitAmountDecimal, 0.0000001)
+	assert.InDelta(t, 286, *unitAmountDecimal*20, 0.0000001)
+}
+
+func TestStripeCheckoutLineItemAmountUsesIntegerUnitAmountWhenDivisible(t *testing.T) {
+	unitAmount, unitAmountDecimal, err := stripeCheckoutLineItemAmount(300, 20)
+	require.NoError(t, err)
+	require.NotNil(t, unitAmount)
+	assert.Equal(t, int64(15), *unitAmount)
+	assert.Nil(t, unitAmountDecimal)
+}
+
+func TestStripeCheckoutLineItemAmountRejectsInvalidValues(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		amount   int64
+		quantity int64
+	}{
+		{name: "zero amount", amount: 0, quantity: 20},
+		{name: "zero quantity", amount: 286, quantity: 0},
+		{name: "negative quantity", amount: 286, quantity: -1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := stripeCheckoutLineItemAmount(tc.amount, tc.quantity)
+			assert.Error(t, err)
+		})
+	}
+}
+
 func TestStripeCheckoutPaymentMethodTypesAreLocaleScoped(t *testing.T) {
 	tests := []struct {
 		name   string

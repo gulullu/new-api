@@ -120,7 +120,7 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 	reference := fmt.Sprintf("new-api-ref-%d-%d-%s", user.Id, time.Now().UnixMilli(), randstr.String(4))
 	referenceId := "ref_" + common.Sha1([]byte(reference))
 
-	checkout, err := genStripeLinkForLocale(
+	checkout, err := genStripeLinkForLocaleWithQuantity(
 		referenceId,
 		user.StripeCustomer,
 		user.Email,
@@ -128,6 +128,7 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 		unitPrice,
 		req.SuccessURL,
 		req.CancelURL,
+		req.Amount,
 		appI18n.GetLangFromContext(c),
 	)
 	if err != nil {
@@ -454,7 +455,7 @@ type stripeCheckoutResult struct {
 // Returns the checkout session URL and the exact amount/currency sent to
 // Stripe, or an error if the session creation fails.
 func genStripeLink(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string) (stripeCheckoutResult, error) {
-	return genStripeLinkWithPaymentMethodTypes(
+	return genStripeLinkWithPaymentMethodTypesAndQuantity(
 		referenceId,
 		customerId,
 		email,
@@ -462,6 +463,7 @@ func genStripeLink(referenceId string, customerId string, email string, payMoney
 		configuredUnitPrice,
 		successURL,
 		cancelURL,
+		1,
 		nil,
 	)
 }
@@ -469,9 +471,14 @@ func genStripeLink(referenceId string, customerId string, email string, payMoney
 // genStripeLinkForLocale keeps the existing Stripe gateway request unchanged
 // while constraining one-time Checkout to Alipay for Chinese-language users.
 // Non-Chinese requests pass nil payment method types and continue to use the
-// payment methods configured in Stripe Dashboard.
+// payment methods configured in Stripe Dashboard. The legacy helper keeps a
+// quantity of one for callers that do not have a top-up amount available.
 func genStripeLinkForLocale(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, locale string) (stripeCheckoutResult, error) {
-	return genStripeLinkWithPaymentMethodTypes(
+	return genStripeLinkForLocaleWithQuantity(referenceId, customerId, email, payMoney, configuredUnitPrice, successURL, cancelURL, 1, locale)
+}
+
+func genStripeLinkForLocaleWithQuantity(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, locale string) (stripeCheckoutResult, error) {
+	return genStripeLinkWithPaymentMethodTypesAndQuantity(
 		referenceId,
 		customerId,
 		email,
@@ -479,6 +486,7 @@ func genStripeLinkForLocale(referenceId string, customerId string, email string,
 		configuredUnitPrice,
 		successURL,
 		cancelURL,
+		quantity,
 		stripeCheckoutPaymentMethodTypesForLocale(locale),
 	)
 }
@@ -502,6 +510,10 @@ func isChinesePaymentLocale(locale string) bool {
 }
 
 func genStripeLinkWithPaymentMethodTypes(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, paymentMethodTypes []*string) (stripeCheckoutResult, error) {
+	return genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId, customerId, email, payMoney, configuredUnitPrice, successURL, cancelURL, 1, paymentMethodTypes)
+}
+
+func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, paymentMethodTypes []*string) (stripeCheckoutResult, error) {
 	if !strings.HasPrefix(setting.StripeApiSecret, "sk_") && !strings.HasPrefix(setting.StripeApiSecret, "rk_") {
 		return stripeCheckoutResult{}, fmt.Errorf("无效的Stripe API密钥")
 	}
@@ -542,11 +554,18 @@ func genStripeLinkWithPaymentMethodTypes(referenceId string, customerId string, 
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 支付快照无效: %w", err)
 	}
+	lineItemUnitAmount, lineItemUnitAmountDecimal, err := stripeCheckoutLineItemAmount(unitAmount, quantity)
+	if err != nil {
+		return stripeCheckoutResult{}, fmt.Errorf("Stripe 商品数量无效: %w", err)
+	}
 
 	priceData := &stripe.CheckoutSessionLineItemPriceDataParams{
 		Currency:   stripe.String(string(configuredPrice.Currency)),
 		Product:    stripe.String(configuredPrice.Product.ID),
-		UnitAmount: stripe.Int64(unitAmount),
+		UnitAmount: lineItemUnitAmount,
+	}
+	if lineItemUnitAmountDecimal != nil {
+		priceData.UnitAmountDecimal = stripe.Float64(*lineItemUnitAmountDecimal)
 	}
 	if configuredPrice.TaxBehavior != "" {
 		priceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
@@ -567,7 +586,7 @@ func genStripeLinkWithPaymentMethodTypes(referenceId string, customerId string, 
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: priceData,
-				Quantity:  stripe.Int64(1),
+				Quantity:  stripe.Int64(quantity),
 			},
 		},
 		Mode:                stripe.String(string(stripe.CheckoutSessionModePayment)),
@@ -598,6 +617,29 @@ func genStripeLinkWithPaymentMethodTypes(referenceId string, customerId string, 
 		PaymentCurrency:   expectedPayment.Currency,
 		ReferralUnitPrice: strconv.FormatFloat(configuredUnitPrice, 'f', -1, 64),
 	}, nil
+}
+
+// stripeCheckoutLineItemAmount preserves the exact rounded Checkout total
+// while exposing the requested credit count as the line-item quantity. Stripe
+// accepts unit_amount_decimal in minor units, so non-divisible totals can be
+// represented without changing the amount charged (for example, 286 cents ÷
+// 20 credits = 14.3 cents per credit).
+func stripeCheckoutLineItemAmount(minorAmount int64, quantity int64) (*int64, *float64, error) {
+	if minorAmount < 1 {
+		return nil, nil, errors.New("invalid Stripe line item amount")
+	}
+	if quantity < 1 {
+		return nil, nil, errors.New("quantity must be positive")
+	}
+	if minorAmount%quantity == 0 {
+		unitAmount := minorAmount / quantity
+		return &unitAmount, nil, nil
+	}
+	unitAmountDecimal := float64(minorAmount) / float64(quantity)
+	if math.IsNaN(unitAmountDecimal) || math.IsInf(unitAmountDecimal, 0) || unitAmountDecimal <= 0 {
+		return nil, nil, errors.New("invalid Stripe decimal line item amount")
+	}
+	return nil, &unitAmountDecimal, nil
 }
 
 // stripeCheckoutPaymentSnapshot applies the same minor-unit rounding used by
