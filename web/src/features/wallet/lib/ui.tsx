@@ -83,8 +83,8 @@ function getWaffoBrandIcon(className: string, altName?: string): ReactNode {
  * Get payment method icon component
  *
  * When icon is provided, render a safe http(s) image URL or resolve it as a
- * react-icons component name. Invalid configured icons intentionally render
- * nothing instead of falling back to the payment type.
+ * react-icons component name. Waffo uses its bundled brand mark so stale
+ * gateway configuration cannot leave the payment card without an icon.
  */
 export function getPaymentIcon(
   paymentType: string | undefined,
