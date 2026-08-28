@@ -119,17 +119,27 @@ func (*StripeAdaptor) RequestPay(c *gin.Context, req *StripePayRequest) {
 
 	reference := fmt.Sprintf("new-api-ref-%d-%d-%s", user.Id, time.Now().UnixMilli(), randstr.String(4))
 	referenceId := "ref_" + common.Sha1([]byte(reference))
+	locale := appI18n.GetLangFromContext(c)
+	checkoutPayMoney := payMoney
+	checkoutUnitPrice := unitPrice
+	if isChinesePaymentLocale(locale) {
+		// Chinese checkout is denominated directly in CNY: 1 R = ¥1.00.
+		// The UI quote remains the configured USD amount, while the hosted
+		// checkout receives the exact CNY amount to avoid exchange conversion.
+		checkoutUnitPrice = 1.0
+		checkoutPayMoney = getStripePayMoneyAtUnitPrice(float64(req.Amount), user.Group, checkoutUnitPrice)
+	}
 
 	checkout, err := genStripeLinkForLocaleWithQuantity(
 		referenceId,
 		user.StripeCustomer,
 		user.Email,
-		payMoney,
-		unitPrice,
+		checkoutPayMoney,
+		checkoutUnitPrice,
 		req.SuccessURL,
 		req.CancelURL,
 		req.Amount,
-		appI18n.GetLangFromContext(c),
+		locale,
 	)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Stripe 创建 Checkout Session 失败 user_id=%d trade_no=%s amount=%d error=%q", id, referenceId, req.Amount, err.Error()))
@@ -478,7 +488,7 @@ func genStripeLinkForLocale(referenceId string, customerId string, email string,
 }
 
 func genStripeLinkForLocaleWithQuantity(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, locale string) (stripeCheckoutResult, error) {
-	return genStripeLinkWithPaymentMethodTypesAndQuantity(
+	return genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(
 		referenceId,
 		customerId,
 		email,
@@ -488,6 +498,7 @@ func genStripeLinkForLocaleWithQuantity(referenceId string, customerId string, e
 		cancelURL,
 		quantity,
 		stripeCheckoutPaymentMethodTypesForLocale(locale),
+		locale,
 	)
 }
 
@@ -514,6 +525,13 @@ func genStripeLinkWithPaymentMethodTypes(referenceId string, customerId string, 
 }
 
 func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, paymentMethodTypes []*string) (stripeCheckoutResult, error) {
+	return genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(
+		referenceId, customerId, email, payMoney, configuredUnitPrice,
+		successURL, cancelURL, quantity, paymentMethodTypes, "",
+	)
+}
+
+func genStripeLinkWithPaymentMethodTypesAndQuantityAndLocale(referenceId string, customerId string, email string, payMoney float64, configuredUnitPrice float64, successURL string, cancelURL string, quantity int64, paymentMethodTypes []*string, locale string) (stripeCheckoutResult, error) {
 	if !strings.HasPrefix(setting.StripeApiSecret, "sk_") && !strings.HasPrefix(setting.StripeApiSecret, "rk_") {
 		return stripeCheckoutResult{}, fmt.Errorf("无效的Stripe API密钥")
 	}
@@ -541,15 +559,23 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe Price 缺少产品或币种信息")
 	}
 
+	checkoutCurrency := strings.ToLower(string(configuredPrice.Currency))
 	priceUnitAmount := configuredPrice.UnitAmountDecimal
 	if priceUnitAmount <= 0 {
 		priceUnitAmount = float64(configuredPrice.UnitAmount)
+	}
+	if isChinesePaymentLocale(locale) {
+		// Inline CNY pricing is intentional here. It keeps the line-item
+		// quantity equal to the requested R amount while using ¥1.00 per R,
+		// even when the configured Stripe Price currently has only USD.
+		checkoutCurrency = "cny"
+		priceUnitAmount = 100
 	}
 	unitAmount, expectedPayment, err := stripeCheckoutPaymentSnapshot(
 		payMoney,
 		priceUnitAmount,
 		configuredUnitPrice,
-		string(configuredPrice.Currency),
+		checkoutCurrency,
 	)
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 支付快照无效: %w", err)
@@ -560,7 +586,7 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 	}
 
 	priceData := &stripe.CheckoutSessionLineItemPriceDataParams{
-		Currency:   stripe.String(string(configuredPrice.Currency)),
+		Currency:   stripe.String(checkoutCurrency),
 		Product:    stripe.String(configuredPrice.Product.ID),
 		UnitAmount: stripe.Int64(lineItemUnitAmount),
 	}

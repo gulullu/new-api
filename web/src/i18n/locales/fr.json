@@ -5408,6 +5408,14 @@
     "Failed to load website access policy": "Échec du chargement de la politique d’accès au site",
     "Failed to update website access policy": "Échec de la mise à jour de la politique d’accès au site",
     "Mainland website access is blocked": "Accès au site bloqué depuis la Chine continentale",
-    "Mainland website access is allowed": "Accès au site autorisé depuis la Chine continentale"
+    "Mainland website access is allowed": "Accès au site autorisé depuis la Chine continentale",
+    "Chinese CNY top-up product": "Produit de recharge CNY chinois",
+    "Create Chinese CNY product": "Créer le produit CNY chinois",
+    "Chinese CNY product already configured": "Produit CNY chinois déjà configuré",
+    "Chinese CNY product ready": "Produit CNY chinois prêt",
+    "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "Crée « RelayBases API 充值（人民币） » à ¥1,00 par Ɍ pour le paiement en chinois.",
+    "Configured product": "Produit configuré",
+    "Create the Chinese CNY wallet top-up product now?": "Créer maintenant le produit de recharge CNY chinois ?",
+    "Pick or create a Pancake store before creating the CNY product.": "Sélectionnez ou créez une boutique Pancake avant de créer le produit CNY."
   }
 }

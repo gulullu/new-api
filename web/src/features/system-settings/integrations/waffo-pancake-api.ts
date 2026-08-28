@@ -60,6 +60,14 @@ export type CatalogResponse = BackendBody<{ stores: CatalogStore[] }>
 export type PairResponse = BackendBody<PairResult>
 export type SaveResponse = BackendBody<{ product_id: string; store_id: string }>
 
+export interface CNYProductResult {
+  product_id: string
+  product_name: string
+  created?: boolean
+}
+
+export type CNYProductResponse = BackendBody<CNYProductResult>
+
 export async function listWaffoPancakeCatalog(
   merchantID: string,
   privateKey: string
@@ -98,5 +106,23 @@ export async function saveWaffoPancakeConfig(params: {
     store_id: params.storeID,
     product_id: params.productID,
   })
+  return res.data
+}
+
+export async function createWaffoPancakeCNYProduct(params: {
+  merchantID: string
+  privateKey: string
+  returnURL: string
+  storeID: string
+}): Promise<CNYProductResponse> {
+  const res = await api.post<CNYProductResponse>(
+    '/api/option/waffo-pancake/cny-product',
+    {
+      merchant_id: params.merchantID,
+      private_key: params.privateKey,
+      return_url: params.returnURL,
+      store_id: params.storeID,
+    }
+  )
   return res.data
 }

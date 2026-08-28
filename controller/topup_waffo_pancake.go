@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	appI18n "github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/service"
@@ -20,6 +21,35 @@ import (
 
 type WaffoPancakePayRequest struct {
 	Amount int64 `json:"amount"`
+}
+
+type waffoPancakeCheckoutConfig struct {
+	ProductID string
+	Currency  string
+	UnitPrice float64
+}
+
+func getWaffoPancakeCheckoutConfig(locale string) (waffoPancakeCheckoutConfig, error) {
+	if isChinesePaymentLocale(locale) {
+		productID := strings.TrimSpace(setting.WaffoPancakeCNYProductID)
+		if productID == "" {
+			return waffoPancakeCheckoutConfig{}, fmt.Errorf("Waffo Pancake CNY product is not configured")
+		}
+		return waffoPancakeCheckoutConfig{
+			ProductID: productID,
+			Currency:  "CNY",
+			UnitPrice: 1.0,
+		}, nil
+	}
+	productID := strings.TrimSpace(setting.WaffoPancakeProductID)
+	if productID == "" {
+		return waffoPancakeCheckoutConfig{}, fmt.Errorf("Waffo Pancake USD product is not configured")
+	}
+	return waffoPancakeCheckoutConfig{
+		ProductID: productID,
+		Currency:  "USD",
+		UnitPrice: setting.WaffoPancakeUnitPrice,
+	}, nil
 }
 
 func RequestWaffoPancakeAmount(c *gin.Context) {
@@ -45,7 +75,12 @@ func RequestWaffoPancakeAmount(c *gin.Context) {
 		return
 	}
 
-	payMoney := getWaffoPancakePayMoney(req.Amount, group)
+	config, err := getWaffoPancakeCheckoutConfig(appI18n.GetLangFromContext(c))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 人民币商品尚未配置"})
+		return
+	}
+	payMoney := getWaffoPancakePayMoneyAtUnitPrice(req.Amount, group, config.UnitPrice)
 	if payMoney <= 0.01 {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
 		return
@@ -125,6 +160,64 @@ type createWaffoPancakePairRequest struct {
 	MerchantID string `json:"merchant_id"`
 	PrivateKey string `json:"private_key"`
 	ReturnURL  string `json:"return_url"`
+	StoreID    string `json:"store_id"`
+}
+
+// CreateWaffoPancakeCNYProduct creates the dedicated Chinese wallet product
+// under the already-bound Pancake store and persists its ID. Repeating the
+// request is idempotent once the setting is populated.
+func CreateWaffoPancakeCNYProduct(c *gin.Context) {
+	if existing := strings.TrimSpace(setting.WaffoPancakeCNYProductID); existing != "" {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "success",
+			"data": gin.H{
+				"product_id": existing,
+				"product_name": "RelayBases API 充值（人民币）",
+				"created": false,
+			},
+		})
+		return
+	}
+	var req createWaffoPancakePairRequest
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusOK, gin.H{"message": "error", "data": "参数错误"})
+			return
+		}
+	}
+	merchantID, privateKey := resolveWaffoPancakeAdminCreds(req.MerchantID, req.PrivateKey)
+	storeID := strings.TrimSpace(req.StoreID)
+	if storeID == "" {
+		storeID = strings.TrimSpace(setting.WaffoPancakeStoreID)
+	}
+	if merchantID == "" || privateKey == "" || storeID == "" {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 凭证或店铺未配置"})
+		return
+	}
+	productID, err := service.CreateWaffoPancakeCNYProduct(
+		c.Request.Context(), merchantID, privateKey, storeID,
+		strings.TrimRight(strings.TrimSpace(req.ReturnURL), "/"),
+	)
+	if err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 创建人民币商品失败 store_id=%q error=%q", storeID, err.Error()))
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "创建人民币商品失败"})
+		return
+	}
+	if err := model.UpdateOptionsBulk(map[string]string{
+		"WaffoPancakeCNYProductID": productID,
+	}); err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Pancake 人民币商品已创建但保存商品 ID 失败 product_id=%q error=%q", productID, err.Error()))
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "人民币商品已创建，但保存配置失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+		"data": gin.H{
+			"product_id": productID,
+			"product_name": "RelayBases API 充值（人民币）",
+			"created": true,
+		},
+	})
 }
 
 // SaveWaffoPancake atomically persists all five operator-controlled fields.
@@ -379,7 +472,12 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		return
 	}
 
-	unitPrice := setting.WaffoPancakeUnitPrice
+	config, err := getWaffoPancakeCheckoutConfig(appI18n.GetLangFromContext(c))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 人民币商品尚未配置"})
+		return
+	}
+	unitPrice := config.UnitPrice
 	payMoney := getWaffoPancakePayMoneyAtUnitPrice(req.Amount, group, unitPrice)
 	if payMoney < 0.01 {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
@@ -395,7 +493,7 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		PaymentMethod:     model.PaymentMethodWaffoPancake,
 		PaymentProvider:   model.PaymentProviderWaffoPancake,
 		PaymentAmount:     formatWaffoPancakeAmount(payMoney),
-		PaymentCurrency:   "USD",
+		PaymentCurrency:   config.Currency,
 		ReferralUnitPrice: decimal.NewFromFloat(unitPrice).String(),
 		CreateTime:        time.Now().Unix(),
 		Status:            common.TopUpStatusPending,
@@ -408,7 +506,8 @@ func RequestWaffoPancakePay(c *gin.Context) {
 
 	expiresInSeconds := 45 * 60
 	session, err := service.CreateWaffoPancakeCheckoutSession(c.Request.Context(), &service.WaffoPancakeCreateSessionParams{
-		ProductID:     setting.WaffoPancakeProductID,
+		ProductID:     config.ProductID,
+		Currency:      config.Currency,
 		BuyerIdentity: getWaffoPancakeBuyerIdentity(user),
 		PriceSnapshot: &service.WaffoPancakePriceSnapshot{
 			Amount:      formatWaffoPancakeAmount(payMoney),

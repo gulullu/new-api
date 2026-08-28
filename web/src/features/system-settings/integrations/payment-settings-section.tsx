@@ -201,6 +201,7 @@ type PaymentSettingsSectionProps = {
   waffoPancakeDefaultValues: WaffoPancakeSettingsValues
   waffoPancakeProvisionedStoreID?: string
   waffoPancakeProvisionedProductID?: string
+  waffoPancakeCNYProductID?: string
   complianceDefaults: PaymentComplianceDefaults
 }
 
@@ -219,6 +220,7 @@ export function PaymentSettingsSection({
   waffoPancakeDefaultValues,
   waffoPancakeProvisionedStoreID,
   waffoPancakeProvisionedProductID,
+  waffoPancakeCNYProductID,
   complianceDefaults,
 }: PaymentSettingsSectionProps) {
   const { t } = useTranslation()
@@ -1615,6 +1617,7 @@ export function PaymentSettingsSection({
                 selectedBinding={waffoPancakeSelection}
                 savedBinding={waffoPancakeSavedBinding}
                 onSelectedBindingChange={setWaffoPancakeSelection}
+                cnyProductID={waffoPancakeCNYProductID ?? ''}
               />
             </TabsContent>
 

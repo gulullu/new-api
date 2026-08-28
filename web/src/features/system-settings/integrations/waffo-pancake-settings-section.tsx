@@ -36,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { removeTrailingSlash } from './utils'
 import {
   type CatalogStore,
+  createWaffoPancakeCNYProduct,
   type PairOrphanError,
   type PairResult,
   createWaffoPancakePair,
@@ -63,6 +64,7 @@ interface Props {
   selectedBinding: WaffoPancakeBinding
   savedBinding: WaffoPancakeBinding
   onSelectedBindingChange: (value: SetStateAction<WaffoPancakeBinding>) => void
+  cnyProductID: string
 }
 
 const PANCAKE_DASHBOARD_URL = 'https://pancake.waffo.ai/merchant/dashboard'
@@ -77,12 +79,15 @@ export function WaffoPancakeSettingsSection({
   selectedBinding,
   savedBinding,
   onSelectedBindingChange,
+  cnyProductID,
 }: Props) {
   const { t } = useTranslation()
 
   const [phase, setPhase] = React.useState<'idle' | 'verifying'>('idle')
   const [catalog, setCatalog] = React.useState<CatalogStore[]>([])
   const [creatingPair, setCreatingPair] = React.useState(false)
+  const [creatingCNYProduct, setCreatingCNYProduct] = React.useState(false)
+  const [configuredCNYProductID, setConfiguredCNYProductID] = React.useState(cnyProductID)
   const chosenStoreID = selectedBinding.storeID
   const chosenProductID = selectedBinding.productID
   const storeID = savedBinding.storeID
@@ -94,6 +99,10 @@ export function WaffoPancakeSettingsSection({
     () => JSON.stringify(defaultValues),
     [defaultValues]
   )
+
+  React.useEffect(() => {
+    setConfiguredCNYProductID(cnyProductID)
+  }, [cnyProductID])
 
   // "merchantID|privateKey" of the last verified pair; debounced verify
   // skips when nothing changed.
@@ -340,6 +349,60 @@ export function WaffoPancakeSettingsSection({
     }
   }
 
+  const handleCreateCNYProduct = async () => {
+    if (!credsReady) {
+      toast.error(
+        t('Fill in both Merchant ID and API Private Key before creating.')
+      )
+      return
+    }
+    const boundStoreID = selectedBinding.storeID || savedBinding.storeID
+    if (!boundStoreID) {
+      toast.error(t('Pick or create a Pancake store before creating the CNY product.'))
+      return
+    }
+    if (configuredCNYProductID) {
+      toast.info(`${t('Chinese CNY product already configured')}: ${configuredCNYProductID}`)
+      return
+    }
+    if (!window.confirm(t('Create the Chinese CNY wallet top-up product now?'))) {
+      return
+    }
+    setCreatingCNYProduct(true)
+    try {
+      const { merchantID, privateKey } = readCreds()
+      const body = await createWaffoPancakeCNYProduct({
+        merchantID,
+        privateKey,
+        returnURL: removeTrailingSlash(returnURL.trim()),
+        storeID: boundStoreID,
+      })
+      if (
+        body?.message === 'success' &&
+        typeof body.data === 'object' &&
+        body.data
+      ) {
+        setConfiguredCNYProductID(
+          (body.data as { product_id: string }).product_id
+        )
+        toast.success(
+          `${t('Chinese CNY product ready')}: ${(body.data as { product_id: string }).product_id}`
+        )
+        return
+      }
+      const reason = typeof body?.data === 'string' ? body.data : undefined
+      toast.error(
+        reason ? `${t('Creation failed')}: ${reason}` : t('Creation failed')
+      )
+    } catch (err) {
+      toast.error(
+        `${t('Creation failed')}: ${err instanceof Error ? err.message : String(err)}`
+      )
+    } finally {
+      setCreatingCNYProduct(false)
+    }
+  }
+
   const verifying = phase === 'verifying'
 
   // "Not edited" = MerchantID unchanged AND PrivateKey field blank, in
@@ -526,6 +589,32 @@ export function WaffoPancakeSettingsSection({
                 "Used as SuccessURL on the new product. You'll be prompted to confirm if left blank."
               )}
             </p>
+          </div>
+
+          <div className='rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100'>
+            <div className='flex flex-wrap items-center justify-between gap-3'>
+              <div>
+                <p className='font-medium'>{t('Chinese CNY top-up product')}</p>
+                <p className='text-xs opacity-80'>
+                  {configuredCNYProductID
+                    ? `${t('Configured product')}: ${configuredCNYProductID}`
+                    : t('Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.')}
+                </p>
+              </div>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={handleCreateCNYProduct}
+                disabled={creatingCNYProduct || verifying || !credsReady || Boolean(configuredCNYProductID)}
+                className='shrink-0'
+              >
+                {creatingCNYProduct
+                  ? t('Creating...')
+                  : configuredCNYProductID
+                    ? t('Already configured')
+                    : `+ ${t('Create Chinese CNY product')}`}
+              </Button>
+            </div>
           </div>
 
           {hasCatalog ? (

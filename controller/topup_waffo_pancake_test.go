@@ -110,3 +110,30 @@ func TestWaffoPancakePayMoneyUsesCapturedUnitPrice(t *testing.T) {
 	actual := getWaffoPancakePayMoneyAtUnitPrice(100, "default", 0.1425)
 	require.InDelta(t, 14.25, actual, 0.000001)
 }
+
+func TestGetWaffoPancakeCheckoutConfigSelectsCurrencyByLocale(t *testing.T) {
+	originalUSDProduct := setting.WaffoPancakeProductID
+	originalCNYProduct := setting.WaffoPancakeCNYProductID
+	originalUnitPrice := setting.WaffoPancakeUnitPrice
+	t.Cleanup(func() {
+		setting.WaffoPancakeProductID = originalUSDProduct
+		setting.WaffoPancakeCNYProductID = originalCNYProduct
+		setting.WaffoPancakeUnitPrice = originalUnitPrice
+	})
+
+	setting.WaffoPancakeProductID = "prod_usd"
+	setting.WaffoPancakeCNYProductID = "prod_cny"
+	setting.WaffoPancakeUnitPrice = 0.15
+
+	cny, err := getWaffoPancakeCheckoutConfig("zh-CN")
+	require.NoError(t, err)
+	require.Equal(t, waffoPancakeCheckoutConfig{ProductID: "prod_cny", Currency: "CNY", UnitPrice: 1}, cny)
+
+	usd, err := getWaffoPancakeCheckoutConfig("en")
+	require.NoError(t, err)
+	require.Equal(t, waffoPancakeCheckoutConfig{ProductID: "prod_usd", Currency: "USD", UnitPrice: 0.15}, usd)
+
+	setting.WaffoPancakeCNYProductID = ""
+	_, err = getWaffoPancakeCheckoutConfig("zh-CN")
+	require.Error(t, err)
+}

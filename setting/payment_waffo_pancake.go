@@ -12,4 +12,5 @@ var (
 	WaffoPancakeMinTopUp   int     = 1
 	WaffoPancakeStoreID    string
 	WaffoPancakeProductID  string
+	WaffoPancakeCNYProductID string
 )

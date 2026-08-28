@@ -21,6 +21,7 @@ type WaffoPancakePriceSnapshot struct {
 // OrderMerchantExternalID = our trade_no; Pancake echoes it back in webhooks.
 type WaffoPancakeCreateSessionParams struct {
 	ProductID               string
+	Currency                string
 	BuyerIdentity           string
 	PriceSnapshot           *WaffoPancakePriceSnapshot
 	BuyerEmail              string
@@ -113,10 +114,14 @@ func CreateWaffoPancakeCheckoutSession(ctx context.Context, params *WaffoPancake
 		return nil, fmt.Errorf("build Waffo Pancake client: %w", err)
 	}
 
+	currency := strings.ToUpper(strings.TrimSpace(params.Currency))
+	if currency == "" {
+		currency = "USD"
+	}
 	sdkParams := pancake.AuthenticatedCheckoutParams{
 		CreateCheckoutSessionParams: pancake.CreateCheckoutSessionParams{
 			ProductID:               params.ProductID,
-			Currency:                "USD",
+			Currency:                currency,
 			BuyerEmail:              optionalString(params.BuyerEmail),
 			ExpiresInSeconds:        params.ExpiresInSeconds,
 			OrderMerchantExternalID: optionalString(params.OrderMerchantExternalID),
@@ -265,7 +270,51 @@ func ResolveWaffoPancakeSubscriptionTradeNo(event *WaffoPancakeWebhookEvent) (st
 const (
 	defaultWaffoPancakeStoreName   = "new-api-store"
 	defaultWaffoPancakeProductName = "new-api-charge-product"
+	defaultWaffoPancakeCNYProductName = "RelayBases API 充值（人民币）"
+	defaultWaffoPancakeCNYProductDescription = "中文用户人民币充值商品：1 Ɍ = 1 元人民币。"
 )
+
+// CreateWaffoPancakeCNYProduct mints and publishes the dedicated Chinese
+// wallet top-up product under the already-bound store. The product is priced
+// at CNY 1.00 so a checkout snapshot can represent the exact RelayBases R
+// amount without an exchange-rate conversion.
+func CreateWaffoPancakeCNYProduct(ctx context.Context, merchantID, privateKey, storeID, returnURL string) (string, error) {
+	storeID = strings.TrimSpace(storeID)
+	if storeID == "" {
+		return "", fmt.Errorf("store id is required to create a CNY product")
+	}
+	client, err := newWaffoPancakeClientFromCreds(merchantID, privateKey)
+	if err != nil {
+		return "", err
+	}
+	description := defaultWaffoPancakeCNYProductDescription
+	prodRes, err := client.OnetimeProducts.Create(ctx, pancake.CreateOnetimeProductParams{
+		StoreID:     storeID,
+		Name:        defaultWaffoPancakeCNYProductName,
+		Description: &description,
+		Prices: pancake.Prices{
+			"CNY": {
+				Amount:      "1.00",
+				TaxCategory: pancake.TaxCategory("saas"),
+			},
+		},
+		SuccessURL: optionalString(strings.TrimSpace(returnURL)),
+	})
+	if err != nil {
+		return "", fmt.Errorf("create Waffo Pancake CNY product: %w", err)
+	}
+	if prodRes == nil {
+		return "", fmt.Errorf("Waffo Pancake returned empty CNY product")
+	}
+	productID := strings.TrimSpace(prodRes.Product.ID)
+	if productID == "" {
+		return "", fmt.Errorf("Waffo Pancake returned empty CNY product id")
+	}
+	if _, err := client.OnetimeProducts.Publish(ctx, pancake.PublishOnetimeProductParams{ID: productID}); err != nil {
+		return "", fmt.Errorf("publish Waffo Pancake CNY product: %w", err)
+	}
+	return productID, nil
+}
 
 // CreateWaffoPancakePrimaryStore creates a Pancake Store using in-flight
 // (not-yet-persisted) credentials and returns the new store ID.

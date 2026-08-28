@@ -5408,6 +5408,14 @@
     "Failed to load website access policy": "ウェブサイトアクセス・ポリシーの読み込みに失敗しました",
     "Failed to update website access policy": "ウェブサイトアクセス・ポリシーの更新に失敗しました",
     "Mainland website access is blocked": "中国本土からのウェブサイトアクセスをブロックしました",
-    "Mainland website access is allowed": "中国本土からのウェブサイトアクセスを許可しました"
+    "Mainland website access is allowed": "中国本土からのウェブサイトアクセスを許可しました",
+    "Chinese CNY top-up product": "中国語 CNY チャージ商品",
+    "Create Chinese CNY product": "中国語 CNY 商品を作成",
+    "Chinese CNY product already configured": "中国語 CNY 商品は設定済みです",
+    "Chinese CNY product ready": "中国語 CNY 商品の準備が完了しました",
+    "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "中国語の決済用に、Ɍ あたり ¥1.00 の「RelayBases API 充值（人民币）」を作成します。",
+    "Configured product": "設定済みの商品",
+    "Create the Chinese CNY wallet top-up product now?": "中国語 CNY チャージ商品を今すぐ作成しますか？",
+    "Pick or create a Pancake store before creating the CNY product.": "CNY 商品を作成する前に Pancake ストアを選択または作成してください。"
   }
 }

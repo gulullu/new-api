@@ -5408,6 +5408,14 @@
     "Failed to load website access policy": "Không thể tải chính sách truy cập website",
     "Failed to update website access policy": "Không thể cập nhật chính sách truy cập website",
     "Mainland website access is blocked": "Đã chặn truy cập website từ Trung Quốc đại lục",
-    "Mainland website access is allowed": "Đã cho phép truy cập website từ Trung Quốc đại lục"
+    "Mainland website access is allowed": "Đã cho phép truy cập website từ Trung Quốc đại lục",
+    "Chinese CNY top-up product": "Sản phẩm nạp CNY tiếng Trung",
+    "Create Chinese CNY product": "Tạo sản phẩm CNY tiếng Trung",
+    "Chinese CNY product already configured": "Sản phẩm CNY tiếng Trung đã được cấu hình",
+    "Chinese CNY product ready": "Sản phẩm CNY tiếng Trung đã sẵn sàng",
+    "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "Tạo “RelayBases API 充值（人民币）” với giá ¥1,00 mỗi Ɍ cho thanh toán tiếng Trung.",
+    "Configured product": "Sản phẩm đã cấu hình",
+    "Create the Chinese CNY wallet top-up product now?": "Tạo sản phẩm nạp CNY tiếng Trung ngay bây giờ?",
+    "Pick or create a Pancake store before creating the CNY product.": "Hãy chọn hoặc tạo cửa hàng Pancake trước khi tạo sản phẩm CNY."
   }
 }

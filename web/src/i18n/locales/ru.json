@@ -5408,6 +5408,14 @@
     "Failed to load website access policy": "Не удалось загрузить политику доступа к сайту",
     "Failed to update website access policy": "Не удалось обновить политику доступа к сайту",
     "Mainland website access is blocked": "Доступ к сайту из материкового Китая заблокирован",
-    "Mainland website access is allowed": "Доступ к сайту из материкового Китая разрешён"
+    "Mainland website access is allowed": "Доступ к сайту из материкового Китая разрешён",
+    "Chinese CNY top-up product": "Китайский товар пополнения в CNY",
+    "Create Chinese CNY product": "Создать китайский товар CNY",
+    "Chinese CNY product already configured": "Китайский товар CNY уже настроен",
+    "Chinese CNY product ready": "Китайский товар CNY готов",
+    "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "Создаёт «RelayBases API 充值（人民币）» по ¥1,00 за Ɍ для оплаты на китайском языке.",
+    "Configured product": "Настроенный товар",
+    "Create the Chinese CNY wallet top-up product now?": "Создать китайский товар пополнения в CNY сейчас?",
+    "Pick or create a Pancake store before creating the CNY product.": "Выберите или создайте магазин Pancake перед созданием товара CNY."
   }
 }
