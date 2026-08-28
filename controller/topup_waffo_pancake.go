@@ -75,12 +75,17 @@ func RequestWaffoPancakeAmount(c *gin.Context) {
 		return
 	}
 
-	config, err := getWaffoPancakeCheckoutConfig(appI18n.GetLangFromContext(c))
-	if err != nil {
+	locale := appI18n.GetLangFromContext(c)
+	if _, err := getWaffoPancakeCheckoutConfig(locale); err != nil {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo Pancake 人民币商品尚未配置"})
 		return
 	}
-	payMoney := getWaffoPancakePayMoneyAtUnitPrice(req.Amount, group, config.UnitPrice)
+	// The amount endpoint feeds the wallet/confirmation display, which is
+	// denominated in the configured USD quote.  Chinese checkout itself is
+	// still created with config.UnitPrice=1.0 CNY per R in RequestPay below;
+	// returning that CNY value here would make the UI incorrectly label it as
+	// USD (for example, showing USD 20.00 instead of USD 3.00 + 约合￥20.00).
+	payMoney := getWaffoPancakePayMoneyAtUnitPrice(req.Amount, group, setting.WaffoPancakeUnitPrice)
 	if payMoney <= 0.01 {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
 		return
