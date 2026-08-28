@@ -111,6 +111,19 @@ export function Wallet(props: WalletProps) {
   const { processing: pancakeProcessing, processWaffoPancakePayment } =
     useWaffoPancakePayment()
 
+  const configuredPaymentPrice =
+    selectedPaymentMethod?.type === PAYMENT_TYPES.STRIPE
+      ? status?.stripe_unit_price
+      : selectedPaymentMethod?.type === PAYMENT_TYPES.WAFFO_PANCAKE
+        ? status?.waffo_pancake_unit_price
+        : status?.price
+  const priceRatio =
+    typeof configuredPaymentPrice === 'number' &&
+    Number.isFinite(configuredPaymentPrice) &&
+    configuredPaymentPrice > 0
+      ? configuredPaymentPrice
+      : 1
+
   // Fetch and refresh user data
   const fetchUser = useCallback(async () => {
     try {
@@ -351,7 +364,7 @@ export function Wallet(props: WalletProps) {
                   redeeming={redeeming}
                   topupLink={topupInfo?.topup_link}
                   loading={topupLoading}
-                  priceRatio={(status?.price as number) || 1}
+                  priceRatio={priceRatio}
                   onOpenBilling={() => setBillingDialogOpen(true)}
                   creemProducts={topupInfo?.creem_products}
                   enableCreemTopup={topupInfo?.enable_creem_topup}
