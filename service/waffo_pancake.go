@@ -269,10 +269,10 @@ func ResolveWaffoPancakeSubscriptionTradeNo(event *WaffoPancakeWebhookEvent) (st
 // Deterministic default names for "+ Create": stable bodies mean stable
 // X-Idempotency-Key, which lets Pancake dedupe retries server-side.
 const (
-	defaultWaffoPancakeStoreName   = "new-api-store"
-	defaultWaffoPancakeProductName = "new-api-charge-product"
-	defaultWaffoPancakeCNYProductName = "RelayBases API 充值（人民币）"
-	defaultWaffoPancakeCNYProductDescription = "中文用户人民币充值商品：1 Ɍ = 1 元人民币。"
+	defaultWaffoPancakeStoreName             = "new-api-store"
+	defaultWaffoPancakeProductName           = "new-api-charge-product"
+	defaultWaffoPancakeCNYProductName        = "RelayBases API 充值（人民币）"
+	defaultWaffoPancakeCNYProductDescription = "用于 RelayBases API 的预付费数字额度。1 个单位等于 1 个 RelayBases 额度（Ɍ）。付款成功后，额度将自动到账。这是一次性购买，不是订阅。"
 )
 
 // CreateWaffoPancakeCNYProduct mints and publishes the dedicated Chinese
