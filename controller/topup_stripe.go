@@ -554,7 +554,7 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 支付快照无效: %w", err)
 	}
-	lineItemBreakdown, err := stripeCheckoutLineItemBreakdown(unitAmount, quantity)
+	lineItemUnitAmount, err := stripeCheckoutLineItemAmount(unitAmount, quantity)
 	if err != nil {
 		return stripeCheckoutResult{}, fmt.Errorf("Stripe 商品数量无效: %w", err)
 	}
@@ -562,7 +562,7 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 	priceData := &stripe.CheckoutSessionLineItemPriceDataParams{
 		Currency:   stripe.String(string(configuredPrice.Currency)),
 		Product:    stripe.String(configuredPrice.Product.ID),
-		UnitAmount: stripe.Int64(lineItemBreakdown.unitAmount),
+		UnitAmount: stripe.Int64(lineItemUnitAmount),
 	}
 	if configuredPrice.TaxBehavior != "" {
 		priceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
@@ -583,25 +583,11 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: priceData,
-				Quantity:  stripe.Int64(lineItemBreakdown.quantity),
+				Quantity:  stripe.Int64(quantity),
 			},
 		},
 		Mode:                stripe.String(string(stripe.CheckoutSessionModePayment)),
 		AllowPromotionCodes: stripe.Bool(setting.StripePromotionCodesEnabled),
-	}
-	if lineItemBreakdown.remainder > 0 {
-		remainderPriceData := &stripe.CheckoutSessionLineItemPriceDataParams{
-			Currency:   stripe.String(string(configuredPrice.Currency)),
-			Product:    stripe.String(configuredPrice.Product.ID),
-			UnitAmount: stripe.Int64(lineItemBreakdown.remainder),
-		}
-		if configuredPrice.TaxBehavior != "" {
-			remainderPriceData.TaxBehavior = stripe.String(string(configuredPrice.TaxBehavior))
-		}
-		params.LineItems = append(params.LineItems, &stripe.CheckoutSessionLineItemParams{
-			PriceData: remainderPriceData,
-			Quantity:  stripe.Int64(1),
-		})
 	}
 	if len(paymentMethodTypes) > 0 {
 		params.PaymentMethodTypes = paymentMethodTypes
@@ -630,36 +616,25 @@ func genStripeLinkWithPaymentMethodTypesAndQuantity(referenceId string, customer
 	}, nil
 }
 
-type stripeCheckoutLineItemBreakdownResult struct {
-	unitAmount int64
-	quantity   int64
-	remainder  int64
-}
-
-// stripeCheckoutLineItemBreakdown preserves the exact rounded Checkout total
-// while exposing the requested credit count as the primary line-item quantity.
-// Stripe payment-mode Checkout only accepts integer USD cents, so a remainder
-// is represented by a second same-product line item instead of a decimal
-// unit_amount (for example, 286 cents becomes 14 cents × 20 plus 6 cents).
-func stripeCheckoutLineItemBreakdown(minorAmount int64, quantity int64) (stripeCheckoutLineItemBreakdownResult, error) {
+// stripeCheckoutLineItemAmount returns the integer per-unit amount required by
+// Stripe when Checkout quantity must remain equal to the purchased R amount.
+// The rounded total must be exactly divisible by that quantity; a remainder
+// line item would make the hosted product display misleading.
+func stripeCheckoutLineItemAmount(minorAmount int64, quantity int64) (int64, error) {
 	if minorAmount < 1 {
-		return stripeCheckoutLineItemBreakdownResult{}, errors.New("invalid Stripe line item amount")
+		return 0, errors.New("invalid Stripe line item amount")
 	}
 	if quantity < 1 {
-		return stripeCheckoutLineItemBreakdownResult{}, errors.New("quantity must be positive")
+		return 0, errors.New("quantity must be positive")
+	}
+	if minorAmount%quantity != 0 {
+		return 0, fmt.Errorf("rounded total %d cents is not divisible by quantity %d", minorAmount, quantity)
 	}
 	unitAmount := minorAmount / quantity
 	if unitAmount < 1 {
-		return stripeCheckoutLineItemBreakdownResult{
-			unitAmount: minorAmount,
-			quantity:   1,
-		}, nil
+		return 0, errors.New("Stripe unit amount must be positive")
 	}
-	return stripeCheckoutLineItemBreakdownResult{
-		unitAmount: unitAmount,
-		quantity:   quantity,
-		remainder:  minorAmount % quantity,
-	}, nil
+	return unitAmount, nil
 }
 
 // stripeCheckoutPaymentSnapshot applies the same minor-unit rounding used by

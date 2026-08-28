@@ -19,21 +19,13 @@ func TestStripeCheckoutPaymentSnapshotUsesLineItemMinorUnitRounding(t *testing.T
 	assert.Equal(t, "USD", payment.Currency)
 }
 
-func TestStripeCheckoutLineItemBreakdownPreservesTotalWithVisibleQuantity(t *testing.T) {
-	breakdown, err := stripeCheckoutLineItemBreakdown(286, 20)
+func TestStripeCheckoutLineItemAmountRequiresExactPerUnitPrice(t *testing.T) {
+	unitAmount, err := stripeCheckoutLineItemAmount(300, 20)
 	require.NoError(t, err)
-	assert.Equal(t, int64(14), breakdown.unitAmount)
-	assert.Equal(t, int64(20), breakdown.quantity)
-	assert.Equal(t, int64(6), breakdown.remainder)
-	assert.Equal(t, int64(286), breakdown.unitAmount*breakdown.quantity+breakdown.remainder)
-}
+	assert.Equal(t, int64(15), unitAmount)
 
-func TestStripeCheckoutLineItemBreakdownUsesIntegerUnitAmountWhenDivisible(t *testing.T) {
-	breakdown, err := stripeCheckoutLineItemBreakdown(300, 20)
-	require.NoError(t, err)
-	assert.Equal(t, int64(15), breakdown.unitAmount)
-	assert.Equal(t, int64(20), breakdown.quantity)
-	assert.Equal(t, int64(0), breakdown.remainder)
+	_, err = stripeCheckoutLineItemAmount(286, 20)
+	assert.Error(t, err)
 }
 
 func TestStripeCheckoutLineItemAmountRejectsInvalidValues(t *testing.T) {
@@ -47,7 +39,7 @@ func TestStripeCheckoutLineItemAmountRejectsInvalidValues(t *testing.T) {
 		{name: "negative quantity", amount: 286, quantity: -1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := stripeCheckoutLineItemBreakdown(tc.amount, tc.quantity)
+			_, err := stripeCheckoutLineItemAmount(tc.amount, tc.quantity)
 			assert.Error(t, err)
 		})
 	}
