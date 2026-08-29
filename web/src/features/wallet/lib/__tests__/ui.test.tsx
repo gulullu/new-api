@@ -82,7 +82,7 @@ describe('wallet payment icons', () => {
 
     await act(async () => {
       pancakeRoot.render(
-        getPaymentIcon('waffo_pancake', 'size-5', undefined, 'Waffo')
+        getPaymentIcon('waffo_pancake', 'size-5', 'LuGlobe2', 'Waffo')
       )
     })
     const darkLogo = pancakeContainer.querySelector(

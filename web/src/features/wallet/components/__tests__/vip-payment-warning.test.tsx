@@ -363,6 +363,29 @@ describe('RelayBases VIP payment warning', () => {
     await unmountPaymentDialog(english)
   })
 
+  test('shows the bundled Waffo mark in English when the configured icon is invalid', async () => {
+    await i18n.changeLanguage('en')
+    const englishWaffo = await renderPaymentDialog({
+      showVipWarning: false,
+      paymentMethod: {
+        name: 'Waffo Pancake',
+        type: PAYMENT_TYPES.WAFFO_PANCAKE,
+        icon: 'LuGlobe2',
+      },
+    })
+    const englishWaffoDialog = document.querySelector(
+      '[data-slot="alert-dialog-content"]'
+    )
+    assert.match(englishWaffoDialog?.textContent ?? '', /Waffo Pancake/)
+    assert.ok(
+      englishWaffoDialog?.querySelector('img[src="/waffo-logo-dark.svg"]')
+    )
+    assert.ok(
+      englishWaffoDialog?.querySelector('img[src="/waffo-logo-light.svg"]')
+    )
+    await unmountPaymentDialog(englishWaffo)
+  })
+
   test('shows clear support and continue choices without truncating copy', async () => {
     await i18n.changeLanguage('en')
     let supportClicks = 0

@@ -83,14 +83,21 @@ reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 async function renderWalletComponents(
   topupAmount: number,
   selectedPaymentType?: string,
-  paymentLoading: string | null = null
+  paymentLoading: string | null = null,
+  language = 'zhCN',
+  waffoPancakeIcon?: string
 ) {
-  await i18n.changeLanguage('zhCN')
+  await i18n.changeLanguage(language)
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
   const methods = [
-    { name: 'Waffo Pancake', type: 'waffo_pancake', min_topup: 20 },
+    {
+      name: 'Waffo Pancake',
+      type: 'waffo_pancake',
+      icon: waffoPancakeIcon,
+      min_topup: 20,
+    },
     { name: 'Stripe', type: 'stripe', min_topup: 20 },
   ]
 
@@ -230,6 +237,25 @@ describe('RelayBases wallet components', () => {
       buttons.every((button) => !button.textContent?.includes('去支付')),
       true
     )
+
+    await unmount(rendered)
+  })
+
+  test('shows the bundled Waffo mark in English when the configured icon is invalid', async () => {
+    const rendered = await renderWalletComponents(
+      20,
+      undefined,
+      null,
+      'en',
+      'LuGlobe2'
+    )
+    const waffoButton = [...rendered.container.querySelectorAll('button')].find(
+      (button) => button.textContent?.includes('Waffo Pancake')
+    )
+
+    assert.ok(waffoButton)
+    assert.ok(waffoButton.querySelector('img[src="/waffo-logo-dark.svg"]'))
+    assert.ok(waffoButton.querySelector('img[src="/waffo-logo-light.svg"]'))
 
     await unmount(rendered)
   })
