@@ -22,6 +22,8 @@ func announcement(sourceHash, en, zhCN, zhTW, fr, ja, ru, vi string) localizedLe
 	return leaf(sourceHash, translations(en, zhCN, zhTW, fr, ja, ru, vi))
 }
 
+const announcement25Source = "## 新模型 · Claude Fable 5.1\n\n**Claude Fable 5.1 现已在 `claude-max` 分组上线。**\n\n- **模型 ID**：`claude-fable-5-1`\n- **上下文 / 最大输出**：1M / 128K Tokens\n- **基础价格**：输入 Ɍ10、输出 Ɍ50、缓存读取 Ɍ0.25 / MTok\n\n输入与输出基础价和 Fable 5 相同，缓存读取价格降至其四分之一。费用按基础价 × 当前分组倍率计算，最终以模型广场和控制台账单为准。"
+
 const announcement23Source = "## 新模型与价格更新 · Gemini 3.7 Flash / DeepSeek V4\n\n`gemini-3.7-flash` 已在 gemini-lite 分组上线，支持 1,048,576 Token 上下文、65,536 Token 最大输出，以及 low / medium（默认）/ high 推理等级。\n\nGemini 3.7 Flash 当前基础优惠价（截至 2026-12-31）：输入 Ɍ0.75、输出 Ɍ3.75、缓存读取 Ɍ0.075 / MTok；gemini-lite 当前 0.8x，有效价格为 Ɍ0.60 / Ɍ3.00 / Ɍ0.06。\n\nDeepSeek V4 已按最新官方高峰价统一：Flash 输入（缓存命中）Ɍ0.10、输入（缓存未命中）Ɍ3、输出 Ɍ9；Pro 输入（缓存命中）Ɍ0.30、输入（缓存未命中）Ɍ9、输出 Ɍ27 / MTok。平台不采用低峰优惠；open-models 既有 0.7x 分组倍率仍适用。最终以模型广场和控制台账单为准。"
 
 const announcement24Source = "## Codex CLI / App 149 兼容说明\n\n149 版本调用 Responses API 可能出现 `401 Unauthorized: Invalid token`。在 `config.toml` 的 `[model_providers.<provider>]` 段加入 `requires_openai_auth = true`，保存并重启客户端。无需修改 API Key、模型或接口地址。\n\n---\n\n## Codex CLI / App 149 Notice\n\nVersion 149 may return `401 Unauthorized: Invalid token` for Responses API. Add `requires_openai_auth = true` to `[model_providers.<provider>]` in `config.toml`, save, and restart. No API key, model, or endpoint change is required."
@@ -38,6 +40,16 @@ var archivedAnnouncementSourceHashes = map[string]string{
 }
 
 var announcementCatalog = map[string]localizedLeaf{
+	"25": announcement(
+		"0e47b568",
+		"## New Model · Claude Fable 5.1\n\n**Claude Fable 5.1 is now available in `claude-max`.**\n\n- **Model ID**: `claude-fable-5-1`\n- **Context / max output**: 1M / 128K tokens\n- **Base pricing**: Ɍ10 input, Ɍ50 output, Ɍ0.25 cache reads / MTok\n\nInput and output base prices match Fable 5; cache reads cost one quarter as much. Charges are calculated as base price × the current group multiplier. The Model Marketplace and console bill are authoritative.",
+		announcement25Source,
+		"## 新模型 · Claude Fable 5.1\n\n**Claude Fable 5.1 現已在 `claude-max` 分組上線。**\n\n- **模型 ID**：`claude-fable-5-1`\n- **內容視窗 / 最大輸出**：1M / 128K Tokens\n- **基礎價格**：輸入 Ɍ10、輸出 Ɍ50、快取讀取 Ɍ0.25 / MTok\n\n輸入與輸出基礎價和 Fable 5 相同，快取讀取價格降至其四分之一。費用按基礎價 × 目前分組倍率計算，最終以模型廣場和控制台帳單為準。",
+		"## Nouveau modèle · Claude Fable 5.1\n\n**Claude Fable 5.1 est disponible dans `claude-max`.**\n\n- **ID du modèle** : `claude-fable-5-1`\n- **Contexte / sortie maximale** : 1M / 128K Tokens\n- **Tarifs de base** : entrée Ɍ10, sortie Ɍ50, cache Ɍ0,25 / MTok\n\nLes tarifs d’entrée et de sortie sont identiques à Fable 5 ; la lecture du cache coûte quatre fois moins cher. Facturation = tarif de base × multiplicateur actuel du groupe. La facture de la console fait foi.",
+		"## 新モデル · Claude Fable 5.1\n\n**Claude Fable 5.1 を `claude-max` で提供開始しました。**\n\n- **モデル ID**：`claude-fable-5-1`\n- **コンテキスト / 最大出力**：1M / 128K Tokens\n- **基本価格**：入力 Ɍ10、出力 Ɍ50、キャッシュ読み取り Ɍ0.25 / MTok\n\n入力・出力の基本価格は Fable 5 と同じで、キャッシュ読み取りは 4 分の 1 です。料金は基本価格 × 現在のグループ倍率で計算され、最終的にはモデル広場とコンソール請求が基準となります。",
+		"## Новая модель · Claude Fable 5.1\n\n**Claude Fable 5.1 теперь доступна в `claude-max`.**\n\n- **ID модели**: `claude-fable-5-1`\n- **Контекст / максимум вывода**: 1M / 128K токенов\n- **Базовые цены**: ввод Ɍ10, вывод Ɍ50, чтение кэша Ɍ0.25 / MTok\n\nБазовые цены ввода и вывода совпадают с Fable 5, а чтение кэша стоит в четыре раза дешевле. Итог = базовая цена × текущий множитель группы. Окончательная сумма указана в консоли.",
+		"## Mô hình mới · Claude Fable 5.1\n\n**Claude Fable 5.1 hiện đã có trong `claude-max`.**\n\n- **Model ID**: `claude-fable-5-1`\n- **Ngữ cảnh / đầu ra tối đa**: 1M / 128K token\n- **Giá cơ sở**: đầu vào Ɍ10, đầu ra Ɍ50, đọc cache Ɍ0,25 / MTok\n\nGiá đầu vào và đầu ra giống Fable 5; giá đọc cache chỉ bằng một phần tư. Phí = giá cơ sở × hệ số nhóm hiện tại. Model Marketplace và hóa đơn bảng điều khiển là căn cứ cuối cùng.",
+	),
 	"24": announcement(
 		"b2090888",
 		"## Codex CLI / App 149 Notice\n\nVersion 149 may return `401 Unauthorized: Invalid token` for Responses API. Add `requires_openai_auth = true` to `[model_providers.<provider>]` in `config.toml`, save, and restart. No API key, model, or endpoint change is required.",

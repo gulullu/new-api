@@ -226,6 +226,7 @@
       "zai": "Z.AI"
     },
     "modelDescriptions": {
+      "claude-fable-5-1": "Claude Fable 5.1，Anthropic 目前能力最強的廣泛可用模型，適合高難度推理、長週期代理式編碼、多步驟研究與文件密集型工作。",
       "claude-fable-5": "Claude Fable 5，Anthropic 面向廣泛發佈的最高能力模型，適用於長週期代理、複雜推理、編碼和研究場景。",
       "claude-haiku-4-5-20251001": "Claude Haiku 4.5，低延遲、低成本的輕量模型，適合聊天、批處理和快速編碼任務。",
       "claude-opus-4-5-20251101": "Claude Opus 4.5，面向複雜編碼、代理任務和企業工作流的高智能模型。",

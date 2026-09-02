@@ -230,6 +230,7 @@
       "zai": "Z.AI"
     },
     "modelDescriptions": {
+      "claude-fable-5-1": "Claude Fable 5.1, mô hình mạnh nhất được Anthropic cung cấp rộng rãi, dành cho suy luận chuyên sâu, lập trình tác nhân dài hạn, nghiên cứu nhiều bước và công việc với nhiều tài liệu.",
       "claude-fable-5": "Claude Fable 5, mô hình được phát hành rộng rãi có khả năng nhất của Anthropic dành cho các tác nhân hoạt động lâu dài, lý luận, mã hóa và nghiên cứu phức tạp.",
       "claude-haiku-4-5-20251001": "Claude Haiku 4.5, một mô hình nhẹ, nhanh dành cho các tác vụ hàng loạt và trò chuyện có độ trễ thấp.",
       "claude-opus-4-5-20251101": "Claude Opus 4.5, một mô hình lý luận hàng đầu cho việc mã hóa và phân tích phức tạp.",

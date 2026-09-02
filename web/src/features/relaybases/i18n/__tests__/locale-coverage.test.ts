@@ -168,7 +168,10 @@ describe('RelayBases locale coverage', () => {
     const expectedModels = Object.keys(locales.en)
       .filter((key) => key.startsWith(modelPrefix))
       .sort()
-    assert.equal(expectedModels.length, 62)
+    assert.equal(expectedModels.length, 63)
+    assert.ok(
+      expectedModels.includes('pricing.modelDescriptions.claude-fable-5-1')
+    )
     assert.ok(expectedModels.includes('pricing.modelDescriptions.grok-4.6'))
     assert.ok(expectedModels.includes('pricing.modelDescriptions.glm-5.3'))
     assert.equal(

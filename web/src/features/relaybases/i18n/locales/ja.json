@@ -230,6 +230,7 @@
       "zai": "Z.AI"
     },
     "modelDescriptions": {
+      "claude-fable-5-1": "Claude Fable 5.1 は、Anthropic で最も高性能な一般提供モデルです。高度な推論、長期エージェント型コーディング、マルチステップ調査、文書中心の作業に適しています。",
       "claude-fable-5": "Claude Fable 5 は、長時間実行されるエージェント、複雑な推論、コーディング、および研究向けに、Anthropic で最も有能で広くリリースされたモデルです。",
       "claude-haiku-4-5-20251001": "Claude Haiku 4.5 は、低遅延のチャットおよびバッチ タスク用の高速軽量モデルです。",
       "claude-opus-4-5-20251101": "Claude Opus 4.5 は、複雑なコーディングと分析のための主力推論モデルです。",

@@ -230,6 +230,7 @@
       "zai": "Z.AI"
     },
     "modelDescriptions": {
+      "claude-fable-5-1": "Claude Fable 5.1, le modèle d'Anthropic le plus performant et largement disponible, pour le raisonnement exigeant, le codage agentique de longue durée, la recherche en plusieurs étapes et les travaux documentaires.",
       "claude-fable-5": "Claude Fable 5, le modèle d'Anthropic le plus performant et largement diffusé pour les agents de longue durée, le raisonnement complexe, le codage et la recherche.",
       "claude-haiku-4-5-20251001": "Claude Haiku 4.5, un modèle léger et rapide pour les tâches de chat et de lots à faible latence.",
       "claude-opus-4-5-20251101": "Claude Opus 4.5, un modèle de raisonnement phare pour le codage et l'analyse complexes.",

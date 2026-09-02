@@ -160,6 +160,32 @@ describe('RelayBases pricing presentation adapter', () => {
     assert.ok(glm?.capabilities?.includes('caching'))
   })
 
+  test('adds Claude Fable 5.1 specifications without changing server billing', () => {
+    const source = pricingData([
+      model('claude-fable-5-1', {
+        model_ratio: 5,
+        completion_ratio: 5,
+        cache_ratio: 0.025,
+        enable_groups: ['claude-max'],
+      }),
+    ])
+
+    const adapted = adaptRelayBasesPricingData(source, 'en').data[0]
+
+    assert.equal(adapted.context_length, 1000000)
+    assert.equal(adapted.max_output_tokens, 128000)
+    assert.equal(adapted.knowledge_cutoff, '2026-06')
+    assert.equal(adapted.release_date, '2026-09-01')
+    assert.deepEqual(adapted.input_modalities, ['text', 'image'])
+    assert.deepEqual(adapted.output_modalities, ['text'])
+    assert.ok(adapted.capabilities?.includes('reasoning'))
+    assert.ok(adapted.capabilities?.includes('caching'))
+    assert.equal(adapted.model_ratio, 5)
+    assert.equal(adapted.completion_ratio, 5)
+    assert.equal(adapted.cache_ratio, 0.025)
+    assert.deepEqual(adapted.enable_groups, ['claude-max'])
+  })
+
   test('uses the curated stable model and group order', () => {
     const source = pricingData([
       model('future-model', { vendor_id: 99 }),

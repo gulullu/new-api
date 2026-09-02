@@ -43,6 +43,25 @@ export type RelayBasesModelPresentation = Partial<
 export const RELAYBASES_MODEL_CATALOG: Readonly<
   Record<string, RelayBasesModelPresentation>
 > = {
+  'claude-fable-5-1': {
+    icon: 'Claude.Color',
+    tags: 'Anthropic,Claude,reasoning,vision,tools,caching',
+    context_length: 1000000,
+    max_output_tokens: 128000,
+    knowledge_cutoff: '2026-06',
+    release_date: '2026-09-01',
+    input_modalities: ['text', 'image'],
+    output_modalities: ['text'],
+    capabilities: [
+      'streaming',
+      'system_prompt',
+      'function_calling',
+      'tools',
+      'vision',
+      'reasoning',
+      'caching',
+    ],
+  },
   'claude-fable-5': {
     icon: 'Claude.Color',
     tags: 'Anthropic,Claude,reasoning,vision,tools,caching',

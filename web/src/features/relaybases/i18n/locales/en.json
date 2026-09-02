@@ -236,6 +236,7 @@
       "zai": "Z.AI"
     },
     "modelDescriptions": {
+      "claude-fable-5-1": "Claude Fable 5.1, Anthropic's most capable generally available model for demanding reasoning, long-horizon agentic coding, multistep research, and document-heavy work.",
       "claude-fable-5": "Claude Fable 5, Anthropic's most capable broadly released model for long-running agents, complex reasoning, coding, and research.",
       "claude-haiku-4-5-20251001": "Claude Haiku 4.5, a fast lightweight model for low-latency chat and batch tasks.",
       "claude-opus-4-5-20251101": "Claude Opus 4.5, a flagship reasoning model for complex coding and analysis.",

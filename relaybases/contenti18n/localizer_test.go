@@ -129,6 +129,23 @@ func TestGemini37AnnouncementSourceHash(t *testing.T) {
 	require.Equal(t, announcementCatalog["23"].sourceHash, ContentSourceHash(announcement23Source))
 }
 
+func TestClaudeFable51AnnouncementSupportsEveryLocale(t *testing.T) {
+	t.Parallel()
+	require.Equal(t, "0e47b568", ContentSourceHash(announcement25Source))
+	require.Equal(t, announcementCatalog["25"].sourceHash, ContentSourceHash(announcement25Source))
+
+	items := []map[string]any{{"id": 25, "content": announcement25Source}}
+	for _, locale := range SupportedLocales() {
+		localized := LocalizeAnnouncements(items, locale)
+		require.Len(t, localized, 1, locale)
+		content, ok := localized[0]["content"].(string)
+		require.True(t, ok, locale)
+		assert.Contains(t, content, "Claude Fable 5.1", locale)
+		assert.Contains(t, content, "claude-fable-5-1", locale)
+		assert.Contains(t, content, "Ɍ0", locale)
+	}
+}
+
 func TestLocalizeAnnouncementsKeepsAdministratorEditsAndUnknownContent(t *testing.T) {
 	t.Parallel()
 	items := []map[string]any{
