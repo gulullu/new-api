@@ -21,19 +21,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UserAuthForm } from '../user-auth-form'
 
-const {
-  login,
-  useAuthRedirect,
-  useAuthStore,
-  useStatus,
-  useTurnstile,
-} = vi.hoisted(() => ({
-  login: vi.fn(),
-  useAuthRedirect: vi.fn(),
-  useAuthStore: vi.fn(),
-  useStatus: vi.fn(),
-  useTurnstile: vi.fn(),
-}))
+const { login, useAuthRedirect, useAuthStore, useStatus, useTurnstile } =
+  vi.hoisted(() => ({
+    login: vi.fn(),
+    useAuthRedirect: vi.fn(),
+    useAuthStore: vi.fn(),
+    useStatus: vi.fn(),
+    useTurnstile: vi.fn(),
+  }))
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: unknown }) => children,
