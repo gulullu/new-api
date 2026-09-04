@@ -35,6 +35,18 @@ const {
   useTurnstile: vi.fn(),
 }))
 
+// Keep this test focused on the consent gate; schema validation is covered separately.
+vi.mock('@hookform/resolvers/zod', () => ({
+  zodResolver: vi.fn(() => async (values: Record<string, unknown>) => ({
+    values,
+    errors: {},
+  })),
+}))
+
+vi.mock('@/features/auth/constants', () => ({
+  registerFormSchema: {},
+}))
+
 vi.mock('@/features/auth/api', () => ({
   register,
   wechatLoginByCode: vi.fn(),
