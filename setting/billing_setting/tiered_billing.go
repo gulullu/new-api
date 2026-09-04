@@ -14,6 +14,10 @@ const (
 	BillingModeField         = "billing_mode"
 	BillingExprField         = "billing_expr"
 	DefaultGrok46BillingExpr = `len < 200000 ? tier("standard", p * 2 + c * 6 + cr * 0.5) : tier("long_context", p * 4 + c * 12 + cr * 1)`
+	// GPT-6 Astra official pricing: $10 input, $50 output, $1 cached input,
+	// and $12.50 cache writes per million tokens. Requests above 272K input
+	// tokens use the documented 2x input/cache and 1.5x output tier.
+	DefaultGPT6AstraBillingExpr = `len <= 272000 ? tier("standard", p * 10 + c * 50 + cr * 1 + cc * 12.5) : tier("long_context", p * 20 + c * 75 + cr * 2 + cc * 25)`
 )
 
 // BillingSetting is managed by config.GlobalConfig.Register.
@@ -25,10 +29,12 @@ type BillingSetting struct {
 
 var billingSetting = BillingSetting{
 	BillingMode: map[string]string{
-		"grok-4.6": BillingModeTieredExpr,
+		"grok-4.6":    BillingModeTieredExpr,
+		"gpt-6-astra": BillingModeTieredExpr,
 	},
 	BillingExpr: map[string]string{
-		"grok-4.6": DefaultGrok46BillingExpr,
+		"grok-4.6":    DefaultGrok46BillingExpr,
+		"gpt-6-astra": DefaultGPT6AstraBillingExpr,
 	},
 }
 

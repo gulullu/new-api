@@ -49,3 +49,10 @@ func TestDeepSeekV4PeakDefaults(t *testing.T) {
 	require.InDelta(t, 0.1/3, defaultCacheRatio["deepseek-v4-flash"], 1e-15)
 	require.InDelta(t, 0.3/9, defaultCacheRatio["deepseek-v4-pro"], 1e-15)
 }
+
+func TestGPT6AstraDefaultsMatchOfficialPricing(t *testing.T) {
+	require.Equal(t, 5.0, defaultModelRatio["gpt-6-astra"])
+	require.Equal(t, 5.0, defaultCompletionRatio["gpt-6-astra"])
+	require.Equal(t, 0.1, defaultCacheRatio["gpt-6-astra"])
+	require.Equal(t, 1.25, defaultCreateCacheRatio["gpt-6-astra"])
+}

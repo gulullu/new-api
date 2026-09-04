@@ -266,6 +266,7 @@
       "gpt-5.6-luna": "GPT-5.6 Luna, a fast and cost-efficient model for high-volume, latency-sensitive tasks, with separate standard and long-context pricing tiers.",
       "gpt-5.6-terra": "GPT-5.6 Terra, a balanced model between the flagship Sol and cost-efficient Luna tiers for everyday coding, reasoning, and agentic tasks, with separate standard and long-context pricing tiers.",
       "gpt-5.6-sol": "GPT-5.6 Sol, the flagship of the GPT-5.6 series, excelling at complex reasoning, coding, and agentic workflows, especially strong at command-line and multi-step coding.",
+      "gpt-6-astra": "GPT-6 Astra, OpenAI's most capable model for the hardest end-to-end work, including complex reasoning, coding, computer use, research, and document creation.",
       "gpt-audio-1.5": "GPT Audio 1.5, a general-purpose audio model for Chat Completions with audio input and output, streaming, and function calling.",
       "gpt-image-2": "GPT Image 2 supports image generation and editing through Azure image endpoints. Billing is based on actual usage, with a minimum charge of Ɍ0.08 per generated or edited image. If actual usage exceeds the minimum, actual usage billing applies. The console bill is authoritative.",
       "gpt-realtime-2.1": "GPT Realtime 2.1, a realtime reasoning model for advanced voice agents with improved alphanumeric recognition, silence and noise handling, interruption behavior, configurable reasoning, and tool use.",

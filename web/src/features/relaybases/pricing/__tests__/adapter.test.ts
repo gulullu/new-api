@@ -186,6 +186,51 @@ describe('RelayBases pricing presentation adapter', () => {
     assert.deepEqual(adapted.enable_groups, ['claude-max'])
   })
 
+  test('adds GPT-6 Astra specifications without changing server billing', () => {
+    const source = pricingData([
+      model('gpt-6-astra', {
+        description: 'server description',
+        icon: 'server-icon',
+        vendor_id: 99,
+        tags: 'server-tag',
+        model_ratio: 5,
+        completion_ratio: 5,
+        cache_ratio: 0.1,
+        create_cache_ratio: 1.25,
+        billing_mode: 'tiered_expr',
+        billing_expr: 'v1:astra-expression',
+        enable_groups: ['codex-pro'],
+      }),
+    ])
+
+    const adapted = adaptRelayBasesPricingData(source, 'en').data[0]
+
+    assert.equal(adapted.icon, 'OpenAI')
+    assert.equal(adapted.vendor_id, 1)
+    assert.equal(
+      adapted.tags,
+      'OpenAI,text,image,reasoning,tools,structured,vision,streaming,search,code,caching'
+    )
+    assert.equal(adapted.context_length, 1050000)
+    assert.equal(adapted.max_output_tokens, 128000)
+    assert.equal(adapted.knowledge_cutoff, '2026-04-30')
+    assert.equal(adapted.release_date, '2026-09-05')
+    assert.deepEqual(adapted.input_modalities, ['text', 'image'])
+    assert.deepEqual(adapted.output_modalities, ['text'])
+    assert.ok(adapted.capabilities?.includes('reasoning'))
+    assert.ok(adapted.capabilities?.includes('web_search'))
+    assert.ok(adapted.capabilities?.includes('code_interpreter'))
+    assert.ok(adapted.capabilities?.includes('caching'))
+
+    assert.equal(adapted.model_ratio, 5)
+    assert.equal(adapted.completion_ratio, 5)
+    assert.equal(adapted.cache_ratio, 0.1)
+    assert.equal(adapted.create_cache_ratio, 1.25)
+    assert.equal(adapted.billing_mode, 'tiered_expr')
+    assert.equal(adapted.billing_expr, 'v1:astra-expression')
+    assert.deepEqual(adapted.enable_groups, ['codex-pro'])
+  })
+
   test('uses the curated stable model and group order', () => {
     const source = pricingData([
       model('future-model', { vendor_id: 99 }),

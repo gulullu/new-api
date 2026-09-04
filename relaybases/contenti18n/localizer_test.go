@@ -146,6 +146,21 @@ func TestClaudeFable51AnnouncementSupportsEveryLocale(t *testing.T) {
 	}
 }
 
+func TestGPT6AstraAnnouncementSupportsEveryLocale(t *testing.T) {
+	t.Parallel()
+	require.Equal(t, "10aa5000", ContentSourceHash(announcement26Source))
+	require.Equal(t, announcementCatalog["26"].sourceHash, ContentSourceHash(announcement26Source))
+
+	items := []map[string]any{{"id": 26, "content": announcement26Source}}
+	for _, locale := range SupportedLocales() {
+		localized := LocalizeAnnouncements(items, locale)
+		require.Len(t, localized, 1, locale)
+		content, ok := localized[0]["content"].(string)
+		require.True(t, ok, locale)
+		assert.Contains(t, content, "gpt-6-astra", locale)
+	}
+}
+
 func TestLocalizeAnnouncementsKeepsAdministratorEditsAndUnknownContent(t *testing.T) {
 	t.Parallel()
 	items := []map[string]any{

@@ -24,6 +24,8 @@ func announcement(sourceHash, en, zhCN, zhTW, fr, ja, ru, vi string) localizedLe
 
 const announcement25Source = "## 新模型 · Claude Fable 5.1\n\n**Claude Fable 5.1 现已在 `claude-max` 分组上线。**\n\n- **模型 ID**：`claude-fable-5-1`\n- **上下文 / 最大输出**：1M / 128K Tokens\n- **基础价格**：输入 Ɍ10、输出 Ɍ50、缓存读取 Ɍ0.25 / MTok\n\n输入与输出基础价和 Fable 5 相同，缓存读取价格降至其四分之一。费用按基础价 × 当前分组倍率计算，最终以模型广场和控制台账单为准。"
 
+const announcement26Source = "## 新模型 · GPT-6 Astra\n\n**GPT-6 Astra 现已上线。**\n\n- **模型 ID**：`gpt-6-astra`\n- **上下文 / 最大输出**：1,050,000 / 128,000 Tokens\n- **基础价格**：输入 Ɍ10、输出 Ɍ50、缓存读取 Ɍ1、缓存写入 Ɍ12.5 / MTok\n\n适合复杂推理、编程、电脑操作、研究和文档创作。费用按基础价 × 当前分组倍率计算，最终以模型广场和控制台账单为准。"
+
 const announcement23Source = "## 新模型与价格更新 · Gemini 3.7 Flash / DeepSeek V4\n\n`gemini-3.7-flash` 已在 gemini-lite 分组上线，支持 1,048,576 Token 上下文、65,536 Token 最大输出，以及 low / medium（默认）/ high 推理等级。\n\nGemini 3.7 Flash 当前基础优惠价（截至 2026-12-31）：输入 Ɍ0.75、输出 Ɍ3.75、缓存读取 Ɍ0.075 / MTok；gemini-lite 当前 0.8x，有效价格为 Ɍ0.60 / Ɍ3.00 / Ɍ0.06。\n\nDeepSeek V4 已按最新官方高峰价统一：Flash 输入（缓存命中）Ɍ0.10、输入（缓存未命中）Ɍ3、输出 Ɍ9；Pro 输入（缓存命中）Ɍ0.30、输入（缓存未命中）Ɍ9、输出 Ɍ27 / MTok。平台不采用低峰优惠；open-models 既有 0.7x 分组倍率仍适用。最终以模型广场和控制台账单为准。"
 
 const announcement24Source = "## Codex CLI / App 149 兼容说明\n\n149 版本调用 Responses API 可能出现 `401 Unauthorized: Invalid token`。在 `config.toml` 的 `[model_providers.<provider>]` 段加入 `requires_openai_auth = true`，保存并重启客户端。无需修改 API Key、模型或接口地址。\n\n---\n\n## Codex CLI / App 149 Notice\n\nVersion 149 may return `401 Unauthorized: Invalid token` for Responses API. Add `requires_openai_auth = true` to `[model_providers.<provider>]` in `config.toml`, save, and restart. No API key, model, or endpoint change is required."
@@ -40,6 +42,16 @@ var archivedAnnouncementSourceHashes = map[string]string{
 }
 
 var announcementCatalog = map[string]localizedLeaf{
+	"26": announcement(
+		"10aa5000",
+		"## New Model · GPT-6 Astra\n\n**GPT-6 Astra is now available.**\n\n- **Model ID**: `gpt-6-astra`\n- **Context / max output**: 1,050,000 / 128,000 tokens\n- **Base pricing**: Ɍ10 input, Ɍ50 output, Ɍ1 cache reads, Ɍ12.5 cache writes / MTok\n\nBuilt for complex reasoning, coding, computer use, research, and document work. Charges are base price × current group multiplier; the Model Marketplace and console bill are authoritative.",
+		announcement26Source,
+		"## 新模型 · GPT-6 Astra\n\n**GPT-6 Astra 現已上線。**\n\n- **模型 ID**：`gpt-6-astra`\n- **內容視窗 / 最大輸出**：1,050,000 / 128,000 Tokens\n- **基礎價格**：輸入 Ɍ10、輸出 Ɍ50、快取讀取 Ɍ1、快取寫入 Ɍ12.5 / MTok\n\n適合複雜推理、程式設計、電腦操作、研究與文件創作。費用按基礎價 × 目前分組倍率計算，最終以模型廣場與控制台帳單為準。",
+		"## Nouveau modèle · GPT-6 Astra\n\n**GPT-6 Astra est désormais disponible.**\n\n- **ID du modèle** : `gpt-6-astra`\n- **Contexte / sortie maximale** : 1 050 000 / 128 000 tokens\n- **Tarifs de base** : entrée Ɍ10, sortie Ɍ50, lectures du cache Ɍ1, écritures du cache Ɍ12,5 / MTok\n\nConçu pour le raisonnement complexe, le code, l'utilisation d'ordinateurs, la recherche et les documents. Facturation = tarif de base × multiplicateur actuel du groupe ; le Model Marketplace et la facture de la console font foi.",
+		"## 新モデル · GPT-6 Astra\n\n**GPT-6 Astra を提供開始しました。**\n\n- **モデル ID**：`gpt-6-astra`\n- **コンテキスト / 最大出力**：1,050,000 / 128,000 Tokens\n- **基本価格**：入力 Ɍ10、出力 Ɍ50、キャッシュ読み取り Ɍ1、キャッシュ書き込み Ɍ12.5 / MTok\n\n複雑な推論、コーディング、コンピューター操作、研究、文書作業に対応します。料金は基本価格 × 現在のグループ倍率で計算され、最終料金は Model Marketplace とコンソール請求に従います。",
+		"## Новая модель · GPT-6 Astra\n\n**GPT-6 Astra теперь доступна.**\n\n- **ID модели**: `gpt-6-astra`\n- **Контекст / максимум вывода**: 1 050 000 / 128 000 токенов\n- **Базовые цены**: ввод Ɍ10, вывод Ɍ50, чтение кэша Ɍ1, запись кэша Ɍ12,5 / MTok\n\nМодель предназначена для сложных рассуждений, программирования, работы с компьютером, исследований и документов. Итоговая плата = базовая цена × текущий множитель группы; решающими являются Model Marketplace и счет в консоли.",
+		"## Mô hình mới · GPT-6 Astra\n\n**GPT-6 Astra hiện đã khả dụng.**\n\n- **Model ID**: `gpt-6-astra`\n- **Ngữ cảnh / đầu ra tối đa**: 1.050.000 / 128.000 token\n- **Giá cơ sở**: đầu vào Ɍ10, đầu ra Ɍ50, đọc cache Ɍ1, ghi cache Ɍ12,5 / MTok\n\nPhù hợp với suy luận phức tạp, lập trình, thao tác máy tính, nghiên cứu và tài liệu. Phí = giá cơ sở × hệ số nhóm hiện tại; Model Marketplace và hóa đơn bảng điều khiển là căn cứ cuối cùng.",
+	),
 	"25": announcement(
 		"0e47b568",
 		"## New Model · Claude Fable 5.1\n\n**Claude Fable 5.1 is now available in `claude-max`.**\n\n- **Model ID**: `claude-fable-5-1`\n- **Context / max output**: 1M / 128K tokens\n- **Base pricing**: Ɍ10 input, Ɍ50 output, Ɍ0.25 cache reads / MTok\n\nInput and output base prices match Fable 5; cache reads cost one quarter as much. Charges are calculated as base price × the current group multiplier. The Model Marketplace and console bill are authoritative.",
