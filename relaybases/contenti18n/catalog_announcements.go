@@ -45,7 +45,7 @@ var archivedAnnouncementSourceHashes = map[string]string{
 
 var announcementCatalog = map[string]localizedLeaf{
 	"27": announcement(
-		"5c782c2e",
+		"85614872",
 		"## New models and pricing update · GPT Image 2.5 / Gemini 3.8 Flash\n\n**GPT Image 2.5 Flare and Sunburst are now available.**\n\n- Model IDs: `gpt-image-2.5-flare`, `gpt-image-2.5-sunburst`\n- low / medium / high channel prices match `gpt-image-2`; generation and editing are supported\n- `gemini-3.8-flash-high` and `gemini-3.8-flash-low` are now available in gemini-lite\n- Gemini 3.8 Flash base pricing matches Gemini 3.7 Flash\n\nCharges use the current group multiplier; the Model Marketplace and console bill are authoritative.",
 		announcement27Source,
 		"## 新模型與價格更新 · GPT Image 2.5 / Gemini 3.8 Flash\n\n**GPT Image 2.5 Flare 與 Sunburst 現已上線。**\n\n- 模型 ID：`gpt-image-2.5-flare`、`gpt-image-2.5-sunburst`\n- low / medium / high 品質檔的渠道價格與 `gpt-image-2` 保持一致，支援生成與編輯\n- `gemini-3.8-flash-high`、`gemini-3.8-flash-low` 已在 gemini-lite 分組開放\n- Gemini 3.8 Flash 的基礎價格與 Gemini 3.7 Flash 保持一致\n\n實際費用按目前分組倍率計算，最終以模型廣場與控制台帳單為準。",
