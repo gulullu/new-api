@@ -224,7 +224,9 @@ test('saves reusable defaults and loads them without copying key rows into a tem
   })
   await pasteRows('Team A')
   fireEvent.change(screen.getByLabelText('Group'), { target: { value: 'vip' } })
-  fireEvent.click(screen.getAllByRole('checkbox', { name: 'Unlimited' })[0])
+  expect(
+    screen.getAllByRole('checkbox', { name: 'Unlimited' })[0]
+  ).toBeChecked()
   expect(screen.getByLabelText('Quota')).toBeDisabled()
   fireEvent.click(screen.getByRole('button', { name: 'Save as template' }))
   fireEvent.change(screen.getByLabelText('Template name'), {
@@ -240,7 +242,7 @@ test('saves reusable defaults and loads them without copying key rows into a tem
       group: 'vip',
       remain_quota: 0,
       unlimited_quota: true,
-      expiry: '30',
+      expiry: 'never',
       model_limits: '',
       allow_ips: '',
     },
