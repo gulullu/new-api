@@ -133,7 +133,7 @@ export function useApiKeysColumns(now: number): ColumnDef<ApiKey>[] {
           />
         )
       },
-      filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
+      filterFn: () => true,
       size: 120,
       meta: { mobileBadge: true },
     },

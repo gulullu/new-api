@@ -27,6 +27,7 @@ test('group searches preserve encoded names, key filters, and pagination', async
     .spyOn(api, 'get')
     .mockResolvedValue({ data: { success: true } })
   await searchApiKeys({
+    status: '2,3',
     group: 'VIP & 特殊/%',
     keyword: 'job',
     token: 'sk-example',
@@ -36,6 +37,7 @@ test('group searches preserve encoded names, key filters, and pagination', async
   const request = new URL(String(get.mock.calls[0][0]), 'https://example.test')
   expect(request.pathname).toBe('/api/token/search')
   expect(Object.fromEntries(request.searchParams)).toEqual({
+    status: '2,3',
     group: 'VIP & 特殊/%',
     keyword: 'job',
     token: 'sk-example',

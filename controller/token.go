@@ -138,7 +138,7 @@ func GetAllTokens(c *gin.Context) {
 	total, _ := model.CountUserTokens(userId)
 	pageInfo.SetTotal(int(total))
 	pageInfo.SetItems(buildMaskedTokenResponses(tokens))
-	common.ApiSuccess(c, pageInfo)
+	writeTokenSearchPage(c, pageInfo, userId, "", "", "")
 }
 
 func SearchTokens(c *gin.Context) {
@@ -148,14 +148,46 @@ func SearchTokens(c *gin.Context) {
 
 	pageInfo := common.GetPageQuery(c)
 
-	tokens, total, err := model.SearchUserTokens(userId, keyword, token, c.Query("group"), pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	var statuses []int
+	if value := c.Query("status"); value != "" {
+		if len(value) > 7 {
+			common.ApiError(c, fmt.Errorf("Invalid status filter"))
+			return
+		}
+		for _, part := range strings.Split(value, ",") {
+			status, err := strconv.Atoi(part)
+			if err != nil || status < common.TokenStatusEnabled || status > common.TokenStatusExhausted {
+				common.ApiError(c, fmt.Errorf("Invalid status filter"))
+				return
+			}
+			statuses = append(statuses, status)
+		}
+	}
+	tokens, total, err := model.SearchUserTokens(userId, keyword, token, c.Query("group"), pageInfo.GetStartIdx(), pageInfo.GetPageSize(), statuses...)
 	if err != nil {
 		common.ApiError(c, err)
 		return
 	}
 	pageInfo.SetTotal(int(total))
 	pageInfo.SetItems(buildMaskedTokenResponses(tokens))
-	common.ApiSuccess(c, pageInfo)
+	writeTokenSearchPage(c, pageInfo, userId, keyword, token, c.Query("group"), statuses...)
+}
+
+func writeTokenSearchPage(c *gin.Context, page *common.PageInfo, userId int, keyword, token, group string, statuses ...int) {
+	facets, err := model.CountUserTokenFacets(userId, keyword, token, group, statuses...)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	for name := range facets.Groups {
+		if strings.EqualFold(strings.TrimSpace(name), service.PrivatePartnerGroup) {
+			delete(facets.Groups, name)
+		}
+	}
+	common.ApiSuccess(c, struct {
+		*common.PageInfo
+		Facets *model.TokenFacets `json:"facets"`
+	}{page, facets})
 }
 
 func GetToken(c *gin.Context) {

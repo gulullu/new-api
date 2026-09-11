@@ -133,3 +133,101 @@ test('batch group switching keeps selected key identities after a table refresh'
     expect(checkbox).not.toBeChecked()
   }
 })
+
+test('status selection queries the server and reveals keys outside the loaded page', async () => {
+  const key = {
+    id: 44,
+    name: 'Newest enabled',
+    key: 'masked',
+    status: 1,
+    group: 'default',
+    remain_quota: 100,
+    used_quota: 0,
+    unlimited_quota: true,
+    expired_time: -1,
+    created_time: 1,
+    accessed_time: 1,
+    model_limits_enabled: false,
+    model_limits: '',
+    allow_ips: '',
+  }
+  const get = vi.spyOn(api, 'get').mockImplementation(async (url) => {
+    const request = new URL(String(url), 'https://example.test')
+    if (request.pathname.includes('groups')) {
+      return {
+        data: {
+          success: true,
+          data: { default: { desc: 'Default', ratio: 1 } },
+        },
+      }
+    }
+    const filtered = request.searchParams.get('status') === '2'
+    return {
+      data: {
+        success: true,
+        data: {
+          items: [
+            filtered
+              ? { ...key, id: 1, name: 'Older disabled', status: 2 }
+              : key,
+          ],
+          total: filtered ? 1 : 30,
+          facets: {
+            groups: { default: filtered ? 1 : 30 },
+            statuses: { 1: 29, 2: 1 },
+          },
+        },
+      },
+    }
+  })
+  const root = createRootRoute({ component: Outlet })
+  const authenticated = createRoute({
+    getParentRoute: () => root,
+    id: '_authenticated',
+    component: Outlet,
+  })
+  const keys = createRoute({
+    getParentRoute: () => authenticated,
+    path: 'keys/',
+    component: () => (
+      <ApiKeysProvider>
+        <ApiKeysTable />
+      </ApiKeysProvider>
+    ),
+  })
+  const router = createRouter({
+    routeTree: root.addChildren([authenticated.addChildren([keys])]),
+    history: createMemoryHistory({ initialEntries: ['/keys'] }),
+  })
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  clients.push(client)
+  render(
+    <QueryClientProvider client={client}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  )
+
+  await screen.findAllByText('Newest enabled')
+  fireEvent.click(screen.getByRole('button', { name: 'Group' }))
+  expect(
+    await screen.findByRole('option', { name: /default.*30/i })
+  ).toBeVisible()
+  fireEvent.keyDown(screen.getByRole('option', { name: /default.*30/i }), {
+    key: 'Escape',
+  })
+  fireEvent.click(screen.getByRole('button', { name: 'Status' }))
+  fireEvent.click(await screen.findByRole('option', { name: /Disabled/ }))
+  await screen.findAllByText('Older disabled')
+  expect(
+    get.mock.calls.some(
+      ([url]) =>
+        String(url).includes('/api/token/search?') &&
+        new URL(String(url), 'https://example.test').searchParams.get(
+          'status'
+        ) === '2'
+    )
+  ).toBe(true)
+  expect(screen.queryByText('Newest enabled')).not.toBeInTheDocument()
+})

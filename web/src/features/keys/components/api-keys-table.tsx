@@ -244,6 +244,11 @@ export function ApiKeysTable() {
         | string[]
         | undefined
     )?.[0] || ''
+  const statusFilter = (
+    (columnFilters.find((filter) => filter.id === 'status')?.value as
+      | string[]
+      | undefined) || []
+  ).join(',')
   const groupOptions = [
     ...new Set([
       'auto',
@@ -255,7 +260,7 @@ export function ApiKeysTable() {
     label: group === 'auto' ? 'Cross-group' : group,
   }))
   const shouldSearch = Boolean(
-    globalFilter?.trim() || tokenFilter.trim() || groupFilter
+    globalFilter?.trim() || tokenFilter.trim() || groupFilter || statusFilter
   )
 
   // Fetch data with React Query
@@ -268,6 +273,7 @@ export function ApiKeysTable() {
       globalFilter,
       tokenFilter,
       groupFilter,
+      statusFilter,
       refreshTrigger,
     ],
     queryFn: async () => {
@@ -276,6 +282,7 @@ export function ApiKeysTable() {
             keyword: globalFilter,
             token: tokenFilter,
             group: groupFilter,
+            status: statusFilter,
             p: pagination.pageIndex + 1,
             size: pagination.pageSize,
           })
@@ -299,6 +306,7 @@ export function ApiKeysTable() {
       return {
         items: result.data?.items || [],
         total: result.data?.total || 0,
+        facets: result.data?.facets,
       }
     },
     placeholderData: (previousData) => previousData,
@@ -352,13 +360,19 @@ export function ApiKeysTable() {
           {
             columnId: 'group',
             title: t('Group'),
-            options: groupOptions,
+            options: groupOptions.map((option) => ({
+              ...option,
+              count: data?.facets?.groups[option.value] ?? 0,
+            })),
             singleSelect: true,
           },
           {
             columnId: 'status',
             title: t('Status'),
-            options: API_KEY_STATUS_OPTIONS,
+            options: API_KEY_STATUS_OPTIONS.map((option) => ({
+              ...option,
+              count: data?.facets?.statuses[option.value] ?? 0,
+            })),
             singleSelect: true,
           },
         ],

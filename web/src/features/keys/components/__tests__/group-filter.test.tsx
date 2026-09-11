@@ -92,7 +92,7 @@ test('selecting a group searches all keys from page one and clearing restores th
     </QueryClientProvider>
   )
   fireEvent.click(await screen.findByRole('button', { name: 'Group' }))
-  fireEvent.click(await screen.findByRole('option', { name: 'vip' }))
+  fireEvent.click(await screen.findByRole('option', { name: /^vip/ }))
   await waitFor(() => {
     expect(
       requests.some(

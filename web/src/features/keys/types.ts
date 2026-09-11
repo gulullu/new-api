@@ -73,10 +73,15 @@ export interface GetApiKeysResponse {
     total: number
     page: number
     page_size: number
+    facets?: {
+      groups: Record<string, number>
+      statuses: Record<string, number>
+    }
   }
 }
 
 export interface SearchApiKeysParams {
+  status?: string
   group?: string
   keyword?: string
   token?: string

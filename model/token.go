@@ -156,7 +156,7 @@ func validateLikePattern(input string) error {
 
 const searchHardLimit = 100
 
-func SearchUserTokens(userId int, keyword string, token string, group string, offset int, limit int) (tokens []*Token, total int64, err error) {
+func SearchUserTokens(userId int, keyword string, token string, group string, offset int, limit int, statuses ...int) (tokens []*Token, total int64, err error) {
 	// model 层强制截断
 	if limit <= 0 || limit > searchHardLimit {
 		limit = searchHardLimit
@@ -165,47 +165,13 @@ func SearchUserTokens(userId int, keyword string, token string, group string, of
 		offset = 0
 	}
 
-	if token != "" {
-		token = strings.TrimPrefix(token, "sk-")
+	baseQuery, err := userTokenSearchQuery(userId, keyword, token, group, statuses...)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	// 超量用户（令牌数超过上限）只允许精确搜索，禁止模糊搜索
-	maxTokens := operation_setting.GetMaxUserTokens()
-	hasFuzzy := strings.Contains(keyword, "%") || strings.Contains(token, "%")
-	if hasFuzzy {
-		count, err := CountUserTokens(userId)
-		if err != nil {
-			common.SysLog("failed to count user tokens: " + err.Error())
-			return nil, 0, errors.New("获取令牌数量失败")
-		}
-		if int(count) > maxTokens {
-			return nil, 0, errors.New("令牌数量超过上限，仅允许精确搜索，请勿使用 % 通配符")
-		}
-	}
-
-	baseQuery := DB.Model(&Token{}).Where("user_id = ?", userId)
-	if group != "" {
-		baseQuery = baseQuery.Where(map[string]interface{}{"group": group})
-	}
-
-	// 非空才加 LIKE 条件，空则跳过（不过滤该字段）
-	if keyword != "" {
-		keywordPattern, err := sanitizeLikePattern(keyword)
-		if err != nil {
-			return nil, 0, err
-		}
-		baseQuery = baseQuery.Where("name LIKE ? ESCAPE '!'", keywordPattern)
-	}
-	if token != "" {
-		tokenPattern, err := sanitizeLikePattern(token)
-		if err != nil {
-			return nil, 0, err
-		}
-		baseQuery = baseQuery.Where(commonKeyCol+" LIKE ? ESCAPE '!'", tokenPattern)
-	}
-
-	// 先查匹配总数（用于分页，受 maxTokens 上限保护，避免全表 COUNT）
-	err = baseQuery.Limit(maxTokens).Count(&total).Error
+	// Count the complete filtered result before pagination.
+	err = baseQuery.Count(&total).Error
 	if err != nil {
 		common.SysError("failed to count search tokens: " + err.Error())
 		return nil, 0, errors.New("搜索令牌失败")
@@ -218,6 +184,96 @@ func SearchUserTokens(userId int, keyword string, token string, group string, of
 		return nil, 0, errors.New("搜索令牌失败")
 	}
 	return tokens, total, nil
+}
+
+func userTokenSearchQuery(userId int, keyword, token, group string, statuses ...int) (*gorm.DB, error) {
+	if token != "" {
+		token = strings.TrimPrefix(token, "sk-")
+	}
+
+	// 超量用户（令牌数超过上限）只允许精确搜索，禁止模糊搜索
+	maxTokens := operation_setting.GetMaxUserTokens()
+	hasFuzzy := strings.Contains(keyword, "%") || strings.Contains(token, "%")
+	if hasFuzzy {
+		count, err := CountUserTokens(userId)
+		if err != nil {
+			common.SysLog("failed to count user tokens: " + err.Error())
+			return nil, errors.New("获取令牌数量失败")
+		}
+		if int(count) > maxTokens {
+			return nil, errors.New("令牌数量超过上限，仅允许精确搜索，请勿使用 % 通配符")
+		}
+	}
+
+	baseQuery := DB.Model(&Token{}).Where("user_id = ?", userId)
+	if len(statuses) > 0 {
+		for _, status := range statuses {
+			if status < common.TokenStatusEnabled || status > common.TokenStatusExhausted {
+				return nil, errors.New("Invalid status filter")
+			}
+		}
+		baseQuery = baseQuery.Where("status IN ?", statuses)
+	}
+	if group != "" {
+		baseQuery = baseQuery.Where(map[string]interface{}{"group": group})
+	}
+
+	// 非空才加 LIKE 条件，空则跳过（不过滤该字段）
+	if keyword != "" {
+		keywordPattern, err := sanitizeLikePattern(keyword)
+		if err != nil {
+			return nil, err
+		}
+		baseQuery = baseQuery.Where("name LIKE ? ESCAPE '!'", keywordPattern)
+	}
+	if token != "" {
+		tokenPattern, err := sanitizeLikePattern(token)
+		if err != nil {
+			return nil, err
+		}
+		baseQuery = baseQuery.Where(commonKeyCol+" LIKE ? ESCAPE '!'", tokenPattern)
+	}
+
+	return baseQuery, nil
+}
+
+// Facet counts ignore their own dimension while retaining the other filters.
+type TokenFacets struct {
+	Groups   map[string]int64 `json:"groups"`
+	Statuses map[string]int64 `json:"statuses"`
+}
+
+func CountUserTokenFacets(userId int, keyword, token, group string, statuses ...int) (*TokenFacets, error) {
+	result := &TokenFacets{Groups: map[string]int64{}, Statuses: map[string]int64{}}
+	for _, dimension := range []string{"group", "status"} {
+		filterGroup := group
+		filterStatuses := statuses
+		if dimension == "group" {
+			filterGroup = ""
+		} else {
+			filterStatuses = nil
+		}
+		query, err := userTokenSearchQuery(userId, keyword, token, filterGroup, filterStatuses...)
+		if err != nil {
+			return nil, err
+		}
+		var counts []struct {
+			Name  string
+			Count int64
+		}
+		column := DB.Statement.Quote(dimension)
+		if err = query.Select(column + " AS name, COUNT(*) AS count").Group(dimension).Scan(&counts).Error; err != nil {
+			return nil, err
+		}
+		for _, entry := range counts {
+			if dimension == "group" {
+				result.Groups[entry.Name] = entry.Count
+			} else {
+				result.Statuses[entry.Name] = entry.Count
+			}
+		}
+	}
+	return result, nil
 }
 
 func ValidateUserToken(key string) (token *Token, err error) {
