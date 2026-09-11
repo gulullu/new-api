@@ -123,7 +123,6 @@ export function ImportRowsEditor(props: Props) {
               try {
                 await downloadImportWorkbook({
                   title: t('API key import template'),
-                  instructions: t('Excel template instructions'),
                   headers: [
                     t('Name'),
                     t('Group'),
@@ -132,12 +131,6 @@ export function ImportRowsEditor(props: Props) {
                     t('Model limits'),
                     t('IP whitelist'),
                   ],
-                  group_help: t(
-                    'Choose a group from the dropdown. See the Groups sheet for descriptions.'
-                  ),
-                  expiry_help: t(
-                    '7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.'
-                  ),
                 })
                 props.onError('')
               } catch (error) {

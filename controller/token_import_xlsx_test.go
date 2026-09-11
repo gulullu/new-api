@@ -8,12 +8,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/stretchr/testify/require"
 	"github.com/xuri/excelize/v2"
 )
 
 func workbookTestLabels() tokenWorkbookLabels {
-	return tokenWorkbookLabels{Title: "API 密钥导入模板", Instructions: "名称必填；留空沿用页面默认值", Headers: []string{"名称", "分组", "额度 (USD)", "有效期", "模型限制", "IP 白名单"}, GroupHelp: "从下拉选择", ExpiryHelp: "7 / 30 / never / YYYY-MM-DD"}
+	return tokenWorkbookLabels{Title: "API 密钥导入模板", Headers: []string{"名称", "分组", "额度 (USD)", "有效期", "模型限制", "IP 白名单"}}
 }
 
 func TestTokenWorkbookDropdownAndRoundTrip(t *testing.T) {
@@ -32,6 +35,16 @@ func TestTokenWorkbookDropdownAndRoundTrip(t *testing.T) {
 	require.Equal(t, "B6:B105", validations[0].Sqref)
 	require.Equal(t, "AvailableGroups", validations[0].Formula1)
 	require.True(t, validations[0].ShowErrorMessage)
+	require.False(t, validations[0].ShowInputMessage)
+	visible, err := f.GetSheetVisible("Groups")
+	require.NoError(t, err)
+	require.False(t, visible)
+	instructions, err := f.GetCellValue("API Keys", "A2")
+	require.NoError(t, err)
+	require.Empty(t, instructions)
+	description, err := f.GetCellValue("Groups", "B2")
+	require.NoError(t, err)
+	require.Empty(t, description)
 	require.Contains(t, f.GetDefinedName()[0].RefersTo, "$A$41")
 	require.NoError(t, f.SetCellStr("API Keys", "A6", "001 张三,研发"))
 	require.NoError(t, f.SetCellStr("API Keys", "B6", "group-03-long-name"))
@@ -56,6 +69,8 @@ func TestTokenWorkbookDropdownAndRoundTrip(t *testing.T) {
 
 func TestTokenWorkbookUserGroups(t *testing.T) {
 	user := setupImportTest(t)
+	require.NoError(t, model.DB.Model(user).Update("role", common.RoleRootUser).Error)
+	require.NoError(t, ratio_setting.UpdateGroupRatioByJSONString(`{"default":1,"vip":1,"codex-pro":1,"parnter":1}`))
 	ctx, recorder := newTokenAutoGroupsAuthenticatedContext(t, http.MethodPost, "/api/token/import-template.xlsx", workbookTestLabels(), user.Id)
 	DownloadTokenImportWorkbook(ctx)
 	require.Contains(t, recorder.Header().Get("Content-Type"), "spreadsheetml")
@@ -89,4 +104,18 @@ func TestTokenWorkbookRejectsInvalidAndTooManyRows(t *testing.T) {
 	require.NoError(t, err)
 	_, err = parseTokenImportWorkbook(buf)
 	require.ErrorContains(t, err, "100")
+}
+
+func TestUserGroupDropdownHidesInternalGroupFromAdmin(t *testing.T) {
+	user := setupImportTest(t)
+	require.NoError(t, model.DB.Model(user).Update("role", common.RoleRootUser).Error)
+	require.NoError(t, ratio_setting.UpdateGroupRatioByJSONString(`{"default":1,"vip":1,"codex-pro":1,"parnter":1}`))
+	ctx, recorder := newTokenAutoGroupsAuthenticatedContext(t, http.MethodGet, "/api/user/self/groups", nil, user.Id)
+	GetUserGroups(ctx)
+	response := decodeAPIResponse(t, recorder)
+	require.True(t, response.Success)
+	var groups map[string]any
+	require.NoError(t, common.Unmarshal(response.Data, &groups))
+	require.Contains(t, groups, "default")
+	require.NotContains(t, groups, "parnter")
 }

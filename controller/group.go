@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/QuantumNous/new-api/model"
 	contenti18n "github.com/QuantumNous/new-api/relaybases/contenti18n"
@@ -32,6 +33,9 @@ func GetUserGroups(c *gin.Context) {
 	userGroup, _ = model.GetUserGroup(userId, false)
 	userUsableGroups := service.GetUserUsableGroupsForUser(userId, userGroup)
 	for groupName, _ := range ratio_setting.GetGroupRatioCopy() {
+		if strings.EqualFold(strings.TrimSpace(groupName), service.PrivatePartnerGroup) {
+			continue
+		}
 		// UserUsableGroups contains the groups that the user can use
 		if desc, ok := userUsableGroups[groupName]; ok {
 			usableGroups[groupName] = map[string]interface{}{

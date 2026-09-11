@@ -84,10 +84,7 @@ export function importErrorMessage(
 
 export async function downloadImportWorkbook(labels: {
   title: string
-  instructions: string
   headers: string[]
-  group_help: string
-  expiry_help: string
 }): Promise<void> {
   const response = await api.post('/api/token/import-template.xlsx', labels, {
     responseType: 'blob',

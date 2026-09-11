@@ -16,11 +16,8 @@ import (
 )
 
 type tokenWorkbookLabels struct {
-	Title        string   `json:"title"`
-	Instructions string   `json:"instructions"`
-	Headers      []string `json:"headers"`
-	GroupHelp    string   `json:"group_help"`
-	ExpiryHelp   string   `json:"expiry_help"`
+	Title   string   `json:"title"`
+	Headers []string `json:"headers"`
 }
 
 var tokenWorkbookHeaders = []string{"name", "group", "quota", "expiry", "models", "ips"}
@@ -40,7 +37,7 @@ func DownloadTokenImportWorkbook(c *gin.Context) {
 	}
 	groups := service.GetUserUsableGroupsForUser(c.GetInt("id"), userGroup)
 	for name := range groups {
-		if !service.CanUserUseGroup(c.GetInt("id"), userGroup, name) {
+		if strings.EqualFold(strings.TrimSpace(name), service.PrivatePartnerGroup) || !service.CanUserUseGroup(c.GetInt("id"), userGroup, name) {
 			delete(groups, name)
 		}
 	}
@@ -76,8 +73,8 @@ func buildTokenImportWorkbook(labels tokenWorkbookLabels, groups map[string]stri
 	for _, op := range []func() error{
 		func() error { return f.SetCellStr(sheet, "A1", labels.Title) },
 		func() error { return f.MergeCell(sheet, "A1", "F1") },
-		func() error { return f.SetCellStr(sheet, "A2", labels.Instructions) },
-		func() error { return f.MergeCell(sheet, "A2", "F3") },
+		func() error { return f.SetRowVisible(sheet, 2, false) },
+		func() error { return f.SetRowVisible(sheet, 3, false) },
 		func() error { return f.SetCellStyle(sheet, "A6", "F105", textStyle) },
 		func() error { return f.SetCellStyle(sheet, "A4", "F4", headerStyle) },
 		func() error { return f.SetColWidth(sheet, "A", "F", 26) },
@@ -91,16 +88,6 @@ func buildTokenImportWorkbook(labels tokenWorkbookLabels, groups map[string]stri
 		if err := op(); err != nil {
 			return nil, err
 		}
-	}
-	wrap, err := f.NewStyle(&excelize.Style{Alignment: &excelize.Alignment{WrapText: true, Vertical: "top"}})
-	if err != nil {
-		return nil, err
-	}
-	if err = f.SetCellStyle(sheet, "A2", "F3", wrap); err != nil {
-		return nil, err
-	}
-	if err = f.SetRowHeight(sheet, 2, 45); err != nil {
-		return nil, err
 	}
 	for i, h := range tokenWorkbookHeaders {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 5)
@@ -120,21 +107,16 @@ func buildTokenImportWorkbook(labels tokenWorkbookLabels, groups map[string]stri
 	if err = f.SetCellStr("Groups", "A1", labels.Headers[1]); err != nil {
 		return nil, err
 	}
-	if err = f.SetCellStr("Groups", "B1", labels.GroupHelp); err != nil {
-		return nil, err
-	}
 	for i, name := range names {
 		if err = f.SetCellStr("Groups", fmt.Sprintf("A%d", i+2), name); err != nil {
 			return nil, err
 		}
-		if err = f.SetCellStr("Groups", fmt.Sprintf("B%d", i+2), groups[name]); err != nil {
-			return nil, err
-		}
+
 	}
 	if err = f.SetColWidth("Groups", "A", "A", 30); err != nil {
 		return nil, err
 	}
-	if err = f.SetColWidth("Groups", "B", "B", 80); err != nil {
+	if err = f.SetSheetVisible("Groups", false); err != nil {
 		return nil, err
 	}
 	if len(names) > 0 {
@@ -144,8 +126,7 @@ func buildTokenImportWorkbook(labels tokenWorkbookLabels, groups map[string]stri
 		dv := excelize.NewDataValidation(true)
 		dv.SetSqref("B6:B105")
 		dv.SetSqrefDropList("AvailableGroups")
-		dv.SetInput(labels.Headers[1], labels.GroupHelp)
-		dv.SetError(excelize.DataValidationErrorStyleStop, labels.Headers[1], labels.GroupHelp)
+		dv.SetError(excelize.DataValidationErrorStyleStop, labels.Headers[1], labels.Headers[1])
 		if err = f.AddDataValidation(sheet, dv); err != nil {
 			return nil, err
 		}
@@ -155,7 +136,6 @@ func buildTokenImportWorkbook(labels tokenWorkbookLabels, groups map[string]stri
 	if err = dv.SetDropList([]string{"7", "30", "never"}); err != nil {
 		return nil, err
 	}
-	dv.SetInput(labels.Headers[3], labels.ExpiryHelp)
 	// Dates are also allowed; do not reject values outside the quick-pick list.
 	dv.ShowErrorMessage = false
 	if err = f.AddDataValidation(sheet, dv); err != nil {
