@@ -1,5 +1,11 @@
 {
   "translation": {
+    "Switch group": "切换分组",
+    "Choose a group for {{count}} selected API key(s).": "为选中的 {{count}} 个 API 密钥选择分组。",
+    "Switched group for {{count}} API key(s)": "已切换 {{count}} 个 API 密钥的分组",
+    "Failed to switch API key groups": "切换 API 密钥分组失败",
+    "Switching to Cross-group uses the global group order.": "切换到跨分组将使用全局分组顺序。",
+    "Failed to load groups": "加载分组失败",
     "360": "360",
     "1000": "1000",
     "10000": "10000",

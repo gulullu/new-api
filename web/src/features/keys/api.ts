@@ -41,14 +41,15 @@ export async function getApiKeys(
   return res.data
 }
 
-// Search API keys by keyword or token (with pagination)
+// Search API keys by keyword, token, or group (with pagination)
 export async function searchApiKeys(
   params: SearchApiKeysParams
 ): Promise<GetApiKeysResponse> {
-  const { keyword = '', token = '', p, size } = params
+  const { keyword = '', token = '', group = '', p, size } = params
   const queryParams = new URLSearchParams()
   if (keyword) queryParams.set('keyword', keyword)
   if (token) queryParams.set('token', token)
+  if (group) queryParams.set('group', group)
   if (p != null) queryParams.set('p', String(p))
   if (size != null) queryParams.set('size', String(size))
   const res = await api.get(`/api/token/search?${queryParams.toString()}`)
@@ -123,5 +124,13 @@ export async function fetchTokenKeysBatch(ids: number[]): Promise<{
   data?: { keys: Record<number, string> }
 }> {
   const res = await api.post('/api/token/batch/keys', { ids })
+  return res.data
+}
+
+export async function batchUpdateApiKeyGroup(
+  ids: number[],
+  group: string
+): Promise<ApiResponse<number>> {
+  const res = await api.put('/api/token/batch/group', { ids, group })
   return res.data
 }

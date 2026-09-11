@@ -156,7 +156,7 @@ func validateLikePattern(input string) error {
 
 const searchHardLimit = 100
 
-func SearchUserTokens(userId int, keyword string, token string, offset int, limit int) (tokens []*Token, total int64, err error) {
+func SearchUserTokens(userId int, keyword string, token string, group string, offset int, limit int) (tokens []*Token, total int64, err error) {
 	// model 层强制截断
 	if limit <= 0 || limit > searchHardLimit {
 		limit = searchHardLimit
@@ -184,6 +184,9 @@ func SearchUserTokens(userId int, keyword string, token string, offset int, limi
 	}
 
 	baseQuery := DB.Model(&Token{}).Where("user_id = ?", userId)
+	if group != "" {
+		baseQuery = baseQuery.Where(map[string]interface{}{"group": group})
+	}
 
 	// 非空才加 LIKE 条件，空则跳过（不过滤该字段）
 	if keyword != "" {
@@ -517,4 +520,46 @@ func invalidateTokensCache(tokens []Token) error {
 		}
 	}
 	return firstErr
+}
+
+// BatchUpdateTokenGroup atomically changes only routing settings of owned tokens.
+func BatchUpdateTokenGroup(ids []int, userId int, group string) (int, error) {
+	if userId <= 0 || group == "" || len(ids) == 0 || len(ids) > 100 {
+		return 0, errors.New("invalid batch group update")
+	}
+	uniqueIDs := make([]int, 0, len(ids))
+	seen := make(map[int]bool, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			return 0, errors.New("invalid token id")
+		}
+		if !seen[id] {
+			uniqueIDs = append(uniqueIDs, id)
+			seen[id] = true
+		}
+	}
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		var tokens []Token
+		if err := lockForUpdate(tx).Where("user_id = ? AND id IN ?", userId, uniqueIDs).
+			Order("id").Find(&tokens).Error; err != nil {
+			return err
+		}
+		if len(tokens) != len(uniqueIDs) {
+			return gorm.ErrRecordNotFound
+		}
+		// Refuse the mutation if stale routing settings cannot be invalidated.
+		if err := invalidateTokensCache(tokens); err != nil {
+			return err
+		}
+		return tx.Model(&Token{}).Where("user_id = ? AND id IN ?", userId, uniqueIDs).
+			Updates(map[string]interface{}{
+				"group":             group,
+				"auto_groups":       "",
+				"cross_group_retry": group == "auto",
+			}).Error
+	})
+	if err != nil {
+		return 0, err
+	}
+	return len(uniqueIDs), nil
 }

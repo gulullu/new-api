@@ -1,5 +1,11 @@
 {
   "translation": {
+    "Switch group": "Switch group",
+    "Choose a group for {{count}} selected API key(s).": "Choose a group for {{count}} selected API key(s).",
+    "Switched group for {{count}} API key(s)": "Switched group for {{count}} API key(s)",
+    "Failed to switch API key groups": "Failed to switch API key groups",
+    "Switching to Cross-group uses the global group order.": "Switching to Cross-group uses the global group order.",
+    "Failed to load groups": "Failed to load groups",
     "360": "360",
     "1000": "1000",
     "10000": "10000",

@@ -16,8 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { type Table } from '@tanstack/react-table'
-import { Copy, Trash2, Loader2 } from 'lucide-react'
+import type { Table } from '@tanstack/react-table'
+import { Copy, Trash2, Loader2, ArrowRightLeft } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -31,7 +31,8 @@ import {
 } from '@/components/ui/tooltip'
 import { copyToClipboard } from '@/lib/copy-to-clipboard'
 
-import { type ApiKey } from '../types'
+import type { ApiKey } from '../types'
+import { ApiKeysBatchGroupDialog } from './api-keys-batch-group-dialog'
 import { ApiKeysMultiDeleteDialog } from './api-keys-multi-delete-dialog'
 import { useApiKeys } from './api-keys-provider'
 
@@ -46,6 +47,7 @@ export function DataTableBulkActions<TData>({
   const { resolveRealKeysBatch } = useApiKeys()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
+  const [groupIds, setGroupIds] = useState<number[]>([])
   const selectedRows = table.getFilteredSelectedRowModel().rows
 
   const handleBatchCopy = useCallback(async () => {
@@ -83,6 +85,18 @@ export function DataTableBulkActions<TData>({
   return (
     <>
       <BulkActionsToolbar table={table} entityName='API key'>
+        <Button
+          variant='outline'
+          size='sm'
+          className='h-8'
+          onClick={() =>
+            setGroupIds(selectedRows.map((row) => (row.original as ApiKey).id))
+          }
+          disabled={selectedRows.length === 0 || selectedRows.length > 100}
+        >
+          <ArrowRightLeft className='size-4' aria-hidden='true' />
+          {t('Switch group')}
+        </Button>
         <Tooltip>
           <TooltipTrigger
             render={
@@ -128,6 +142,13 @@ export function DataTableBulkActions<TData>({
         </Tooltip>
       </BulkActionsToolbar>
 
+      {groupIds.length > 0 && (
+        <ApiKeysBatchGroupDialog
+          ids={groupIds}
+          onClose={() => setGroupIds([])}
+          onSuccess={() => table.resetRowSelection()}
+        />
+      )}
       <ApiKeysMultiDeleteDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}

@@ -1,5 +1,11 @@
 {
   "translation": {
+    "Switch group": "Chuyển nhóm",
+    "Choose a group for {{count}} selected API key(s).": "Chọn nhóm cho {{count}} khóa API đã chọn.",
+    "Switched group for {{count}} API key(s)": "Đã chuyển nhóm cho {{count}} khóa API",
+    "Failed to switch API key groups": "Không thể chuyển nhóm khóa API",
+    "Switching to Cross-group uses the global group order.": "Chuyển sang chế độ liên nhóm sẽ sử dụng thứ tự nhóm toàn cục.",
+    "Failed to load groups": "Không thể tải nhóm",
     "360": "360",
     "1000": "1000",
     "10000": "10000",

@@ -1,5 +1,11 @@
 {
   "translation": {
+    "Switch group": "グループを変更",
+    "Choose a group for {{count}} selected API key(s).": "選択した {{count}} 個の API キーのグループを選択してください。",
+    "Switched group for {{count}} API key(s)": "{{count}} 個の API キーのグループを変更しました",
+    "Failed to switch API key groups": "API キーのグループ変更に失敗しました",
+    "Switching to Cross-group uses the global group order.": "クロスグループに切り替えると、グローバルのグループ順序が使用されます。",
+    "Failed to load groups": "グループの読み込みに失敗しました",
     "360": "360",
     "1000": "1000",
     "10000": "10000",

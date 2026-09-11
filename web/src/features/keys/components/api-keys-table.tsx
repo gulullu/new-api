@@ -41,7 +41,9 @@ import {
 } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { toRelayBasesContentLocale } from '@/features/relaybases/content/locale'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
+import { getUserGroups } from '@/lib/api'
 import { formatQuota } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -187,7 +189,14 @@ function ApiKeysMobileList({
 }
 
 export function ApiKeysTable() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const contentLocale = toRelayBasesContentLocale(
+    i18n.resolvedLanguage || i18n.language
+  )
+  const { data: groupsData } = useQuery({
+    queryKey: ['user-groups', contentLocale],
+    queryFn: () => getUserGroups(contentLocale),
+  })
   const { refreshTrigger } = useApiKeys()
   const [now, setNow] = useState(() => Date.now())
   const columns = useApiKeysColumns(now)
@@ -215,6 +224,7 @@ export function ApiKeysTable() {
     globalFilter: { enabled: true, key: 'filter' },
     columnFilters: [
       { columnId: 'status', searchKey: 'status', type: 'array' },
+      { columnId: 'group', searchKey: 'group', type: 'array' },
       { columnId: '_tokenSearch', searchKey: 'token', type: 'string' },
     ],
   })
@@ -228,7 +238,25 @@ export function ApiKeysTable() {
     columnId: '_tokenSearch',
     onColumnFiltersChange,
   })
-  const shouldSearch = Boolean(globalFilter?.trim() || tokenFilter.trim())
+  const groupFilter =
+    (
+      columnFilters.find((filter) => filter.id === 'group')?.value as
+        | string[]
+        | undefined
+    )?.[0] || ''
+  const groupOptions = [
+    ...new Set([
+      'auto',
+      ...Object.keys(groupsData?.data || {}),
+      ...(groupFilter ? [groupFilter] : []),
+    ]),
+  ].map((group) => ({
+    value: group,
+    label: group === 'auto' ? 'Cross-group' : group,
+  }))
+  const shouldSearch = Boolean(
+    globalFilter?.trim() || tokenFilter.trim() || groupFilter
+  )
 
   // Fetch data with React Query
   // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -239,6 +267,7 @@ export function ApiKeysTable() {
       pagination.pageSize,
       globalFilter,
       tokenFilter,
+      groupFilter,
       refreshTrigger,
     ],
     queryFn: async () => {
@@ -246,6 +275,7 @@ export function ApiKeysTable() {
         ? await searchApiKeys({
             keyword: globalFilter,
             token: tokenFilter,
+            group: groupFilter,
             p: pagination.pageIndex + 1,
             size: pagination.pageSize,
           })
@@ -278,6 +308,7 @@ export function ApiKeysTable() {
 
   const { table } = useDataTable({
     data: apiKeys,
+    getRowId: (apiKey) => String(apiKey.id),
     columns,
     enableRowSelection: true,
     columnFilters,
@@ -318,6 +349,12 @@ export function ApiKeysTable() {
           />
         ),
         filters: [
+          {
+            columnId: 'group',
+            title: t('Group'),
+            options: groupOptions,
+            singleSelect: true,
+          },
           {
             columnId: 'status',
             title: t('Status'),

@@ -1,5 +1,11 @@
 {
   "translation": {
+    "Switch group": "Сменить группу",
+    "Choose a group for {{count}} selected API key(s).": "Выберите группу для {{count}} выбранных API-ключей.",
+    "Switched group for {{count}} API key(s)": "Группа изменена для {{count}} API-ключей",
+    "Failed to switch API key groups": "Не удалось изменить группу API-ключей",
+    "Switching to Cross-group uses the global group order.": "При переходе в межгрупповой режим используется глобальный порядок групп.",
+    "Failed to load groups": "Не удалось загрузить группы",
     "360": "360",
     "1000": "1000",
     "10000": "10000",
