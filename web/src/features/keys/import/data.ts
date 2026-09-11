@@ -35,8 +35,8 @@ export const EMPTY_FIELDS: ImportFields = {
 }
 export const DEFAULT_FIELDS: ImportFields = {
   group: '',
-  quota: '10',
-  expiry: '30',
+  quota: 'unlimited',
+  expiry: 'never',
   models: '*',
   ips: '*',
 }

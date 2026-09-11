@@ -76,6 +76,13 @@ test('pastes, edits row groups, previews and retries uncertain creation without 
   let attempts = 0
   const post = vi.spyOn(api, 'post').mockImplementation(async (url, data) => {
     if (url.endsWith('/preview')) {
+      for (const item of (data as { items: ImportItem[] }).items) {
+        expect(item).toMatchObject({
+          unlimited_quota: true,
+          remain_quota: 0,
+          expired_time: -1,
+        })
+      }
       return {
         data: {
           success: true,
@@ -250,16 +257,14 @@ test('saves reusable defaults and loads them without copying key rows into a tem
 })
 
 test('imports an Excel file into editable rows without creating keys', async () => {
-  const post = vi
-    .spyOn(api, 'post')
-    .mockResolvedValue({
+  const post = vi.spyOn(api, 'post').mockResolvedValue({
+    data: {
+      success: true,
       data: {
-        success: true,
-        data: {
-          text: 'name,group,quota,expiry,models,ips\n001 Device,vip,10,never,*,*\n',
-        },
+        text: 'name,group,quota,expiry,models,ips\n001 Device,vip,10,never,*,*\n',
       },
-    })
+    },
+  })
   renderDialog()
   const file = new File(['xlsx fixture'], 'filled-template.xlsx', {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
