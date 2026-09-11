@@ -43,12 +43,11 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { getCurrencyLabel } from '@/lib/currency'
 
+import { downloadImportWorkbook, readImportWorkbook } from './api'
 import {
   EMPTY_FIELDS,
   MAX_IMPORT_BYTES,
   MAX_IMPORT_ROWS,
-  downloadImportCSV,
-  importCSV,
   importRowErrors,
   newImportRow,
   parseImportText,
@@ -68,6 +67,7 @@ type Props = {
 
 export function ImportRowsEditor(props: Props) {
   const { t } = useTranslation()
+  const [fileBusy, setFileBusy] = useState(false)
   const [pasteOpen, setPasteOpen] = useState(false)
   const [text, setText] = useState('')
   const [mode, setMode] = useState('replace')
@@ -102,7 +102,10 @@ export function ImportRowsEditor(props: Props) {
     }
   }
   return (
-    <fieldset disabled={props.disabled} className='min-w-0 space-y-3'>
+    <fieldset
+      disabled={props.disabled || fileBusy}
+      className='min-w-0 space-y-3'
+    >
       <div className='flex flex-wrap items-center justify-between gap-2'>
         <h3 className='text-sm font-medium'>
           {t('Key list')}{' '}
@@ -115,17 +118,43 @@ export function ImportRowsEditor(props: Props) {
             type='button'
             variant='ghost'
             size='sm'
-            onClick={() =>
-              downloadImportCSV(
-                'api-key-template.csv',
-                importCSV([
-                  ['name', 'group', 'quota', 'expiry', 'models', 'ips'],
-                ])
-              )
-            }
+            onClick={async () => {
+              setFileBusy(true)
+              try {
+                await downloadImportWorkbook({
+                  title: t('API key import template'),
+                  instructions: t('Excel template instructions'),
+                  headers: [
+                    t('Name'),
+                    t('Group'),
+                    `${t('Quota')} (${getCurrencyLabel()})`,
+                    t('Expiry'),
+                    t('Model limits'),
+                    t('IP whitelist'),
+                  ],
+                  group_help: t(
+                    'Choose a group from the dropdown. See the Groups sheet for descriptions.'
+                  ),
+                  expiry_help: t(
+                    '7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.'
+                  ),
+                })
+                props.onError('')
+              } catch (error) {
+                props.onError(
+                  t(
+                    error instanceof Error
+                      ? error.message
+                      : 'Unable to download Excel template'
+                  )
+                )
+              } finally {
+                setFileBusy(false)
+              }
+            }}
           >
             <Download />
-            {t('Download CSV template')}
+            {t('Download Excel template')}
           </Button>
           <Button
             type='button'
@@ -134,7 +163,7 @@ export function ImportRowsEditor(props: Props) {
             onClick={() => file.current?.click()}
           >
             <Upload />
-            {t('Import CSV')}
+            {t('Import Excel / CSV')}
           </Button>
           <Button
             type='button'
@@ -149,17 +178,22 @@ export function ImportRowsEditor(props: Props) {
             hidden
             ref={file}
             type='file'
-            accept='.csv,.txt,text/csv,text/plain'
+            accept='.xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain'
             aria-label={t('Import file')}
             onChange={async (e) => {
               const input = e.currentTarget
               const selectedFile = input.files?.[0]
               if (!selectedFile) return
+              setFileBusy(true)
               try {
                 if (selectedFile.size > MAX_IMPORT_BYTES) {
                   throw new Error('Import file must be smaller than 1 MB')
                 }
-                importText(await selectedFile.text())
+                importText(
+                  selectedFile.name.toLowerCase().endsWith('.xlsx')
+                    ? await readImportWorkbook(selectedFile)
+                    : await selectedFile.text()
+                )
               } catch (error) {
                 props.onError(
                   t(
@@ -170,6 +204,7 @@ export function ImportRowsEditor(props: Props) {
                 )
               } finally {
                 input.value = ''
+                setFileBusy(false)
               }
             }}
           />

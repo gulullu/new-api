@@ -2175,7 +2175,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Related Projects",
     "footer.defaultCopyright": "All rights reserved.",
-    "footer.new\u0061pi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
+    "footer.newapi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment",
     "For private deployments, format: https://fastgpt.run/api/openapi": "For private deployments, format: https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.",
@@ -5519,6 +5519,14 @@
     "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.",
     "Configured product": "Configured product",
     "Create the Chinese CNY wallet top-up product now?": "Create the Chinese CNY wallet top-up product now?",
-    "Pick or create a Pancake store before creating the CNY product.": "Pick or create a Pancake store before creating the CNY product."
+    "Pick or create a Pancake store before creating the CNY product.": "Pick or create a Pancake store before creating the CNY product.",
+    "API key import template": "API key import template",
+    "Download Excel template": "Download Excel template",
+    "Import Excel / CSV": "Import Excel / CSV",
+    "Excel template instructions": "Name is required; one key per row, up to 100. Select groups from the cell dropdown; descriptions are on Groups. Blank fields use import-page defaults: review before creating. Quota: number or unlimited. Expiry: 7, 30, never, or YYYY-MM-DD. Models/IPs: comma-separated; * means unrestricted.",
+    "Choose a group from the dropdown. See the Groups sheet for descriptions.": "Choose a group from the dropdown. See the Groups sheet for descriptions.",
+    "7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.": "7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.",
+    "Unable to download Excel template": "Unable to download Excel template",
+    "Spreadsheet formulas are not supported": "Spreadsheet formulas are not supported"
   }
 }

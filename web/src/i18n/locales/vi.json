@@ -2175,7 +2175,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Các Dự Án Liên Quan",
     "footer.defaultCopyright": "Bản quyền được bảo lưu.",
-    "footer.new\u0061pi.projectAttributionSuffix": "Bản quyền được bảo lưu. Được thiết kế và phát triển bởi các cộng tác viên dự án.",
+    "footer.newapi.projectAttributionSuffix": "Bản quyền được bảo lưu. Được thiết kế và phát triển bởi các cộng tác viên dự án.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "Đối với các kênh được thêm sau ngày 10 tháng 5 năm 2025, không cần loại bỏ \".\" khỏi tên mô hình trong quá trình triển khai",
     "For private deployments, format: https://fastgpt.run/api/openapi": "Đối với các triển khai riêng tư, định dạng: https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "Vì lý do bảo mật, không thể hiển thị lại token truy cập hiện có. Chỉ tạo lại khi bạn cần token mới.",
@@ -5519,6 +5519,14 @@
     "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "Tạo “RelayBases API 充值（人民币）” với giá ¥1,00 mỗi Ɍ cho thanh toán tiếng Trung.",
     "Configured product": "Sản phẩm đã cấu hình",
     "Create the Chinese CNY wallet top-up product now?": "Tạo sản phẩm nạp CNY tiếng Trung ngay bây giờ?",
-    "Pick or create a Pancake store before creating the CNY product.": "Hãy chọn hoặc tạo cửa hàng Pancake trước khi tạo sản phẩm CNY."
+    "Pick or create a Pancake store before creating the CNY product.": "Hãy chọn hoặc tạo cửa hàng Pancake trước khi tạo sản phẩm CNY.",
+    "API key import template": "Mẫu nhập khóa API",
+    "Download Excel template": "Tải mẫu Excel",
+    "Import Excel / CSV": "Nhập Excel / CSV",
+    "Excel template instructions": "Tên là bắt buộc; mỗi dòng một khóa, tối đa 100. Chọn nhóm từ danh sách trong ô; xem mô tả ở Groups. Ô trống dùng mặc định trên trang nhập: kiểm tra trước khi tạo. Hạn mức: số hoặc unlimited. Hết hạn: 7, 30, never hoặc YYYY-MM-DD. Mô hình/IP cách nhau bằng dấu phẩy; * không giới hạn.",
+    "Choose a group from the dropdown. See the Groups sheet for descriptions.": "Chọn nhóm từ danh sách. Xem mô tả tại trang Groups.",
+    "7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.": "7 / 30 ngày, never hoặc YYYY-MM-DD. Trống: mặc định trên trang.",
+    "Unable to download Excel template": "Không thể tải mẫu Excel",
+    "Spreadsheet formulas are not supported": "Không hỗ trợ công thức; hãy dán giá trị"
   }
 }

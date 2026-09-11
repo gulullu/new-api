@@ -2175,7 +2175,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Projets liés",
     "footer.defaultCopyright": "Tous droits réservés.",
-    "footer.new\u0061pi.projectAttributionSuffix": "Tous droits réservés. Conçu et développé par les contributeurs du projet.",
+    "footer.newapi.projectAttributionSuffix": "Tous droits réservés. Conçu et développé par les contributeurs du projet.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "Pour les canaux ajoutés après le 10 mai 2025, pas besoin de supprimer \".\" des noms de modèles lors du déploiement",
     "For private deployments, format: https://fastgpt.run/api/openapi": "Pour les déploiements privés, format : https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "Pour des raisons de sécurité, les jetons d'accès existants ne peuvent pas être réaffichés. Ne les régénérez que si vous en avez besoin d'un nouveau.",
@@ -5519,6 +5519,14 @@
     "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "Crée « RelayBases API 充值（人民币） » à ¥1,00 par Ɍ pour le paiement en chinois.",
     "Configured product": "Produit configuré",
     "Create the Chinese CNY wallet top-up product now?": "Créer maintenant le produit de recharge CNY chinois ?",
-    "Pick or create a Pancake store before creating the CNY product.": "Sélectionnez ou créez une boutique Pancake avant de créer le produit CNY."
+    "Pick or create a Pancake store before creating the CNY product.": "Sélectionnez ou créez une boutique Pancake avant de créer le produit CNY.",
+    "API key import template": "Modèle d’importation de clés API",
+    "Download Excel template": "Télécharger le modèle Excel",
+    "Import Excel / CSV": "Importer Excel / CSV",
+    "Excel template instructions": "Nom obligatoire, une clé par ligne, maximum 100. Choisissez le groupe dans la liste ; descriptions dans Groups. Les champs vides utilisent les valeurs de la page : vérifiez l’aperçu. Quota : nombre ou unlimited. Expiration : 7, 30, never ou YYYY-MM-DD. Modèles/IP : séparés par virgules, * sans restriction.",
+    "Choose a group from the dropdown. See the Groups sheet for descriptions.": "Choisissez un groupe ; descriptions dans la feuille Groups.",
+    "7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.": "7 ou 30 jours, never ou YYYY-MM-DD. Vide : valeurs de la page.",
+    "Unable to download Excel template": "Impossible de télécharger le modèle Excel",
+    "Spreadsheet formulas are not supported": "Les formules ne sont pas prises en charge"
   }
 }

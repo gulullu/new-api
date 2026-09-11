@@ -81,3 +81,39 @@ export function importErrorMessage(
     message: translate(messages[row[2]] || row[2]),
   })
 }
+
+export async function downloadImportWorkbook(labels: {
+  title: string
+  instructions: string
+  headers: string[]
+  group_help: string
+  expiry_help: string
+}): Promise<void> {
+  const response = await api.post('/api/token/import-template.xlsx', labels, {
+    responseType: 'blob',
+  })
+  const blob = response.data as Blob
+  if (!blob.type.includes('spreadsheetml')) {
+    throw new Error('Unable to download Excel template')
+  }
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = 'api-key-template.xlsx'
+  anchor.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+export async function readImportWorkbook(file: File): Promise<string> {
+  const form = new FormData()
+  form.append('file', file)
+  const response = await api.post<ApiResponse<{ text: string }>>(
+    '/api/token/batch/import/file',
+    form,
+    { headers: { 'Content-Type': undefined } }
+  )
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || 'Invalid import data')
+  }
+  return response.data.data.text
+}

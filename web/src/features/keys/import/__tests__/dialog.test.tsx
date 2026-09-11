@@ -248,3 +248,33 @@ test('saves reusable defaults and loads them without copying key rows into a tem
   expect(screen.getByLabelText('Group')).toHaveValue('vip')
   expect(screen.getByLabelText('Name for row 1')).toHaveValue('Team A')
 })
+
+test('imports an Excel file into editable rows without creating keys', async () => {
+  const post = vi
+    .spyOn(api, 'post')
+    .mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          text: 'name,group,quota,expiry,models,ips\n001 Device,vip,10,never,*,*\n',
+        },
+      },
+    })
+  renderDialog()
+  const file = new File(['xlsx fixture'], 'filled-template.xlsx', {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  fireEvent.change(screen.getByLabelText('Import file'), {
+    target: { files: [file] },
+  })
+  await waitFor(() =>
+    expect(screen.getByDisplayValue('001 Device')).toBeInTheDocument()
+  )
+  expect(screen.getByLabelText('Group for row 1')).toHaveValue('vip')
+  expect(post).toHaveBeenCalledTimes(1)
+  expect(post.mock.calls[0][0]).toBe('/api/token/batch/import/file')
+  expect((post.mock.calls[0][1] as FormData).get('file')).toBe(file)
+  expect(
+    screen.getByRole('button', { name: 'Next: confirm configuration' })
+  ).toBeEnabled()
+})

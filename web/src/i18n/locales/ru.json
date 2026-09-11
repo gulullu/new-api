@@ -2175,7 +2175,7 @@
     "footer.columns.related.links.oneApi": "Один API",
     "footer.columns.related.title": "Связанные проекты",
     "footer.defaultCopyright": "Все права защищены.",
-    "footer.new\u0061pi.projectAttributionSuffix": "Все права защищены. Разработано участниками проекта.",
+    "footer.newapi.projectAttributionSuffix": "Все права защищены. Разработано участниками проекта.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "Для каналов, добавленных после 10 мая 2025 г., не нужно удалять \".\" из имён моделей при развёртывании",
     "For private deployments, format: https://fastgpt.run/api/openapi": "Для частных развертываний, формат: https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "В целях безопасности существующие токены доступа нельзя просмотреть повторно. Создавайте новый токен только при необходимости.",
@@ -5519,6 +5519,14 @@
     "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "Создаёт «RelayBases API 充值（人民币）» по ¥1,00 за Ɍ для оплаты на китайском языке.",
     "Configured product": "Настроенный товар",
     "Create the Chinese CNY wallet top-up product now?": "Создать китайский товар пополнения в CNY сейчас?",
-    "Pick or create a Pancake store before creating the CNY product.": "Выберите или создайте магазин Pancake перед созданием товара CNY."
+    "Pick or create a Pancake store before creating the CNY product.": "Выберите или создайте магазин Pancake перед созданием товара CNY.",
+    "API key import template": "Шаблон импорта ключей API",
+    "Download Excel template": "Скачать шаблон Excel",
+    "Import Excel / CSV": "Импорт Excel / CSV",
+    "Excel template instructions": "Имя обязательно, один ключ в строке, максимум 100. Выберите группу из списка; описания на листе Groups. Пустые поля используют настройки страницы: проверьте предпросмотр. Квота: число или unlimited. Срок: 7, 30, never или YYYY-MM-DD. Модели/IP через запятую; * без ограничений.",
+    "Choose a group from the dropdown. See the Groups sheet for descriptions.": "Выберите группу из списка. Описания на листе Groups.",
+    "7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.": "7 / 30 дней, never или YYYY-MM-DD. Пусто: настройки страницы.",
+    "Unable to download Excel template": "Не удалось скачать шаблон Excel",
+    "Spreadsheet formulas are not supported": "Формулы не поддерживаются: вставьте значения"
   }
 }

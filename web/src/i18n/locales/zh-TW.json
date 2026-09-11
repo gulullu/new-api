@@ -2175,7 +2175,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "相關項目",
     "footer.defaultCopyright": "版權所有。",
-    "footer.new\u0061pi.projectAttributionSuffix": "版權所有，由項目貢獻者設計與開發。",
+    "footer.newapi.projectAttributionSuffix": "版權所有，由項目貢獻者設計與開發。",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "對於 2025 年 5 月 10 日之後新增的渠道，在部署時無需從模型名稱中移除 \".\"",
     "For private deployments, format: https://fastgpt.run/api/openapi": "對於私有部署，格式為：https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "基於安全考量，現有存取令牌無法再次顯示。僅在需要新令牌時重新生成。",
@@ -5519,6 +5519,14 @@
     "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "建立「RelayBases API 充值（人民币）」；中文結帳按每 Ɍ ¥1.00 計價。",
     "Configured product": "已設定商品",
     "Create the Chinese CNY wallet top-up product now?": "現在建立中文人民幣充值商品嗎？",
-    "Pick or create a Pancake store before creating the CNY product.": "請先選擇或建立 Pancake 商店，再建立人民幣商品。"
+    "Pick or create a Pancake store before creating the CNY product.": "請先選擇或建立 Pancake 商店，再建立人民幣商品。",
+    "API key import template": "API 金鑰匯入範本",
+    "Download Excel template": "下載 Excel 範本",
+    "Import Excel / CSV": "匯入 Excel / CSV",
+    "Excel template instructions": "僅名稱必填，每列建立一個金鑰，最多 100 列。分組使用儲存格下拉選單，說明見 Groups 表。其他留空沿用匯入頁面預設值，建立前請核對預覽。額度填數字或 unlimited；有效期填 7、30、never 或 YYYY-MM-DD；模型/IP 以逗號分隔，* 表示不限。",
+    "Choose a group from the dropdown. See the Groups sheet for descriptions.": "從下拉選單選擇分組，說明見 Groups 工作表。",
+    "7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.": "7 或 30 天、never（永不過期），或 YYYY-MM-DD。留空沿用頁面預設值。",
+    "Unable to download Excel template": "無法下載 Excel 範本",
+    "Spreadsheet formulas are not supported": "不支援表格公式，請貼上值後匯入"
   }
 }

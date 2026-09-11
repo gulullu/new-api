@@ -251,6 +251,8 @@ func SetApiRouter(router *gin.Engine) {
 			tokenRoute.GET("/auto-groups", controller.GetTokenAutoGroups)
 			tokenRoute.POST("/batch/import/preview", middleware.SearchRateLimit(), controller.PreviewTokenImport)
 			tokenRoute.POST("/batch/import", middleware.CriticalRateLimit(), middleware.DisableCache(), controller.ImportTokens)
+			tokenRoute.POST("/import-template.xlsx", middleware.SearchRateLimit(), controller.DownloadTokenImportWorkbook)
+			tokenRoute.POST("/batch/import/file", middleware.SearchRateLimit(), controller.ParseTokenImportWorkbook)
 			tokenRoute.GET("/import-templates", controller.GetTokenImportTemplates)
 			tokenRoute.POST("/import-templates", controller.SaveTokenImportTemplate)
 			tokenRoute.DELETE("/import-templates/:id", controller.RemoveTokenImportTemplate)

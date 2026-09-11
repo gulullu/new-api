@@ -2175,7 +2175,7 @@
     "footer.columns.related.links.oneApi": "1つのAPI",
     "footer.columns.related.title": "関連プロジェクト",
     "footer.defaultCopyright": "すべての権利を留保します。",
-    "footer.new\u0061pi.projectAttributionSuffix": "すべての権利を留保します。プロジェクトコントリビューターにより設計・開発されています。",
+    "footer.newapi.projectAttributionSuffix": "すべての権利を留保します。プロジェクトコントリビューターにより設計・開発されています。",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "2025 年 5 月 10 日以降に追加されたチャネルの場合、デプロイ時にモデル名から「.」を削除する必要はありません",
     "For private deployments, format: https://fastgpt.run/api/openapi": "プライベートデプロイメントの場合、形式: https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "セキュリティ上、既存のアクセストークンは再表示できません。新しいトークンが必要な場合のみ再生成してください。",
@@ -5519,6 +5519,14 @@
     "Creates “RelayBases API 充值（人民币）” at ¥1.00 per Ɍ for Chinese checkout.": "中国語の決済用に、Ɍ あたり ¥1.00 の「RelayBases API 充值（人民币）」を作成します。",
     "Configured product": "設定済みの商品",
     "Create the Chinese CNY wallet top-up product now?": "中国語 CNY チャージ商品を今すぐ作成しますか？",
-    "Pick or create a Pancake store before creating the CNY product.": "CNY 商品を作成する前に Pancake ストアを選択または作成してください。"
+    "Pick or create a Pancake store before creating the CNY product.": "CNY 商品を作成する前に Pancake ストアを選択または作成してください。",
+    "API key import template": "API キーインポートテンプレート",
+    "Download Excel template": "Excel テンプレートをダウンロード",
+    "Import Excel / CSV": "Excel / CSV をインポート",
+    "Excel template instructions": "名前は必須、1 行に 1 キー、最大 100 行。グループはセルのリストから選択し、説明は Groups を参照。空欄はインポート画面の既定値を使用するため、作成前にプレビューを確認してください。クォータ：数値または unlimited。有効期限：7、30、never、YYYY-MM-DD。モデル/IP：カンマ区切り、* は無制限。",
+    "Choose a group from the dropdown. See the Groups sheet for descriptions.": "リストからグループを選択。説明は Groups シートを参照。",
+    "7 or 30 days, never, or YYYY-MM-DD. Blank uses page defaults.": "7 / 30 日、never（無期限）、YYYY-MM-DD。空欄は画面の既定値。",
+    "Unable to download Excel template": "Excel テンプレートをダウンロードできません",
+    "Spreadsheet formulas are not supported": "数式は使用できません。値を貼り付けてください"
   }
 }
