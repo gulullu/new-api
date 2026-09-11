@@ -127,9 +127,9 @@ export function ImportRowsEditor(props: Props) {
                     t('Name'),
                     t('Group'),
                     `${t('Quota')} (${getCurrencyLabel()})`,
-                    t('Expiry'),
-                    t('Model limits'),
-                    t('IP whitelist'),
+                    t('Expiration'),
+                    t('Model Limits'),
+                    t('IP Whitelist'),
                   ],
                 })
                 props.onError('')
