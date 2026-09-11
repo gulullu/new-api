@@ -87,10 +87,14 @@ export function ApiKeysImportDialog(props: Props) {
   const [attempted, setAttempted] = useState(false)
   const groupOptions = Object.keys(
     groups.data?.success ? groups.data.data || {} : {}
-  ).map((value) => ({
-    value,
-    label: value === 'auto' ? t('Cross-group') : value,
-  }))
+  )
+    .filter((value) => value.trim().toLowerCase() !== 'parnter')
+    .map((value) => ({
+      value,
+      label: value === 'auto' ? t('Cross-group') : value,
+      desc: groups.data?.data?.[value]?.desc,
+      ratio: groups.data?.data?.[value]?.ratio,
+    }))
   const defaults = {
     ...configuredDefaults,
     group:

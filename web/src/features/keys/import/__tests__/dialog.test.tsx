@@ -17,7 +17,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import { api } from '@/lib/api'
@@ -38,7 +44,8 @@ function renderDialog() {
       data: url.includes('groups')
         ? {
             default: { desc: 'Default', ratio: 1 },
-            vip: { desc: 'VIP', ratio: 2 },
+            vip: { desc: 'Priority access', ratio: 2 },
+            parnter: { desc: 'Internal', ratio: 1 },
             auto: { desc: 'Auto', ratio: 1 },
           }
         : [],
@@ -70,6 +77,13 @@ async function pasteRows(text = 'Alice\nBob') {
       screen.getByRole('button', { name: 'Next: confirm configuration' })
     ).toBeEnabled()
   )
+}
+
+async function choose(label: string, option: string | RegExp) {
+  fireEvent.click(screen.getByRole('combobox', { name: label }))
+  const item = await screen.findByRole('option', { name: option })
+  if (item.hasAttribute('cmdk-item')) fireEvent.click(item)
+  else fireEvent.keyDown(item, { key: 'Enter', code: 'Enter' })
 }
 
 test('pastes, edits row groups, previews and retries uncertain creation without duplicate IDs', async () => {
@@ -110,9 +124,7 @@ test('pastes, edits row groups, previews and retries uncertain creation without 
     screen.getByRole('button', { name: 'Next: confirm configuration' })
   ).toBeDisabled()
   await pasteRows()
-  fireEvent.change(screen.getByLabelText('Group for row 2'), {
-    target: { value: 'vip' },
-  })
+  await choose('Group for row 2', /^vip/)
   fireEvent.click(
     screen.getByRole('button', { name: 'Next: confirm configuration' })
   )
@@ -158,16 +170,20 @@ test('batch edits selected rows, restores inheritance and rejects duplicate name
   renderDialog()
   await pasteRows()
   fireEvent.click(screen.getByRole('checkbox', { name: 'Select row 2' }))
-  fireEvent.change(screen.getByLabelText('Batch group'), {
-    target: { value: 'auto' },
-  })
+  await choose('Batch group', /^Cross-group/)
   fireEvent.click(screen.getByRole('button', { name: 'Apply group' }))
-  expect(screen.getByLabelText('Group for row 1')).toHaveValue('')
-  expect(screen.getByLabelText('Group for row 2')).toHaveValue('auto')
+  expect(screen.getByLabelText('Group for row 1')).toHaveTextContent(
+    'Inherit template'
+  )
+  expect(screen.getByLabelText('Group for row 2')).toHaveTextContent(
+    'Cross-group'
+  )
   fireEvent.click(
     screen.getByRole('button', { name: 'Restore template defaults' })
   )
-  expect(screen.getByLabelText('Group for row 2')).toHaveValue('')
+  expect(screen.getByLabelText('Group for row 2')).toHaveTextContent(
+    'Inherit template'
+  )
   fireEvent.change(screen.getByLabelText('Name for row 2'), {
     target: { value: 'Alice' },
   })
@@ -223,7 +239,7 @@ test('saves reusable defaults and loads them without copying key rows into a tem
     return { data: { success: true, data: saved } }
   })
   await pasteRows('Team A')
-  fireEvent.change(screen.getByLabelText('Group'), { target: { value: 'vip' } })
+  await choose('Group', /^vip/)
   expect(
     screen.getAllByRole('checkbox', { name: 'Unlimited' })[0]
   ).toBeChecked()
@@ -234,7 +250,9 @@ test('saves reusable defaults and loads them without copying key rows into a tem
   })
   fireEvent.click(screen.getByRole('button', { name: 'Save' }))
   await waitFor(() =>
-    expect(screen.getByLabelText('Select import template')).toHaveValue('1')
+    expect(screen.getByLabelText('Select import template')).toHaveTextContent(
+      'Shared configuration'
+    )
   )
   expect(post.mock.calls[0][1]).toEqual({
     name: 'Shared configuration',
@@ -247,14 +265,12 @@ test('saves reusable defaults and loads them without copying key rows into a tem
       allow_ips: '',
     },
   })
-  fireEvent.change(screen.getByLabelText('Group'), {
-    target: { value: 'default' },
-  })
-  expect(screen.getByLabelText('Select import template')).toHaveValue('')
-  fireEvent.change(screen.getByLabelText('Select import template'), {
-    target: { value: '1' },
-  })
-  expect(screen.getByLabelText('Group')).toHaveValue('vip')
+  await choose('Group', /^default/)
+  expect(screen.getByLabelText('Select import template')).toHaveTextContent(
+    'Custom configuration'
+  )
+  await choose('Select import template', 'Shared configuration')
+  expect(screen.getByLabelText('Group')).toHaveTextContent('vip')
   expect(screen.getByLabelText('Name for row 1')).toHaveValue('Team A')
 })
 
@@ -277,11 +293,57 @@ test('imports an Excel file into editable rows without creating keys', async () 
   await waitFor(() =>
     expect(screen.getByDisplayValue('001 Device')).toBeInTheDocument()
   )
-  expect(screen.getByLabelText('Group for row 1')).toHaveValue('vip')
+  expect(screen.getByLabelText('Group for row 1')).toHaveTextContent('vip')
   expect(post).toHaveBeenCalledTimes(1)
   expect(post.mock.calls[0][0]).toBe('/api/token/batch/import/file')
   expect((post.mock.calls[0][1] as FormData).get('file')).toBe(file)
   expect(
     screen.getByRole('button', { name: 'Next: confirm configuration' })
   ).toBeEnabled()
+})
+
+test('shows searchable group descriptions and ratios while hiding internal groups', async () => {
+  renderDialog()
+  await pasteRows('Team')
+  fireEvent.click(screen.getByRole('combobox', { name: 'Group for row 1' }))
+  const vip = await screen.findByRole('option', { name: /^vip/ })
+  expect(within(vip).getByText('Priority access')).toBeInTheDocument()
+  expect(within(vip).getByText('2x Ratio')).toBeInTheDocument()
+  expect(
+    screen.queryByRole('option', { name: /parnter/i })
+  ).not.toBeInTheDocument()
+  fireEvent.change(screen.getByPlaceholderText('Search...'), {
+    target: { value: 'Priority' },
+  })
+  expect(
+    screen.queryByRole('option', { name: /^default/ })
+  ).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('option', { name: /^vip/ }))
+  await choose('Group for row 1', /^Inherit template/)
+  expect(screen.getByLabelText('Group for row 1')).toHaveTextContent(
+    'Inherit template'
+  )
+})
+
+test('changes expiration with the built-in selector and restores unlimited validity', async () => {
+  const post = vi.spyOn(api, 'post').mockResolvedValue({
+    data: { success: true, data: { existing_names: [], remaining: 100 } },
+  })
+  renderDialog()
+  await pasteRows('Service A\nService B')
+  await choose('Expiration', '7 days after creation')
+  await choose('Expiration for row 2', 'Custom date')
+  fireEvent.change(screen.getByLabelText('Date for row 2'), {
+    target: { value: '2030-12-31' },
+  })
+  await choose('Expiration for row 2', 'Never')
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Next: confirm configuration' })
+  )
+  await screen.findByRole('button', { name: 'Confirm creation' })
+  const items = (post.mock.calls[0][1] as { items: ImportItem[] }).items
+  expect(items[0].expired_time).toBeGreaterThan(
+    Math.floor(Date.now() / 1000) + 6 * 86400
+  )
+  expect(items[1].expired_time).toBe(-1)
 })

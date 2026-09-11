@@ -24,7 +24,6 @@ import { useTranslation } from 'react-i18next'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { NativeSelect } from '@/components/ui/native-select'
 import { useAuthStore } from '@/stores/auth-store'
 
 import {
@@ -40,6 +39,7 @@ import {
   templatePayload,
 } from './data'
 import { ImportFieldsEditor } from './fields'
+import { ImportSelect } from './selects'
 import type { GroupOption, ImportFields } from './types'
 
 type Props = {
@@ -133,25 +133,26 @@ export function ImportTemplates(props: Props) {
       <div className='flex flex-wrap items-center justify-between gap-2'>
         <div className='flex flex-wrap items-center gap-2'>
           <h3 className='text-sm font-medium'>{t('Template defaults')}</h3>
-          <NativeSelect
-            aria-label={t('Select import template')}
+          <ImportSelect
+            label={t('Select import template')}
+            className='w-full sm:w-56'
             disabled={props.disabled || busy || templates.isFetching}
             value={selected}
-            onChange={(e) => {
-              setSelected(e.target.value)
+            onValueChange={(value) => {
+              setSelected(value)
               const entry = templates.data?.data?.find(
-                (item) => String(item.id) === e.target.value
+                (item) => String(item.id) === value
               )
               if (entry) props.onChange(templateFields(entry.defaults))
             }}
-          >
-            <option value=''>{t('Custom configuration')}</option>
-            {templates.data?.data?.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </NativeSelect>
+            options={[
+              { value: '', label: t('Custom configuration') },
+              ...(templates.data?.data || []).map((item) => ({
+                value: String(item.id),
+                label: item.name,
+              })),
+            ]}
+          />
         </div>
         <div className='flex gap-2'>
           {current && (

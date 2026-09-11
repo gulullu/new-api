@@ -31,7 +31,6 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { NativeSelect } from '@/components/ui/native-select'
 import {
   Table,
   TableBody,
@@ -53,6 +52,7 @@ import {
   parseImportText,
 } from './data'
 import { ImportFieldsEditor, ImportQuotaInput } from './fields'
+import { ImportSelect, ImportGroupSelect } from './selects'
 import type { GroupOption, ImportFields, ImportRow } from './types'
 
 type Props = {
@@ -205,15 +205,18 @@ export function ImportRowsEditor(props: Props) {
       </div>
       <div className='text-muted-foreground flex flex-wrap items-center gap-2 text-xs'>
         <Label htmlFor='key-import-mode'>{t('Import mode')}</Label>
-        <NativeSelect
+        <ImportSelect
           id='key-import-mode'
-          size='sm'
+          label={t('Import mode')}
+          className='w-auto'
           value={mode}
-          onChange={(e) => setMode(e.target.value)}
-        >
-          <option value='replace'>{t('Replace current rows')}</option>
-          <option value='append'>{t('Append to current rows')}</option>
-        </NativeSelect>
+          onValueChange={setMode}
+          disabled={props.disabled || fileBusy}
+          options={[
+            { value: 'replace', label: t('Replace current rows') },
+            { value: 'append', label: t('Append to current rows') },
+          ]}
+        />
         <span>{t('Empty cells inherit the template')}</span>
       </div>
       {pasteOpen && (
@@ -248,18 +251,15 @@ export function ImportRowsEditor(props: Props) {
       {selected.length > 0 && (
         <div className='bg-muted/40 flex flex-wrap items-center gap-2 rounded-lg p-2 text-sm'>
           <span>{t('{{count}} selected', { count: selected.length })}</span>
-          <NativeSelect
-            aria-label={t('Batch group')}
-            value={group}
-            onChange={(e) => setGroup(e.target.value)}
-          >
-            <option value=''>{t('Select a group')}</option>
-            {props.groups.map((g) => (
-              <option key={g.value} value={g.value}>
-                {g.label}
-              </option>
-            ))}
-          </NativeSelect>
+          <div className='w-full sm:w-72'>
+            <ImportGroupSelect
+              label={t('Batch group')}
+              value={group}
+              onValueChange={setGroup}
+              groups={props.groups}
+              disabled={props.disabled || fileBusy}
+            />
+          </div>
           <Button
             type='button'
             variant='outline'
@@ -375,28 +375,16 @@ export function ImportRowsEditor(props: Props) {
                     ))}
                   </TableCell>
                   <TableCell className='align-top'>
-                    <NativeSelect
-                      className='w-full'
-                      aria-label={t('Group for row {{row}}', {
-                        row: index + 1,
-                      })}
+                    <ImportGroupSelect
+                      label={t('Group for row {{row}}', { row: index + 1 })}
                       value={row.group}
-                      onChange={(e) =>
-                        change(row.id, { group: e.target.value })
+                      onValueChange={(value) =>
+                        change(row.id, { group: value })
                       }
-                    >
-                      <option value=''>
-                        {t('Inherit template')} · {props.defaults.group}
-                      </option>
-                      {row.group && !groupNames.includes(row.group) && (
-                        <option value={row.group}>{row.group}</option>
-                      )}
-                      {props.groups.map((g) => (
-                        <option key={g.value} value={g.value}>
-                          {g.label}
-                        </option>
-                      ))}
-                    </NativeSelect>
+                      groups={props.groups}
+                      inherited={props.defaults.group}
+                      disabled={props.disabled || fileBusy}
+                    />
                   </TableCell>
                   <TableCell className='align-top'>
                     <ImportQuotaInput
@@ -407,9 +395,8 @@ export function ImportRowsEditor(props: Props) {
                     />
                   </TableCell>
                   <TableCell className='align-top'>
-                    <NativeSelect
-                      className='w-full'
-                      aria-label={t('Expiration for row {{row}}', {
+                    <ImportSelect
+                      label={t('Expiration for row {{row}}', {
                         row: index + 1,
                       })}
                       value={
@@ -417,16 +404,18 @@ export function ImportRowsEditor(props: Props) {
                           ? row.expiry
                           : 'date'
                       }
-                      onChange={(e) =>
-                        change(row.id, { expiry: e.target.value })
+                      onValueChange={(value) =>
+                        change(row.id, { expiry: value })
                       }
-                    >
-                      <option value=''>{t('Inherit template')}</option>
-                      <option value='7'>{t('7 days after creation')}</option>
-                      <option value='30'>{t('30 days after creation')}</option>
-                      <option value='never'>{t('Never')}</option>
-                      <option value='date'>{t('Custom date')}</option>
-                    </NativeSelect>
+                      disabled={props.disabled || fileBusy}
+                      options={[
+                        { value: '', label: t('Inherit template') },
+                        { value: '7', label: t('7 days after creation') },
+                        { value: '30', label: t('30 days after creation') },
+                        { value: 'never', label: t('Never') },
+                        { value: 'date', label: t('Custom date') },
+                      ]}
+                    />
                     {!['', '7', '30', 'never'].includes(row.expiry) && (
                       <Input
                         className='mt-2'

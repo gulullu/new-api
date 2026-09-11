@@ -23,10 +23,10 @@ import { MultiSelect } from '@/components/multi-select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { NativeSelect } from '@/components/ui/native-select'
 import { Textarea } from '@/components/ui/textarea'
 import { getCurrencyLabel } from '@/lib/currency'
 
+import { ImportSelect, ImportGroupSelect } from './selects'
 import type { GroupOption, ImportFields } from './types'
 
 type Props = {
@@ -56,27 +56,15 @@ export function ImportFieldsEditor(props: Props) {
       <div className='grid gap-4 sm:grid-cols-3'>
         <div className='space-y-2'>
           <Label htmlFor={`${id}-group`}>{t('Group')}</Label>
-          <NativeSelect
+          <ImportGroupSelect
             id={`${id}-group`}
-            className='w-full'
+            label={t('Group')}
             value={props.value.group}
-            onChange={(e) => update('group', e.target.value)}
-          >
-            <option value=''>
-              {props.inherit
-                ? `${inheritLabel} · ${props.inherit.group}`
-                : t('Select a group')}
-            </option>
-            {props.value.group &&
-              !props.groups.some((g) => g.value === props.value.group) && (
-                <option value={props.value.group}>{props.value.group}</option>
-              )}
-            {props.groups.map((g) => (
-              <option key={g.value} value={g.value}>
-                {g.label}
-              </option>
-            ))}
-          </NativeSelect>
+            onValueChange={(value) => update('group', value)}
+            groups={props.groups}
+            inherited={props.inherit?.group}
+            disabled={props.disabled}
+          />
         </div>
         <div className='space-y-2'>
           <Label htmlFor={`${id}-quota`}>
@@ -95,23 +83,20 @@ export function ImportFieldsEditor(props: Props) {
         </div>
         <div className='space-y-2'>
           <Label htmlFor={`${id}-expiry`}>{t('Expiration')}</Label>
-          <NativeSelect
+          <ImportSelect
             id={`${id}-expiry`}
-            className='w-full'
+            label={t('Expiration')}
             value={expiryMode}
-            onChange={(e) =>
-              update(
-                'expiry',
-                e.target.value === 'date' ? 'date' : e.target.value
-              )
-            }
-          >
-            {props.inherit && <option value=''>{inheritLabel}</option>}
-            <option value='7'>{t('7 days after creation')}</option>
-            <option value='30'>{t('30 days after creation')}</option>
-            <option value='never'>{t('Never')}</option>
-            <option value='date'>{t('Custom date')}</option>
-          </NativeSelect>
+            onValueChange={(value) => update('expiry', value)}
+            disabled={props.disabled}
+            options={[
+              ...(props.inherit ? [{ value: '', label: inheritLabel }] : []),
+              { value: '7', label: t('7 days after creation') },
+              { value: '30', label: t('30 days after creation') },
+              { value: 'never', label: t('Never') },
+              { value: 'date', label: t('Custom date') },
+            ]}
+          />
           {expiryMode === 'date' && (
             <Input
               type='date'
@@ -130,17 +115,18 @@ export function ImportFieldsEditor(props: Props) {
           <div className='space-y-2'>
             <Label htmlFor={`${id}-models`}>{t('Model Limits')}</Label>
             {props.inherit && (
-              <NativeSelect
-                aria-label={t('Model inheritance')}
-                className='w-full'
+              <ImportSelect
+                label={t('Model inheritance')}
                 value={props.value.models === '' ? 'inherit' : 'custom'}
-                onChange={(e) =>
-                  update('models', e.target.value === 'inherit' ? '' : '*')
+                onValueChange={(value) =>
+                  update('models', value === 'inherit' ? '' : '*')
                 }
-              >
-                <option value='inherit'>{inheritLabel}</option>
-                <option value='custom'>{t('Custom')}</option>
-              </NativeSelect>
+                disabled={props.disabled}
+                options={[
+                  { value: 'inherit', label: inheritLabel },
+                  { value: 'custom', label: t('Custom') },
+                ]}
+              />
             )}
             {(!props.inherit || props.value.models !== '') && (
               <MultiSelect

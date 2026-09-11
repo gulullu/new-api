@@ -49,4 +49,9 @@ export type ImportTemplate = {
   defaults: TemplateDefaults
 }
 export type ImportPreview = { existing_names: string[]; remaining: number }
-export type GroupOption = { value: string; label: string }
+export type GroupOption = {
+  value: string
+  label: string
+  desc?: string
+  ratio?: number | string
+}
