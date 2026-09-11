@@ -107,6 +107,7 @@ export interface TokenAutoGroupsConfig {
 // ============================================================================
 
 export type ApiKeysDialogType =
+  | 'import'
   | 'create'
   | 'update'
   | 'delete'

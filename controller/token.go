@@ -352,7 +352,7 @@ func AddToken(c *gin.Context) {
 		CrossGroupRetry:    token.CrossGroupRetry,
 		AutoGroups:         token.AutoGroups,
 	}
-	err = cleanToken.Insert()
+	err = model.InsertUserToken(&cleanToken)
 	if err != nil {
 		common.ApiError(c, err)
 		return

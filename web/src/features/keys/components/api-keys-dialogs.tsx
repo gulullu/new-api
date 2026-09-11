@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { ApiKeysImportDialog } from '../import/dialog'
 import { ApiKeysDeleteDialog } from './api-keys-delete-dialog'
 import { ApiKeysMutateDrawer } from './api-keys-mutate-drawer'
 import { useApiKeys } from './api-keys-provider'
@@ -26,6 +27,9 @@ export function ApiKeysDialogs() {
 
   return (
     <>
+      {open === 'import' && (
+        <ApiKeysImportDialog onClose={() => setOpen(null)} />
+      )}
       <ApiKeysMutateDrawer
         open={open === 'create' || open === 'update'}
         onOpenChange={(isOpen) => !isOpen && setOpen(null)}

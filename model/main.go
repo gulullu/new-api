@@ -310,6 +310,8 @@ func migrateDB() error {
 	err := DB.AutoMigrate(
 		&Channel{},
 		&Token{},
+		&TokenImportBatch{},
+		&TokenImportTemplate{},
 		&User{},
 		&UserSession{},
 		&AuthFlow{},
@@ -386,6 +388,8 @@ func migrateDBFast() error {
 	}{
 		{&Channel{}, "Channel"},
 		{&Token{}, "Token"},
+		{&TokenImportBatch{}, "TokenImportBatch"},
+		{&TokenImportTemplate{}, "TokenImportTemplate"},
 		{&User{}, "User"},
 		{&UserSession{}, "UserSession"},
 		{&AuthFlow{}, "AuthFlow"},
